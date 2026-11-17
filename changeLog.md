@@ -39,3 +39,9 @@ Inicializar el repositorio independiente `07_BaserowLite` y elaborar el diseño 
     - Popover de filtros dinámicos multinivel (`components/grid/filter-popover.tsx`).
     - Script de migración masiva desde Baserow oficial (`scripts/migrate_from_baserow.py`).
     - 39 pruebas automatizadas en verde y build de producción Next.js 15 compilando exitosamente.
+11. **Iteración 11**: Despliegue en ambiente Staging de ZBook (:8097), verificación de rendimiento y retrocompatibilidad de API:
+    - Despliegue de contenedores `baserow_lite_app` y `baserow_lite_db` (Postgres 16) en ZBook.
+    - Consumo verificado de RAM en tiempo real: **~65 MiB totales** (frente a 2.55 GiB en Baserow oficial, **97.5% de ahorro**).
+    - Soporte transparente para IDs numéricos legacy (`legacy_id` en PostgreSQL y `lib/table-resolver.ts`), permitiendo invocar `/api/database/rows/table/865/?user_field_names=true` sin cambiar scripts clientes.
+    - Validación de ciclo de vida completo: Healthcheck 200 OK, endpoints de CRUD, papelera con restore, subida y descarga de adjuntos, y ejecución exitosa del script de backup con réplica al NAS.
+    - Cierre exitoso del Hito 5 con issue `#13` en `snadales/BaserowLite`.
