@@ -2,6 +2,53 @@
 
 ---
 
+## 🗓️ [2026-11-17] - Fase 8: Unificación Conceptual por Negocio y Trazabilidad de Métricas (Issue #31)
+
+### 🎯 Intención
+Eliminar la desconexión entre Tablas y Dashboards ([Issue #31](https://github.com/snadales/BaserowLite/issues/31)), unificando ambos mundos bajo el concepto de "Negocio" (un Espacio de Trabajo como `LinkedIn` o `Negocios` agrupa de forma integrada sus Bases, Tablas, Vistas, Dashboards y KPIs). Además, resolver la anomalía `relation "undefined" does not exist` en tarjetas KPI y habilitar la trazabilidad / drill-down directo desde cada tarjeta o gráfico hacia su tabla de origen (`K007 ➔ T026 · Flujos n8n`).
+
+### 📍 Estado Actual
+- **Unificación de Workspaces (Bases + Dashboards Integrados)**:
+  - `app/api/database/workspaces/route.ts`: Ahora incluye en cada espacio de trabajo tanto las bases de datos (`type: 'database'`) como los dashboards ejecutivos (`type: 'dashboard'`), permitiendo ver en una sola cuadrícula o árbol lateral todos los activos analíticos y operacionales de cada área de negocio (ej. `LinkedIn` con su base `LinkedIn · Contenido` y su dashboard `D004 · Panel Ejecutivo LinkedIn`).
+  - `components/workspaces/workspaces-dashboard.tsx`: Grid principal y árbol lateral enriquecidos con navegación bimodal instantánea. Al hacer clic en un dashboard abre la vista analítica directamente; al hacer clic en una base abre el visor de tablas.
+  - `components/navigation/app-sidebar.tsx`: Árbol de navegación lateral unificado con iconos distintivos (`Database` para bases de datos y `BarChart3` rosa/cobalto para dashboards).
+- **Trazabilidad y Drill-down Directo (KPI ➔ Tabla Origen)**:
+  - `components/bi/bi-card-renderer.tsx`: Cada tarjeta KPI (`K001..K012`), gráfico ECharts (`G001..G008`) y tabla (`T001..T002`) despliega un badge interactivo de trazabilidad en su cabecera: `[Txxx · Nombre de Tabla ↗]`.
+  - Al presionar el badge, el usuario viaja inmediatamente a la tabla origen en el Data Grid (`viewMode = 'database'`), cerrando la brecha entre métricas agregadas y registros individuales.
+- **Resolución Definitiva de `relation "undefined" does not exist`**:
+  - `lib/bi/analytics/query-builder.ts`: Validación temprana que rechaza de forma determinista cualquier intento de construir sentencias SQL `FROM undefined` cuando no se especifica una tabla o vista.
+  - `components/bi/bi-card-renderer.tsx`: Guardas defensivas que evitan disparar llamadas innecesarias a `/api/bi/query` si la tarjeta es un KPI con valor precalculado (`displayValue`), contiene datos estáticos (`staticData`) o carece de una tabla SQL asociada.
+- **Enriquecimiento del Catálogo de Tablas y Dashboards en PostgreSQL**:
+  - `scripts/seed_demo_dashboards.sql`: Sembrado completo de bases y tablas para dar soporte a los dashboards de demostración:
+    - Base `Operaciones · Flujos n8n`: Tabla `T026 · Flujos n8n` (legacy_id 26) y `T027 · Logs de Ejecución` (legacy_id 27).
+    - Base `Seguridad · 1Password`: Tabla `T031 · Servicios Homelab` (legacy_id 31) y `T032 · Inventario Bóveda IA` (legacy_id 32).
+    - Base `LinkedIn · Contenido`: Tabla `T041 · Publicaciones y Posts` (legacy_id 41) y `T042 · Métricas y Engagement` (legacy_id 42).
+    - Dashboard `D004 · Panel Ejecutivo LinkedIn & Redes`: Sembrado en workspace `LinkedIn` con tarjetas `K010`, `K011`, `K012`, `G007`, `G008`.
+
+### 🏁 Estado Deseado
+- Una plataforma unificada donde cada concepto de negocio (ej: LinkedIn, Operaciones, Ventas) concentra tanto la captura y edición tabular de datos como su visualización ejecutiva en dashboards y KPIs, con drill-down bidireccional fluido.
+
+### ⚠️ Problemas Encontrados y Soluciones
+- *Problema:* Las tarjetas KPI con `displayValue` pero sin `tableOrView` ejecutaban consultas analíticas vacías contra PostgreSQL generando el error `relation "undefined" does not exist`.
+  *Solución:* Se agregó un retorno temprano en `bi-card-renderer.tsx` y validación estricta en `query-builder.ts`, eliminando la ejecución de SQL espurio.
+- *Problema:* En la interfaz no existía forma de saber de qué tabla proviene una métrica o KPI.
+  *Solución:* Se incorporó el badge interactivo `sourceTable` en la cabecera de cada tarjeta con callback `onNavigateToTable`.
+
+### 🔄 Iteraciones e Historial de Ejecución
+1. **Iteración 115**: Apertura de GitHub Issue #31 para unificación conceptual por negocio y trazabilidad.
+2. **Iteración 116**: Corrección de guardas en `bi-card-renderer.tsx` y validación en `query-builder.ts`.
+3. **Iteración 117**: Implementación del badge de trazabilidad `[Txxx · Tabla Origen]` con redirección a tabla.
+4. **Iteración 118**: Actualización de `app/api/database/workspaces/route.ts` para devolver dashboards consolidados por workspace.
+5. **Iteración 119**: Extensión del sembrador SQL `scripts/seed_demo_dashboards.sql` incorporando tablas T026, T027, T031, T032, T041, T042 y dashboard D004.
+6. **Iteración 120**: Ejecución de pruebas unitarias (`vitest` 64/64 pasados) y compilación limpia de Next.js (`26/26` páginas).
+
+### 📊 Evidencia Empírica de Verificación
+- Pruebas Unitarias: 11 suites y 64 pruebas ejecutadas y aprobadas (`vitest run`).
+- Next.js Build: 26 páginas estáticas y rutas dinámicas generadas sin errores de compilación ni de tipos.
+- Base de Datos: 8 tablas activas (`T865`, `T026`, `T027`, `T031`, `T032`, `T041`, `T042`) y 4 dashboards (`D001`, `D002`, `D003`, `D004`) con 20 tarjetas vinculadas.
+
+---
+
 ## 🗓️ [2026-11-17] - Fase 7: BI & Analytics - Dashboards Ejecutivos de Demostración y Producción (Issue #30)
 
 ### 🎯 Intención

@@ -40,6 +40,18 @@ export async function GET(request: NextRequest) {
       .from(schema.workspaceMembers)
       .leftJoin(schema.users, eq(schema.workspaceMembers.userId, schema.users.id));
 
+    // Obtener todos los dashboards de BI para unificación conceptual por workspace
+    const allDashboards = await db
+      .select({
+        id: schema.biDashboards.id,
+        code: schema.biDashboards.code,
+        name: schema.biDashboards.name,
+        description: schema.biDashboards.description,
+        workspaceId: schema.biDashboards.workspaceId,
+        icon: schema.biDashboards.icon,
+      })
+      .from(schema.biDashboards);
+
     // Si no hay workspaces creados aún, devolver fallback
     if (allWorkspaces.length === 0) {
       return NextResponse.json([]);
@@ -66,6 +78,28 @@ export async function GET(request: NextRequest) {
           };
         });
 
+      // Incorporar Dashboards de BI pertenecientes al Workspace (Unificación por Negocio)
+      const wDashboards = allDashboards
+        .filter((d) => d.workspaceId === w.id)
+        .map((d) => ({
+          id: d.id,
+          code: d.code,
+          name: d.name,
+          description: d.description || '',
+          category: 'Dashboards & KPIs',
+          icon: 'chart',
+          color: 'rose',
+          tags: ['dashboard', 'bi', d.code.toLowerCase()],
+          tablesCount: 0,
+          type: 'dashboard' as const,
+          viewedAt: 'Reciente',
+        }));
+
+      // Evitar duplicar elementos si ya existía una base con el mismo nombre
+      const baseNames = new Set(wBases.map((b) => b.name.toLowerCase()));
+      const filteredDashboards = wDashboards.filter((d) => !baseNames.has(d.name.toLowerCase()));
+      const allItems = [...wBases, ...filteredDashboards];
+
       return {
         id: w.id,
         name: w.name,
@@ -77,8 +111,8 @@ export async function GET(request: NextRequest) {
           role: m.role || 'admin',
         })),
         membersCount: Math.max(wMembers.length, 1),
-        itemsCount: wBases.length,
-        bases: wBases,
+        itemsCount: allItems.length,
+        bases: allItems,
       };
     });
 

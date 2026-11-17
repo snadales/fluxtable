@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState, useMemo } from 'react';
 import * as echarts from 'echarts';
 import { 
   ArrowUpRight, ArrowDownRight, Minus, AlertCircle, RefreshCw, 
-  HelpCircle, ChevronRight, Filter
+  HelpCircle, ChevronRight, Filter, Table as TableIcon
 } from 'lucide-react';
 import { useDashboardStore } from '@/lib/bi/state/dashboard-store';
 import { formatCurrency } from '@/lib/formatters';
@@ -28,9 +28,10 @@ interface BiCardRendererProps {
       colorScheme: string;
     }>;
   };
+  onNavigateToTable?: (tableIdentifier: string) => void;
 }
 
-export function BiCardRenderer({ card }: BiCardRendererProps) {
+export function BiCardRenderer({ card, onNavigateToTable }: BiCardRendererProps) {
   const chartRef = useRef<HTMLDivElement>(null);
   const chartInstance = useRef<echarts.ECharts | null>(null);
 
@@ -56,6 +57,29 @@ export function BiCardRenderer({ card }: BiCardRendererProps) {
         setDurationMs(1);
         setIsCached(true);
         setLoading(false);
+        setError(null);
+        return;
+      }
+
+      // Si es una tarjeta KPI con valor fijo o sin tabla configurada (Issue #31)
+      if (card.chartType === 'kpi' && (card.visualConfigJson?.displayValue || !card.queryConfigJson?.tableOrView)) {
+        setData(card.visualConfigJson?.displayValue ? [{ valor: card.visualConfigJson.displayValue }] : [{}]);
+        setColumns(['valor']);
+        setDurationMs(1);
+        setIsCached(true);
+        setLoading(false);
+        setError(null);
+        return;
+      }
+
+      // Si no hay tabla o vista especificada, no intentar consulta SQL inválida
+      if (!card.queryConfigJson?.tableOrView) {
+        setData([]);
+        setColumns([]);
+        setDurationMs(0);
+        setIsCached(false);
+        setLoading(false);
+        setError(null);
         return;
       }
 
@@ -221,11 +245,18 @@ export function BiCardRenderer({ card }: BiCardRendererProps) {
     };
   }, []);
 
+  const sourceTable = card.visualConfigJson?.sourceTable || 
+    (card.queryConfigJson?.tableOrView ? { 
+      code: card.queryConfigJson.tableCode || 'Txxx', 
+      name: card.queryConfigJson.tableName || card.queryConfigJson.tableOrView,
+      tableId: card.queryConfigJson.tableId || card.queryConfigJson.tableOrView 
+    } : null);
+
   return (
     <div className="bg-white rounded-xl border border-slate-200/90 shadow-xs flex flex-col h-full overflow-hidden hover:shadow-md transition-shadow">
       {/* Cabecera de la Tarjeta */}
       <div className="px-3.5 py-2.5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-        <div className="flex items-center gap-2 min-w-0">
+        <div className="flex items-center gap-2 min-w-0 flex-1">
           <span className="font-mono text-[10px] font-semibold px-1.5 py-0.5 bg-blue-50 text-blue-700 rounded border border-blue-200/60 shrink-0">
             {card.code}
           </span>
@@ -233,12 +264,34 @@ export function BiCardRenderer({ card }: BiCardRendererProps) {
             {card.name}
           </h3>
           {card.description && (
-            <span title={card.description} className="text-slate-400 hover:text-slate-600 cursor-help">
+            <span title={card.description} className="text-slate-400 hover:text-slate-600 cursor-help shrink-0">
               <HelpCircle className="w-3 h-3" />
             </span>
           )}
+
+          {/* Badge de Trazabilidad hacia la Tabla Origen (Concepto de Negocio) */}
+          {sourceTable && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (onNavigateToTable) {
+                  onNavigateToTable(sourceTable.tableId || sourceTable.code || sourceTable.name);
+                }
+              }}
+              className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono font-medium bg-slate-100 hover:bg-blue-50 text-slate-600 hover:text-blue-700 border border-slate-200 hover:border-blue-300 transition-all cursor-pointer group/tbl ml-2 shrink-0 shadow-2xs"
+              title={`Ver datos en tabla origen: ${sourceTable.code ? sourceTable.code + ' · ' : ''}${sourceTable.name}`}
+            >
+              <TableIcon className="w-2.5 h-2.5 text-blue-600 shrink-0" />
+              <span className="font-bold text-blue-700">{sourceTable.code || 'Txxx'}</span>
+              <span className="text-slate-500 group-hover/tbl:text-blue-600 max-w-[120px] truncate hidden md:inline">
+                · {sourceTable.name}
+              </span>
+              <ArrowUpRight className="w-2.5 h-2.5 text-slate-400 group-hover/tbl:text-blue-600 transition-colors" />
+            </button>
+          )}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0">
           {isCached && (
             <span className="text-[9px] font-mono px-1.5 py-0.2 bg-emerald-50 text-emerald-600 rounded border border-emerald-200">
               Caché 1ms

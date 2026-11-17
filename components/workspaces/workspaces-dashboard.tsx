@@ -38,6 +38,7 @@ interface WorkspacesDashboardProps {
   activeWorkspaceId: string | null;
   onSelectWorkspace: (id: string | null) => void;
   onOpenDatabase: (baseId: string) => void;
+  onOpenDashboard?: (dashboardCodeOrId: string) => void;
   onCreateWorkspace: () => void;
   onCreateDatabase: (workspaceId: string) => void;
   onOpenTrash: () => void;
@@ -57,6 +58,7 @@ export const WorkspacesDashboard: React.FC<WorkspacesDashboardProps> = ({
   activeWorkspaceId,
   onSelectWorkspace,
   onOpenDatabase,
+  onOpenDashboard,
   onCreateWorkspace,
   onCreateDatabase,
   onOpenTrash,
@@ -75,6 +77,15 @@ export const WorkspacesDashboard: React.FC<WorkspacesDashboardProps> = ({
   const [activeBaseMenuId, setActiveBaseMenuId] = useState<string | null>(null);
   const [activeWorkspaceMenuId, setActiveWorkspaceMenuId] = useState<string | null>(null);
   const [expandedBasesInSidebar, setExpandedBasesInSidebar] = useState<Record<string, boolean>>({});
+
+  const handleItemClick = (item: BaseItem) => {
+    const isDashboard = item.type === 'dashboard' || item.icon === 'chart' || item.name.startsWith('D00');
+    if (isDashboard && onOpenDashboard) {
+      onOpenDashboard(item.id);
+    } else {
+      onOpenDatabase(item.id);
+    }
+  };
 
   // Modales interactivos
   const [activeModal, setActiveModal] = useState<'members' | 'settings' | 'rename' | 'apiDocs' | null>(null);
@@ -271,7 +282,7 @@ export const WorkspacesDashboard: React.FC<WorkspacesDashboardProps> = ({
                   return (
                     <div key={b.id} className="space-y-0.5">
                       <div
-                        onClick={() => onOpenDatabase(b.id)}
+                        onClick={() => handleItemClick(b)}
                         className="group flex items-center justify-between px-2.5 py-1.5 rounded-lg hover:bg-surface-sunken cursor-pointer transition-colors text-ink-2 hover:text-ink"
                       >
                         <div className="flex items-center gap-2 truncate">
@@ -547,7 +558,7 @@ export const WorkspacesDashboard: React.FC<WorkspacesDashboardProps> = ({
                           return (
                             <div
                               key={b.id}
-                              onClick={() => onOpenDatabase(b.id)}
+                              onClick={() => handleItemClick(b)}
                               className="group p-4 rounded-xl border border-line bg-surface hover:border-accent hover:shadow-md cursor-pointer transition-all flex items-start justify-between gap-3 relative"
                             >
                               <div className="flex items-start gap-3 truncate">

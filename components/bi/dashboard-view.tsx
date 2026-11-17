@@ -11,9 +11,10 @@ import { BiCardRenderer } from './bi-card-renderer';
 
 interface DashboardViewProps {
   onNewCard?: () => void;
+  onNavigateToTable?: (tableId: string) => void;
 }
 
-export function DashboardView({ onNewCard }: DashboardViewProps) {
+export function DashboardView({ onNewCard, onNavigateToTable }: DashboardViewProps) {
   const {
     activeDashboard,
     activeTabId,
@@ -244,7 +245,7 @@ export function DashboardView({ onNewCard }: DashboardViewProps) {
 
               return (
                 <div key={card.id} className={`${colSpan} min-h-[220px]`}>
-                  <BiCardRenderer card={card} />
+                  <BiCardRenderer card={card} onNavigateToTable={onNavigateToTable} />
                 </div>
               );
             })}

@@ -45,6 +45,10 @@ export class BiQueryBuilder {
    * Genera una sentencia SQL analítica completa con soporte de Time Intelligence
    */
   public static buildQuery(config: BiQueryConfig): { sql: string; params: any[] } {
+    if (!config.tableOrView || typeof config.tableOrView !== 'string' || !config.tableOrView.trim()) {
+      throw new Error('CONFIG_ERROR: tableOrView es requerido para construir la consulta analítica');
+    }
+
     const params: any[] = [];
     const whereClauses: string[] = [];
 

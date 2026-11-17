@@ -17,6 +17,7 @@ import { MySettingsModal } from '@/components/modals/my-settings-modal';
 import { TableWebhooksModal } from '@/components/modals/table-webhooks-modal';
 import { TableSnapshotsModal } from '@/components/modals/table-snapshots-modal';
 import { BiAnalyticsPage } from '@/components/bi/bi-analytics-page';
+import { useDashboardStore } from '@/lib/bi/state/dashboard-store';
 import { FluxTableLogo } from '@/components/brand/yarken-logo';
 import { AppSidebar } from '@/components/navigation/app-sidebar';
 import { CommentsDrawer } from '@/components/comments/comments-drawer';
@@ -720,6 +721,10 @@ export default function HomePage() {
           activeWorkspaceId={activeWorkspaceId}
           onSelectWorkspace={setActiveWorkspaceId}
           onOpenDatabase={handleOpenDatabase}
+          onOpenDashboard={(dashId) => {
+            useDashboardStore.getState().selectDashboard(dashId);
+            setViewMode('analytics');
+          }}
           onCreateWorkspace={handleCreateWorkspace}
           onCreateDatabase={handleCreateDatabaseInWorkspace}
           onOpenTrash={() => {
@@ -861,7 +866,12 @@ export default function HomePage() {
             </button>
           </div>
         </header>
-        <BiAnalyticsPage />
+        <BiAnalyticsPage 
+          onNavigateToTable={async (targetTableIdentifier) => {
+            await handleSwitchTable(targetTableIdentifier);
+            setViewMode('database');
+          }}
+        />
       </div>
     );
   }
@@ -887,6 +897,10 @@ export default function HomePage() {
         }}
         onSelectTable={(tableId) => {
           handleSwitchTable(tableId);
+        }}
+        onSelectDashboard={(dashId) => {
+          useDashboardStore.getState().selectDashboard(dashId);
+          setViewMode('analytics');
         }}
         onOpenWorkspaces={() => setViewMode('workspaces')}
         onOpenAnalytics={() => setViewMode('analytics')}

@@ -45,6 +45,7 @@ interface AppSidebarProps {
   onSelectWorkspace: (wsId: string) => void;
   onSelectBase: (baseId: string) => void;
   onSelectTable: (tableId: string) => void;
+  onSelectDashboard?: (dashboardCodeOrId: string) => void;
   onOpenWorkspaces: () => void;
   onOpenAnalytics: () => void;
   onOpenTrash: () => void;
@@ -71,6 +72,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
   onSelectWorkspace,
   onSelectBase,
   onSelectTable,
+  onSelectDashboard,
   onOpenWorkspaces,
   onOpenAnalytics,
   onOpenTrash,
@@ -332,8 +334,30 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
           currentWorkspace.bases
             .filter((b) => !searchQuery || b.name.toLowerCase().includes(searchQuery.toLowerCase()))
             .map((b) => {
+              const isDashboard = b.type === 'dashboard' || b.icon === 'chart' || b.name.startsWith('D00');
               const isCurrentBase = b.id === currentBaseId;
               const isExpanded = !!expandedBases[b.id] || isCurrentBase;
+
+              if (isDashboard) {
+                return (
+                  <div
+                    key={b.id}
+                    className="group relative flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-semibold cursor-pointer transition-all text-ink hover:bg-surface-sunken"
+                    onClick={() => {
+                      if (onSelectDashboard) onSelectDashboard(b.id);
+                      else onOpenAnalytics();
+                    }}
+                  >
+                    <div className="flex items-center gap-2 truncate min-w-0 flex-1">
+                      <BarChart3 className="w-3.5 h-3.5 text-rose-500 shrink-0" />
+                      <span className="truncate">{b.name}</span>
+                    </div>
+                    <span className="text-[10px] font-mono px-1 py-0.2 rounded bg-rose-50 text-rose-600 border border-rose-200 shrink-0">
+                      Dashboard
+                    </span>
+                  </div>
+                );
+              }
 
               return (
                 <div key={b.id} className="space-y-0.5">
