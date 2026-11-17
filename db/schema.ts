@@ -264,3 +264,134 @@ export const snapshots = pgTable('snapshots', {
   index('snapshots_table_id_idx').on(t.tableId),
   index('snapshots_base_id_idx').on(t.baseId),
 ]);
+
+// -----------------------------------------------------------------------------
+// 13. BI & Analytics Engine (EPIC-BI-01)
+// -----------------------------------------------------------------------------
+
+export const biFolders = pgTable('bi_folders', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  workspaceId: uuid('workspace_id').references(() => workspaces.id, { onDelete: 'cascade' }).notNull(),
+  name: text('name').notNull(),
+  parentId: uuid('parent_id'),
+  order: integer('order').default(0).notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+}, (t) => [
+  index('bi_folders_workspace_idx').on(t.workspaceId),
+  index('bi_folders_parent_idx').on(t.parentId),
+]);
+
+export const biDashboards = pgTable('bi_dashboards', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  code: text('code').notNull().unique(), // e.g. 'D001'
+  workspaceId: uuid('workspace_id').references(() => workspaces.id, { onDelete: 'cascade' }).notNull(),
+  folderId: uuid('folder_id').references(() => biFolders.id, { onDelete: 'set null' }),
+  name: text('name').notNull(),
+  description: text('description'),
+  icon: text('icon').default('layout-dashboard').notNull(),
+  isFavorite: boolean('is_favorite').default(false).notNull(),
+  autoRefreshInterval: integer('auto_refresh_interval').default(0).notNull(),
+  layoutJson: jsonb('layout_json').$type<any[]>().default([]).notNull(),
+  tags: jsonb('tags').$type<string[]>().default([]).notNull(),
+  createdById: uuid('created_by_id').references(() => users.id, { onDelete: 'set null' }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+}, (t) => [
+  index('bi_dashboards_workspace_idx').on(t.workspaceId),
+  index('bi_dashboards_folder_idx').on(t.folderId),
+  index('bi_dashboards_code_idx').on(t.code),
+]);
+
+export const biDashboardTabs = pgTable('bi_dashboard_tabs', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  dashboardId: uuid('dashboard_id').references(() => biDashboards.id, { onDelete: 'cascade' }).notNull(),
+  name: text('name').notNull(),
+  order: integer('order').default(0).notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+}, (t) => [
+  index('bi_dashboard_tabs_dashboard_idx').on(t.dashboardId),
+]);
+
+export const biDatasets = pgTable('bi_datasets', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  workspaceId: uuid('workspace_id').references(() => workspaces.id, { onDelete: 'cascade' }).notNull(),
+  name: text('name').notNull(),
+  sourceType: text('source_type', {
+    enum: ['local_baserow', 'odoo_ro', 'voz_ro', 'pimcore_ro'],
+  }).notNull(),
+  configJson: jsonb('config_json').$type<Record<string, any>>().default({}).notNull(),
+  isActive: boolean('is_active').default(true).notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+}, (t) => [
+  index('bi_datasets_workspace_idx').on(t.workspaceId),
+  index('bi_datasets_source_type_idx').on(t.sourceType),
+]);
+
+export const biCards = pgTable('bi_cards', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  code: text('code').notNull(), // 'K001', 'G001', etc.
+  dashboardId: uuid('dashboard_id').references(() => biDashboards.id, { onDelete: 'cascade' }).notNull(),
+  tabId: uuid('tab_id').references(() => biDashboardTabs.id, { onDelete: 'set null' }),
+  name: text('name').notNull(),
+  description: text('description'),
+  chartType: text('chart_type', {
+    enum: ['kpi', 'line', 'bar', 'horizontal_bar', 'table', 'markdown'],
+  }).notNull(),
+  sourceType: text('source_type', {
+    enum: ['local_baserow', 'odoo_ro', 'voz_ro', 'pimcore_ro'],
+  }).notNull(),
+  queryConfigJson: jsonb('query_config_json').$type<Record<string, any>>().default({}).notNull(),
+  visualConfigJson: jsonb('visual_config_json').$type<Record<string, any>>().default({}).notNull(),
+  gridPosJson: jsonb('grid_pos_json').$type<{ x: number; y: number; w: number; h: number }>().default({
+    x: 0,
+    y: 0,
+    w: 6,
+    h: 4,
+  }).notNull(),
+  order: integer('order').default(0).notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+}, (t) => [
+  index('bi_cards_dashboard_idx').on(t.dashboardId),
+  index('bi_cards_tab_idx').on(t.tabId),
+  index('bi_cards_code_idx').on(t.code),
+]);
+
+export const biThresholds = pgTable('bi_thresholds', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  cardId: uuid('card_id').references(() => biCards.id, { onDelete: 'cascade' }).notNull(),
+  metricKey: text('metric_key').notNull(),
+  warningValue: text('warning_value').notNull(),
+  criticalValue: text('critical_value').notNull(),
+  direction: text('direction', { enum: ['above', 'below'] }).default('above').notNull(),
+  colorScheme: text('color_scheme').default('green-yellow-red').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+}, (t) => [
+  index('bi_thresholds_card_idx').on(t.cardId),
+]);
+
+export const biAlerts = pgTable('bi_alerts', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  cardId: uuid('card_id').references(() => biCards.id, { onDelete: 'cascade' }).notNull(),
+  conditionType: text('condition_type', { enum: ['threshold', 'anomaly'] }).default('threshold').notNull(),
+  payloadJson: jsonb('payload_json').$type<Record<string, any>>().default({}).notNull(),
+  webhookUrl: text('webhook_url'),
+  isActive: boolean('is_active').default(true).notNull(),
+  lastTriggeredAt: timestamp('last_triggered_at', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+}, (t) => [
+  index('bi_alerts_card_idx').on(t.cardId),
+]);
+
+export const biSyncRuns = pgTable('bi_sync_runs', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  datasetId: uuid('dataset_id').references(() => biDatasets.id, { onDelete: 'cascade' }).notNull(),
+  status: text('status', { enum: ['running', 'success', 'error'] }).default('running').notNull(),
+  rowsSynced: integer('rows_synced').default(0).notNull(),
+  durationMs: integer('duration_ms').default(0).notNull(),
+  errorMessage: text('error_message'),
+  startedAt: timestamp('started_at', { withTimezone: true }).defaultNow().notNull(),
+  finishedAt: timestamp('finished_at', { withTimezone: true }),
+}, (t) => [
+  index('bi_sync_runs_dataset_idx').on(t.datasetId),
+]);

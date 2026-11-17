@@ -2,6 +2,54 @@
 
 ---
 
+## 🗓️ [2026-11-17] - Fase 1: Esquema Drizzle `bi_*`, Vistas `bi_views` & Pools Multi-BD
+
+### 🎯 Intención
+Implementar la infraestructura de datos analíticos para BaserowLite (`EPIC-BI-01` / Issue #16): diseñar y migrar las 8 tablas core de BI (`bi_folders`, `bi_dashboards`, `bi_dashboard_tabs`, `bi_datasets`, `bi_cards`, `bi_thresholds`, `bi_alerts`, `bi_sync_runs`), crear funciones PL/pgSQL inmunes a crash de tipo (`safe_numeric`, `safe_timestamptz`), desarrollar el administrador de conexiones de sólo lectura `BiPoolManager` hacia PostgreSQL (Odoo, Voz) y MariaDB (Pimcore), y construir el generador de vistas SQL tipadas `BiViewsGenerator` sobre el esquema `bi_views`.
+
+### 📍 Estado Actual
+- Base de datos `baserow_lite_db`: Esquema `bi_views` creado; funciones `public.safe_numeric(text)` y `public.safe_timestamptz(text)` operativas (retornan `NULL` ante datos corruptos o vacíos sin lanzar excepción fatal).
+- Tablas core de BI migradas en PostgreSQL y definidas en Drizzle ORM (`db/schema.ts`):
+  - `bi_folders`: Carpetas jerárquicas con auto-referencia y orden.
+  - `bi_dashboards`: Dashboards con código único (D001, etc.), layout JSON, tags y auto-refresh.
+  - `bi_dashboard_tabs`: Pestañas organizativas por dashboard.
+  - `bi_datasets`: Fuentes unificadas (`local_baserow`, `odoo_ro`, `voz_ro`, `pimcore_ro`).
+  - `bi_cards`: Preguntas y gráficos analíticos (`kpi`, `line`, `bar`, `horizontal_bar`, `table`, `markdown`) con query y visual configs.
+  - `bi_thresholds`: Umbrales de semáforo tricolor para KPIs y alertas.
+  - `bi_alerts`: Condiciones y disparadores de webhook hacia n8n/Telegram.
+  - `bi_sync_runs`: Historial de ejecuciones y caché analítica.
+- Conector multi-fuente `lib/bi/connectors/pool-manager.ts`: Pools controlados de solo lectura con guardia regex que bloquea `INSERT/UPDATE/DELETE/DROP/ALTER/TRUNCATE` (`CONSULTA_BLOQUEADA`) y fuerza `SET TRANSACTION READ ONLY`.
+- Generador de vistas `lib/bi/generators/views-generator.ts`: Mapea campos JSONB de Baserow a columnas SQL tipadas nativas en `bi_views.tbl_*` a velocidad de PostgreSQL.
+- Endpoint de administración `/api/admin/bi/sync-views` implementado para regenerar vistas bajo demanda.
+- Pruebas automatizadas: 48 tests pasando en 6 suites de prueba (100% éxito) y compilación `next build` limpia (17 páginas).
+
+### 🏁 Estado Deseado
+- Cimientos de datos y conectividad listos para la Fase 2 (`EPIC-BI-01` Issue #3: Motor Analítico SQL con Time Intelligence, percentiles p50/p90, cross-filtering y caché en memoria).
+
+### ⚠️ Problemas Encontrados y Soluciones
+- *Problema:* Riesgo de colapso de consultas analíticas cuando usuarios introducen caracteres alfanuméricos en campos de número o monedas en Baserow clásico, provocando error fatal de casteo en PostgreSQL.
+  *Solución:* Implementación de funciones PL/pgSQL inmutables `safe_numeric(text)` y `safe_timestamptz(text)` con captura interna de excepción `WHEN OTHERS THEN RETURN NULL;`.
+- *Problema:* Riesgo de saturar las conexiones de Odoo (límite estricto de 5 en homelab).
+  *Solución:* `BiPoolManager` limita el pool de Odoo a `max: 3` conexiones con timeout agresivo de conexión de 5000ms e inactividad de 10000ms.
+
+### 🔄 Iteraciones e Historial de Ejecución
+1. **Iteración 23**: Creación del issue `#16` en `snadales/BaserowLite` para la Fase 1 de `EPIC-BI-01`.
+2. **Iteración 24**: Redacción y aplicación de la migración SQL `db/migrations/0002_bi_analytics_engine.sql` en `baserow_lite_db`.
+3. **Iteración 25**: Extensión de `db/schema.ts` con definiciones Drizzle para las 8 tablas `bi_*`.
+4. **Iteración 26**: Implementación de `lib/bi/connectors/pool-manager.ts` con guardias de solo lectura para Odoo, Voz y Pimcore.
+5. **Iteración 27**: Implementación de `lib/bi/generators/views-generator.ts` y endpoint `/api/admin/bi/sync-views`.
+6. **Iteración 28**: Creación de tests unitarios en `lib/bi/__tests__/bi-engine.test.ts` (48/48 pasando) y build de producción Next.js (17 páginas).
+
+### 📊 Evidencia Empírica de Verificación
+- `npm test`: 48/48 tests pasando en 6 suites de prueba.
+- `next build`: 17/17 páginas compiladas sin errores.
+- PostgreSQL en ZBook: `\dt bi_*` lista las 8 tablas en `baserow_lite_db`.
+- Funciones seguras validadas en ZBook:
+  - `safe_numeric('12345.67')` ➔ `12345.67`; `safe_numeric('invalido_$$$')` ➔ `NULL`.
+  - `safe_timestamptz('2026-11-17T12:00:00Z')` ➔ `2026-11-17 12:00:00+00`; `safe_timestamptz('corrupto')` ➔ `NULL`.
+
+---
+
 ## 🗓️ [2026-11-17] - Fase 0: Hardening Docker, shm_size, dependencias BI y seguridad Auth/RBAC
 
 ### 🎯 Intención
