@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { 
   Database, LayoutDashboard, Plus, Search, ChevronDown, MoreHorizontal, 
   Settings, Users, Trash2, Clock, FileText, ChevronRight, Check,
-  Folder, ShieldCheck
+  Folder, ShieldCheck, BarChart3
 } from 'lucide-react';
 
 export interface BaseItem {
@@ -38,6 +38,7 @@ interface WorkspacesDashboardProps {
   onCreateWorkspace: () => void;
   onCreateDatabase: (workspaceId: string) => void;
   onOpenTrash: () => void;
+  onOpenAnalytics?: () => void;
   user: {
     name: string;
     email: string;
@@ -54,6 +55,7 @@ export const WorkspacesDashboard: React.FC<WorkspacesDashboardProps> = ({
   onCreateWorkspace,
   onCreateDatabase,
   onOpenTrash,
+  onOpenAnalytics,
   user,
   onOpenUserMenu,
 }) => {
@@ -127,6 +129,22 @@ export const WorkspacesDashboard: React.FC<WorkspacesDashboardProps> = ({
                 {workspaces.length}
               </span>
             </button>
+
+            {onOpenAnalytics && (
+              <button
+                type="button"
+                onClick={onOpenAnalytics}
+                className="w-full flex items-center justify-between px-3 py-2 rounded-lg font-medium transition-colors text-left text-blue-700 bg-blue-50/70 hover:bg-blue-100/70 font-semibold border border-blue-200/50"
+              >
+                <div className="flex items-center gap-2.5">
+                  <BarChart3 className="w-4 h-4 text-blue-600" />
+                  <span>Dashboards BI</span>
+                </div>
+                <span className="text-[9px] font-bold px-1.5 py-0.5 bg-blue-600 text-white rounded">
+                  NUEVO
+                </span>
+              </button>
+            )}
 
             <button
               type="button"

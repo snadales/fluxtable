@@ -16,6 +16,7 @@ import { AdminToolsModal } from '@/components/modals/admin-tools-modal';
 import { MySettingsModal } from '@/components/modals/my-settings-modal';
 import { TableWebhooksModal } from '@/components/modals/table-webhooks-modal';
 import { TableSnapshotsModal } from '@/components/modals/table-snapshots-modal';
+import { BiAnalyticsPage } from '@/components/bi/bi-analytics-page';
 import { 
   Database, Table as TableIcon, LayoutGrid, Kanban as KanbanIcon, 
   Calendar as CalendarIcon, FileText, Search, Download, Plus, Filter, ArrowUpDown, X, 
@@ -124,7 +125,7 @@ export default function HomePage() {
   const [showNewFieldModal, setShowNewFieldModal] = useState(false);
 
   // Navegación de Workspaces y Modales Globales
-  const [viewMode, setViewMode] = useState<'workspaces' | 'database'>('workspaces');
+  const [viewMode, setViewMode] = useState<'workspaces' | 'database' | 'analytics'>('workspaces');
   const [workspaces, setWorkspaces] = useState<WorkspaceGroup[]>([]);
   const [activeWorkspaceId, setActiveWorkspaceId] = useState<string | null>(null);
   const [showWorkspaceUserMenu, setShowWorkspaceUserMenu] = useState(false);
@@ -695,6 +696,7 @@ export default function HomePage() {
             loadTrash();
             setShowTrashModal(true);
           }}
+          onOpenAnalytics={() => setViewMode('analytics')}
           user={{
             name: user.name,
             email: user.email,
@@ -798,6 +800,42 @@ export default function HomePage() {
     );
   }
 
+  // Si estamos en modo BI & Analytics
+  if (viewMode === 'analytics') {
+    return (
+      <div className="flex flex-col h-screen overflow-hidden bg-slate-100">
+        <header className="h-11 bg-white border-b border-slate-200 px-4 flex items-center justify-between shrink-0 shadow-xs">
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setViewMode('workspaces')}
+              className="flex items-center gap-1.5 px-2.5 py-1 text-xs text-slate-600 hover:text-blue-600 bg-slate-100 hover:bg-slate-200/60 rounded-md font-medium transition-colors"
+            >
+              <LayoutDashboard className="w-3.5 h-3.5" />
+              <span>Workspaces</span>
+            </button>
+            <span className="text-slate-300">/</span>
+            <div className="flex items-center gap-2 text-xs font-bold text-slate-800">
+              <BarChart2 className="w-4 h-4 text-blue-600" />
+              <span>BI & Analytics Engine</span>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setViewMode('database')}
+              className="flex items-center gap-1.5 px-2.5 py-1 text-xs text-slate-600 hover:text-blue-600 bg-slate-100 hover:bg-slate-200/60 rounded-md font-medium transition-colors"
+            >
+              <TableIcon className="w-3.5 h-3.5" />
+              <span>Ver Tablas de Datos</span>
+            </button>
+          </div>
+        </header>
+        <BiAnalyticsPage />
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col h-screen overflow-hidden bg-slate-50 dark:bg-slate-950">
       {/* Top Bar / App Navigation */}
@@ -862,6 +900,17 @@ export default function HomePage() {
           >
             <LayoutDashboard className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">Workspaces</span>
+          </button>
+
+          {/* Botón rápido a BI & Analytics */}
+          <button
+            type="button"
+            onClick={() => setViewMode('analytics')}
+            className="flex items-center gap-1.5 px-2.5 py-1 text-xs text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors font-semibold border border-blue-200/60"
+            title="Ir al motor de BI & Dashboards"
+          >
+            <BarChart2 className="w-3.5 h-3.5 text-blue-600" />
+            <span className="hidden sm:inline">Dashboards BI</span>
           </button>
 
           {/* Indicador de Sincronización */}

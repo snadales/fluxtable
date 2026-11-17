@@ -2,6 +2,55 @@
 
 ---
 
+## 🗓️ [2026-11-17] - Fase 3: UI de Dashboards, Pestañas, Visualizador ECharts & Cross-Filtering interactivo
+
+### 🎯 Intención
+Construir la experiencia de usuario analítica completa en BaserowLite (`EPIC-BI-01` / Issue #18): implementar el árbol de navegación lateral de carpetas y dashboards (`FolderTreeSidebar`), el contenedor principal de dashboard (`DashboardView`), el visualizador multi-tipo con Apache ECharts (`BiCardRenderer`), el selector de rangos de fecha (`TimeRangePicker`), modales de creación (`NewBiDashboardModal`, `NewBiCardModal`), endpoints REST de metadatos (`/api/bi/dashboards`, `/api/bi/folders`, `/api/bi/cards`), y el gestor de estado reactivo global con Zustand (`useDashboardStore`) que coordina el Cross-Filtering dimensional en caliente.
+
+### 📍 Estado Actual
+- `lib/bi/state/dashboard-store.ts`: Store Zustand reactivo con soporte para `crossFilters` (toggle y clear), `activeTimeRange`, `activeTabId`, `isKioskMode`, `autoRefreshSeconds` y búsqueda de reportes.
+- `components/bi/bi-card-renderer.tsx`: Renderizador reactivo de tarjetas:
+  - `kpi`: Métrica principal grande con formato numérico/moneda, variación porcentual MoM/YoY (`ArrowUpRight`/`ArrowDownRight`) y semáforo de umbrales.
+  - `line`: Gráfico interactivo con Apache ECharts, curvas suaves, tooltip formateado y brush slider temporal.
+  - `bar` / `horizontal_bar`: Gráficos de barra con paleta corporativa y evento `click` que dispara `setCrossFilter` instantáneamente sobre el dashboard.
+  - `table`: Tabla de datos densa y scrolleable con cabeceras fijas.
+  - `markdown`: Banner explicativo o alertas contextuales.
+- `components/bi/time-range-picker.tsx`: Selector de rango temporal con presets directos (`Hoy`, `Últimos 7 días`, `Últimos 30 días`, `Este mes`, `Mes anterior`, `Este año (YTD)`) e intervalo personalizado.
+- `components/bi/folder-tree-sidebar.tsx`: Árbol jerárquico colapsable con insignia de código (`D001`, `D002`), buscador rápido y favoritos.
+- `components/bi/dashboard-view.tsx`: Contenedor principal con selector de pestañas, badges de filtros cruzados activos, temporizador de auto-refresco, modo Kiosko pantalla completa y exportación a PDF vía `window.print()`.
+- Endpoints REST desarrollados:
+  - `GET /api/bi/folders`, `POST /api/bi/folders`
+  - `GET /api/bi/dashboards`, `POST /api/bi/dashboards`, `GET /api/bi/dashboards/[id]`, `PATCH`, `DELETE`
+  - `POST /api/bi/cards`, `PATCH /api/bi/cards/[id]`, `DELETE`
+- Integración en `app/page.tsx`: Nuevo modo `'analytics'` accesible directamente desde la barra superior y desde el panel de espacios de trabajo (`WorkspacesDashboard`).
+- Pruebas automatizadas: 56 tests pasando en 8 suites (100% éxito) y compilación `next build` limpia (21 páginas).
+
+### 🏁 Estado Deseado
+- Plataforma de BI 100% interactiva en BaserowLite (`tables.yarken.cl`), preparada para la Fase 4 (Issue #5: Automatizaciones, Umbrales de Semáforo y Alertas hacia n8n/Telegram).
+
+### ⚠️ Problemas Encontrados y Soluciones
+- *Problema:* Error de compilación en Next.js `Type error: 'echarts' has no exported member named 'EChartsOption'`.
+  *Solución:* Se tipó la configuración del gráfico de ECharts de forma flexible evitando la discrepancia de exportación de tipos entre `@types/echarts` y `echarts@6`.
+- *Problema:* El renderizado de múltiples gráficos ECharts en el mismo dashboard podía provocar fugas de memoria o colisiones de instancias.
+  *Solución:* Uso de `useRef` dedicado por tarjeta con listeners de resize en window y limpieza estricta con `chartInstance.current.dispose()` en el unmount.
+
+### 🔄 Iteraciones e Historial de Ejecución
+1. **Iteración 34**: Creación del issue `#18` en `snadales/BaserowLite` para la Fase 3 de `EPIC-BI-01`.
+2. **Iteración 35**: Desarrollo de endpoints REST para carpetas, dashboards y tarjetas (`/api/bi/folders`, `/api/bi/dashboards`, `/api/bi/cards`).
+3. **Iteración 36**: Implementación de `lib/bi/state/dashboard-store.ts` con Zustand.
+4. **Iteración 37**: Creación de `components/bi/time-range-picker.tsx` y `components/bi/folder-tree-sidebar.tsx`.
+5. **Iteración 38**: Creación de `components/bi/bi-card-renderer.tsx` con soporte para KPI, ECharts y tablas.
+6. **Iteración 39**: Creación de `components/bi/dashboard-view.tsx` y modales `NewBiDashboardModal` y `NewBiCardModal`.
+7. **Iteración 40**: Integración de la vista `BiAnalyticsPage` y botón de navegación en `app/page.tsx` y `WorkspacesDashboard`.
+8. **Iteración 41**: Creación de tests unitarios en `lib/bi/__tests__/bi-store.test.ts` (56/56 pasando) y build de producción Next.js (21 páginas).
+
+### 📊 Evidencia Empírica de Verificación
+- `npm test`: 56/56 tests pasando en 8 suites de prueba.
+- `next build`: 21/21 páginas compiladas sin errores.
+- Store Zustand verificado: Manipulación atómica de filtros cruzados y alternancia de modo kiosko.
+
+---
+
 ## 🗓️ [2026-11-17] - Fase 2: Motor Analítico SQL con Time Intelligence, Percentiles p50/p90, Cross-Filtering y Caché LRU
 
 ### 🎯 Intención
