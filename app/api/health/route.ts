@@ -4,7 +4,7 @@ export async function GET() {
   return NextResponse.json(
     {
       status: 'ok',
-      service: 'BaserowLite',
+      service: 'FluxTable',
       version: '1.0.0',
       timestamp: new Date().toISOString(),
     },
