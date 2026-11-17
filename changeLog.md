@@ -33,3 +33,9 @@ Inicializar el repositorio independiente `07_BaserowLite` y elaborar el diseño 
 7. **Iteración 7**: Auditoría técnica forense (puntos ciegos de PostgreSQL TOAST, N+1 queries, auto-merge de celda, códigos de error en fórmulas y stack Undo/Redo) documentada en `docs/auditReport.md`.
 8. **Iteración 8**: Análisis forense de migración y paridad 100% sobre los datos reales de ZBook (12.424 filas, 3.5 MB, scripts de Navarino/Postulaciones/Voz) documentado en `docs/migrationCheck.md`.
 9. **Iteración 9**: Especificación completa de Usuarios, Login con Google OAuth nativo (sin licencias Enterprise), logs estructurados JSON con Pino y trazabilidad forense documentada en `docs/authAndObservability.md`.
+10. **Iteración 10**: Implementación y verificación de la suite de producción:
+    - Login visual con botón de Google SSO y formulario local (`app/login/page.tsx`).
+    - Endpoints de adjuntos con subida/descarga segura SHA-256 (`/api/v1/attachments/upload` y `/api/v1/attachments/[id]`).
+    - Popover de filtros dinámicos multinivel (`components/grid/filter-popover.tsx`).
+    - Script de migración masiva desde Baserow oficial (`scripts/migrate_from_baserow.py`).
+    - 39 pruebas automatizadas en verde y build de producción Next.js 15 compilando exitosamente.
