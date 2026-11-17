@@ -77,3 +77,7 @@ Inicializar el repositorio independiente `07_BaserowLite` y elaborar el diseño 
     - Endpoints REST implementados: `GET|PATCH /api/database/tables/[tableId]`, `GET /api/v1/auth/me` (detección Zero Trust) y `GET|POST /api/v1/tokens`.
     - Modales interactivos implementados: `BaseSettingsModal` (personalización completa de logos, iconos, paleta de colores, categorías del homelab y tags) y `ApiTokensModal` (generación de tokens para scripts).
     - Header y barra de pestañas enriquecidos con chip de base interactivo, avatar de usuario `SN` con menú de sesión y pestañas temáticas con etiquetas.
+18. **Iteración 18**: Implementación de Endpoints Masivos (`Batch`) y Gestión Dinámica de Columnas (`Fields`):
+    - **Operaciones en Lote (`/batch`)**: `POST|PATCH|DELETE /api/database/rows/table/[tableId]/batch` para inserción, modificación y eliminación masiva de registros en una sola llamada HTTP con soporte para `user_field_names=true`.
+    - **Gestión de Esquema por API (`/fields`)**: `GET|POST /api/database/fields/table/[tableId]` y `GET|PATCH|DELETE /api/database/fields/[fieldId]` para crear y configurar columnas dinámicamente desde scripts de Python o n8n.
+    - Compilación de producción Next.js 15 exitosa (12/12 rutas dinámicas y estáticas) y suite completa de pruebas en verde.
