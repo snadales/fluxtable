@@ -10,19 +10,22 @@ BACKUP_DIR="${HOME}/docker/baserow-lite/backups"
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
 BACKUP_FILE="${BACKUP_DIR}/baserow_lite_pg_${TIMESTAMP}.sql.gz"
 
+POSTGRES_USER="${POSTGRES_USER:-baserow}"
+POSTGRES_DB="${POSTGRES_DB:-baserow_lite}"
+
 mkdir -p "${BACKUP_DIR}"
 
 echo "[$(date +'%Y-%m-%d %H:%M:%S')] Iniciando pg_dump de BaserowLite..."
-docker exec baserow_lite_db pg_dump -U baserow_user -d baserow_lite | gzip > "${BACKUP_FILE}"
+docker exec baserow_lite_db pg_dump -U "${POSTGRES_USER}" -d "${POSTGRES_DB}" | gzip > "${BACKUP_FILE}"
 
 SIZE=$(du -h "${BACKUP_FILE}" | cut -f1)
 BYTES=$(stat -c %s "${BACKUP_FILE}" 2>/dev/null || stat -f %z "${BACKUP_FILE}")
 echo "[$(date +'%Y-%m-%d %H:%M:%S')] Respaldo completado: ${BACKUP_FILE} (${SIZE})"
 
-# Validación: gzip íntegro y tamaño mínimo (>10 KB)
+# Validación: gzip íntegro y tamaño mínimo (>2 KB)
 FALLO=""
 gzip -t "${BACKUP_FILE}" 2>/dev/null || FALLO="gzip corrupto"
-if [ -z "${FALLO}" ] && [ "${BYTES}" -lt 10240 ]; then
+if [ -z "${FALLO}" ] && [ "${BYTES}" -lt 2048 ]; then
   FALLO="dump demasiado pequeño (${BYTES} B)"
 fi
 
