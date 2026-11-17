@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db';
-import { apiTokens, users } from '@/db/schema';
-import { eq } from 'drizzle-orm';
+import { apiTokens, users, sessions } from '@/db/schema';
+import { eq, gt } from 'drizzle-orm';
 import crypto from 'crypto';
 
 export interface AuthContext {
@@ -18,10 +18,43 @@ export interface AuthContext {
 }
 
 /**
- * Valida autenticación por API Token (SHA-256) o Cloudflare Zero Trust
+ * Valida autenticación por Cookie de Sesión, API Token (SHA-256) o Cloudflare Zero Trust
  */
 export async function authenticateRequest(req: NextRequest): Promise<AuthContext> {
-  // 1. Revisar Authorization Header (Token <key> o Bearer <key>)
+  // 1. Revisar Cookie de Sesión 'fluxtable_session'
+  const sessionCookie = req.cookies.get('fluxtable_session')?.value;
+  if (sessionCookie) {
+    try {
+      const activeSession = await db.query.sessions.findFirst({
+        where: eq(sessions.sessionToken, sessionCookie),
+      });
+
+      if (activeSession && new Date(activeSession.expiresAt) > new Date()) {
+        const foundUser = await db.query.users.findFirst({
+          where: eq(users.id, activeSession.userId),
+        });
+
+        if (foundUser && foundUser.isActive) {
+          return {
+            authenticated: true,
+            user: {
+              id: foundUser.id,
+              email: foundUser.email,
+              name: foundUser.name || foundUser.email.split('@')[0],
+              role: foundUser.role,
+              isApiToken: false,
+            },
+          };
+        }
+      }
+    } catch (err) {
+      if (process.env.NODE_ENV !== 'test') {
+        console.warn('[auth-guard] Error verificando cookie de sesión:', err);
+      }
+    }
+  }
+
+  // 2. Revisar Authorization Header (Token <key> o Bearer <key>)
   const authHeader = req.headers.get('authorization');
   if (authHeader) {
     const parts = authHeader.split(' ');
@@ -60,7 +93,7 @@ export async function authenticateRequest(req: NextRequest): Promise<AuthContext
     }
   }
 
-  // 2. Revisar cabecera Cloudflare Access
+  // 3. Revisar cabecera Cloudflare Access
   const cfEmail = req.headers.get('cf-access-authenticated-user-email');
   if (cfEmail) {
     try {
@@ -105,7 +138,7 @@ export async function authenticateRequest(req: NextRequest): Promise<AuthContext
     }
   }
 
-  // 3. En entorno de desarrollo explícito (nunca en test ni production), permitir bypass local
+  // 4. En entorno de desarrollo explícito (nunca en test ni production), permitir bypass local
   const isDev = process.env.NODE_ENV === 'development';
   const isBypassAllowed = process.env.ALLOW_DEV_AUTH_BYPASS === 'true';
   if (isDev && isBypassAllowed) {
@@ -123,7 +156,7 @@ export async function authenticateRequest(req: NextRequest): Promise<AuthContext
 
   return {
     authenticated: false,
-    error: 'UNAUTHORIZED: Credenciales de acceso requeridas (API Token o Cloudflare Access)',
+    error: 'UNAUTHORIZED: Credenciales de acceso requeridas (Sesión, API Token o Cloudflare Access)',
   };
 }
 
@@ -145,4 +178,24 @@ export async function requireAuth(req: NextRequest): Promise<
     };
   }
   return { authenticated: true, user: auth.user };
+}
+
+/**
+ * Funciones Criptográficas Seguras para Hash de Contraseñas (scrypt + salt)
+ */
+export function hashPassword(password: string): string {
+  const salt = crypto.randomBytes(16).toString('hex');
+  const derivedKey = crypto.scryptSync(password, salt, 64);
+  return `${salt}:${derivedKey.toString('hex')}`;
+}
+
+export function verifyPassword(password: string, combinedHash: string): boolean {
+  try {
+    const [salt, key] = combinedHash.split(':');
+    if (!salt || !key) return false;
+    const derivedKey = crypto.scryptSync(password, salt, 64);
+    return crypto.timingSafeEqual(Buffer.from(key, 'hex'), derivedKey);
+  } catch {
+    return false;
+  }
 }

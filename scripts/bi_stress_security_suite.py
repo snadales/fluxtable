@@ -14,6 +14,12 @@ import subprocess
 import statistics
 
 BASE_URL = "http://127.0.0.1:8097"
+if "--host" in sys.argv:
+    idx = sys.argv.index("--host")
+    if idx + 1 < len(sys.argv):
+        BASE_URL = sys.argv[idx + 1]
+elif len(sys.argv) > 1 and sys.argv[1].startswith("http"):
+    BASE_URL = sys.argv[1]
 VALID_AUTH = {"cf-access-authenticated-user-email": "snadales@gmail.com", "Content-Type": "application/json"}
 
 def make_request(path: str, headers: dict = None, body: dict = None, method: str = "POST"):

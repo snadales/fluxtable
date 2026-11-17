@@ -2,6 +2,59 @@
 
 ---
 
+## 🗓️ [2026-11-17] - Fase 1: Ciberseguridad Defensiva Integral y Hardening Anti-Vibe-Coding
+
+### 🎯 Intención
+Ejecutar un blindaje de ciberseguridad defensiva exhaustivo en FluxTable ([Issue #24](https://github.com/snadales/BaserowLite/issues/24)) para proteger la plataforma contra cualquier riesgo o vulnerabilidad introducida por código generado por IA (vibe-coding): forzar HTTPS y HSTS, inyectar cabeceras CSP/X-Frame-Options/X-Content-Type-Options estrictas, ocultar huella de tecnología (`X-Powered-By`), implementar limitador de tasa (Rate Limiting) en middleware, habilitar autenticación local y por sesión con cookies HTTP-Only/SameSite/Secure, blindar la carga de archivos contra ejecutables y path traversal mediante inspección binaria de Magic Bytes, y escanear el repositorio con Gitleaks para descartar secretos en el historial.
+
+### 📍 Estado Actual
+- **Cabeceras de Seguridad y HSTS**: Configurado en `next.config.mjs` con `Strict-Transport-Security: max-age=63072000`, CSP estricto (`default-src 'self'`), `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy`, y `poweredByHeader: false`.
+- **Middleware de Rate Limiting**: Implementado en `middleware.ts` con algoritmo de ventana deslizante por IP para prevenir ataques de fuerza bruta y saturación (`/api/auth/*` a 15 req/min, `/api/bi/query` a 600 req/min, `/api/v1/attachments/upload` a 30 req/min, general a 300 req/min) respondiendo `HTTP 429` con `Retry-After`.
+- **Autenticación y Sesiones Robustas**:
+  - `lib/auth/auth-guard.ts`: Soporte nativo para cookie `fluxtable_session` con validación en la tabla `sessions`, sumado a tokens API y Cloudflare Access.
+  - Funciones criptográficas `hashPassword` y `verifyPassword` con `crypto.scryptSync` y salt aleatorio de 16 bytes con tiempo constante `timingSafeEqual`.
+  - `app/api/auth/login/route.ts` y `app/api/auth/logout/route.ts`: Endpoints protegidos con validación Zod, emisión de tokens de sesión aleatorios de 32 bytes y fijación de cookies `httpOnly`, `secure`, `sameSite: 'lax'`, con caducidad a 7 días.
+  - `app/login/page.tsx`: Formulario conectado al endpoint `/api/auth/login` con feedback visual de errores.
+- **Blindaje en Carga de Archivos (`/api/v1/attachments/upload`)**:
+  - Requerimiento de autenticación `requireAuth` obligatorio.
+  - Límite de tamaño máximo estricto de 10 MB (`HTTP 413`).
+  - Bloqueo de extensiones ejecutables de alto riesgo (`.exe`, `.sh`, `.php`, `.py`, `.bat`, `.cmd`, `.html`, `.js`, etc.).
+  - Validación binaria de Magic Bytes para verificar firma real de PNG, JPEG, GIF, PDF, WEBP, ZIP y archivos de texto plano, previniendo suplantación de MIME type.
+- **Prevención de Path Traversal (`/api/v1/attachments/[id]`)**:
+  - Sanitización estricta de identificadores mediante `path.basename` y validación de confinamiento dentro de `LOCAL_STORAGE_PATH`.
+  - Inyección de cabecera `X-Content-Type-Options: nosniff`.
+- **Secret Scanning**:
+  - Ejecución de `gitleaks detect --source . -v`: 41 commits auditados con 0 secretos expuestos.
+  - Variables de entorno revisadas: cero claves privadas o contraseñas en prefijos `NEXT_PUBLIC_*`.
+
+### 🏁 Estado Deseado
+- Plataforma completamente blindada ante ataques automatizados, fuerza bruta, inyecciones, XSS, CSRF, path traversal y cargas maliciosas.
+
+### ⚠️ Problemas Encontrados y Soluciones
+- *Problema:* El endpoint de subida de archivos `/api/v1/attachments/upload` carecía de control de autenticación y se fiaba únicamente del `file.type` enviado por el navegador.
+  *Solución:* Se integró `requireAuth`, límite de 10 MB, lista negra de 26 extensiones y validador de Magic Bytes en binario.
+- *Problema:* El script de pruebas de estrés `scripts/bi_stress_security_suite.py` tenía codificada la IP `127.0.0.1:8097`, impidiendo su ejecución contra hosts remotos.
+  *Solución:* Se agregó soporte dinámico para el parámetro `--host` o URL de destino.
+
+### 🔄 Iteraciones e Historial de Ejecución
+1. **Iteración 76**: Creación de los issues #24 a #30 y redacción del Plan Maestro de Trabajo.
+2. **Iteración 77**: Configuración de cabeceras de seguridad CSP, HSTS y permisos en `next.config.mjs`.
+3. **Iteración 78**: Desarrollo de `middleware.ts` con control de Rate Limiting por IP y ruta.
+4. **Iteración 79**: Refactorización de `lib/auth/auth-guard.ts` con hashing scrypt y soporte de cookies de sesión.
+5. **Iteración 80**: Creación de `/api/auth/login` y `/api/auth/logout` con validación Zod y cookies HttpOnly.
+6. **Iteración 81**: Blindaje de subida de archivos y prevención de Path Traversal en `/api/v1/attachments/*`.
+7. **Iteración 82**: Auditoría con Gitleaks (0 secretos) y tests unitarios (59/59 pasando).
+8. **Iteración 83**: Despliegue en ZBook, compilación de contenedor y ejecución de la suite de pentest y concurrencia (100% aprobada).
+
+### 📊 Evidencia Empírica de Verificación
+- Pentest: 8/8 pruebas superadas (401 sin auth, 403 bloqueo DDL/DML, 200 sanitización SQLi).
+- Concurrencia: 100% éxito en ráfagas de 50, 100 y 200 peticiones concurrentes (261 req/s, p50 de 163ms).
+- Rate Limiting: Verificado activo bloqueando saturaciones con HTTP 429 y cabeceras `x-ratelimit-limit`.
+- Tests unitarios: 59/59 pasando en Vitest.
+- Gitleaks: 41 commits auditados, 0 leaks.
+
+---
+
 ## 🗓️ [2026-11-17] - Refactorización, Limpieza del Repositorio y Suite Completa de Manuales Maestros
 
 ### 🎯 Intención

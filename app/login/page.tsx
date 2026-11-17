@@ -10,18 +10,37 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
+  const [errorMessage, setErrorMessage] = useState('');
+
   const handleGoogleLogin = () => {
     // Redirección directa al endpoint de Google OAuth
     window.location.href = '/api/auth/google';
   };
 
-  const handleLocalLogin = (e: React.FormEvent) => {
+  const handleLocalLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    // Simulación de login local exitoso
-    setTimeout(() => {
+    setErrorMessage('');
+
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        setErrorMessage(data.message || 'Error al iniciar sesión');
+        setIsLoading(false);
+        return;
+      }
+
       window.location.href = '/';
-    }, 600);
+    } catch {
+      setErrorMessage('Error de conexión con el servidor');
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -83,6 +102,11 @@ export default function LoginPage() {
 
           {/* Formulario Local */}
           <form onSubmit={handleLocalLogin} className="space-y-3 text-xs">
+            {errorMessage && (
+              <div className="p-2.5 rounded-xl bg-error-tint text-error border border-error/20 text-xs font-medium">
+                {errorMessage}
+              </div>
+            )}
             <div>
               <label className="block text-slate-700 dark:text-slate-300 font-medium mb-1">
                 Correo Electrónico

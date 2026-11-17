@@ -47,4 +47,17 @@ describe('Auth Guard & RBAC', () => {
     // Restore
     process.env.ALLOWED_EMAILS = originalAllowed;
   });
+
+  it('should securely hash and verify passwords using scrypt', async () => {
+    const { hashPassword, verifyPassword } = await import('../auth-guard');
+    const pwd = 'SuperSecretPassword2026!';
+    const hash = hashPassword(pwd);
+
+    expect(hash).toContain(':');
+    expect(hash.length).toBeGreaterThan(64);
+
+    expect(verifyPassword(pwd, hash)).toBe(true);
+    expect(verifyPassword('WrongPassword', hash)).toBe(false);
+    expect(verifyPassword(pwd, 'invalid:hash')).toBe(false);
+  });
 });

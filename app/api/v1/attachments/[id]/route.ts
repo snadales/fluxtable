@@ -11,16 +11,25 @@ export async function GET(
   try {
     const { id } = await params;
 
+    // Validación Anti-Path-Traversal estricta
+    const cleanId = path.basename(id);
+    if (!cleanId || cleanId !== id || cleanId.includes('..') || cleanId.includes('/') || cleanId.includes('\\')) {
+      return NextResponse.json(
+        { error: 'INVALID_IDENTIFIER', message: 'Identificador de archivo no válido' },
+        { status: 400 }
+      );
+    }
+
     let storagePath = '';
     let filename = 'file';
     let mimeType = 'application/octet-stream';
 
-    // 1. Buscar en BD si es UUID
-    if (id.includes('-') && id.length === 36) {
+    // 1. Buscar en BD si es formato UUID
+    if (cleanId.includes('-') && cleanId.length === 36) {
       const [attachment] = await db
         .select()
         .from(schema.recordAttachments)
-        .where(eq(schema.recordAttachments.id, id as any));
+        .where(eq(schema.recordAttachments.id, cleanId as any));
 
       if (attachment) {
         storagePath = attachment.storagePath;
@@ -29,11 +38,21 @@ export async function GET(
       }
     }
 
-    // 2. Si no es UUID o no se encontró en BD, buscar directamente por nombre en disco
+    // 2. Si no es UUID o no se encontró en BD, resolver en directorio base de uploads
     if (!storagePath) {
       const basePath = process.env.LOCAL_STORAGE_PATH || path.join(process.cwd(), 'data', 'uploads');
-      storagePath = path.join(basePath, id);
-      filename = id;
+      const resolvedPath = path.resolve(basePath, cleanId);
+
+      // Verificar que la ruta resuelta permanezca estrictamente dentro del basePath
+      if (!resolvedPath.startsWith(path.resolve(basePath))) {
+        return NextResponse.json(
+          { error: 'ACCESS_DENIED', message: 'Acceso no permitido fuera del directorio de almacenamiento' },
+          { status: 403 }
+        );
+      }
+
+      storagePath = resolvedPath;
+      filename = cleanId;
     }
 
     const fileBuffer = await defaultStorage.read(storagePath);
@@ -44,12 +63,19 @@ export async function GET(
         'Content-Type': mimeType,
         'Content-Disposition': `inline; filename="${encodeURIComponent(filename)}"`,
         'Cache-Control': 'public, max-age=86400, immutable',
+        'X-Content-Type-Options': 'nosniff',
       },
     });
   } catch (err: any) {
+    if (err.code === 'ENOENT') {
+      return NextResponse.json(
+        { error: 'FILE_NOT_FOUND', message: 'El archivo solicitado no existe' },
+        { status: 404 }
+      );
+    }
     return NextResponse.json(
-      { error: 'FILE_NOT_FOUND', message: err.message },
-      { status: 404 }
+      { error: 'RETRIEVAL_FAILED', message: err.message || 'Error al obtener el archivo' },
+      { status: 500 }
     );
   }
 }
