@@ -67,6 +67,7 @@ export const tables = pgTable('tables', {
   id: uuid('id').defaultRandom().primaryKey(),
   baseId: uuid('base_id').references(() => bases.id, { onDelete: 'cascade' }).notNull(),
   name: text('name').notNull(),
+  legacyId: integer('legacy_id').unique(),
   primaryFieldId: uuid('primary_field_id'),
   order: integer('order').default(0).notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),

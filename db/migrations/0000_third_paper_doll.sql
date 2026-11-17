@@ -105,11 +105,13 @@ CREATE TABLE IF NOT EXISTS "tables" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"base_id" uuid NOT NULL,
 	"name" text NOT NULL,
+	"legacy_id" integer,
 	"primary_field_id" uuid,
 	"order" integer DEFAULT 0 NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
-	"deleted_at" timestamp with time zone
+	"deleted_at" timestamp with time zone,
+	CONSTRAINT "tables_legacy_id_unique" UNIQUE("legacy_id")
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "users" (

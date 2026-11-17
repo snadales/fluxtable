@@ -1,13 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db, schema } from '@/db';
 import { eq, and, isNull } from 'drizzle-orm';
+import { resolveTableId } from '@/lib/table-resolver';
 
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ tableId: string; rowId: string }> }
 ) {
   try {
-    const { tableId, rowId } = await params;
+    const { tableId: rawTableId, rowId } = await params;
+    const tableId = await resolveTableId(rawTableId);
+    if (!tableId) {
+      return NextResponse.json(
+        { error: 'TABLE_NOT_FOUND', message: `No se encontró la tabla '${rawTableId}'` },
+        { status: 404 }
+      );
+    }
     const searchParams = req.nextUrl.searchParams;
     const userFieldNames = searchParams.get('user_field_names') === 'true';
 
@@ -46,7 +54,14 @@ export async function PATCH(
   { params }: { params: Promise<{ tableId: string; rowId: string }> }
 ) {
   try {
-    const { tableId, rowId } = await params;
+    const { tableId: rawTableId, rowId } = await params;
+    const tableId = await resolveTableId(rawTableId);
+    if (!tableId) {
+      return NextResponse.json(
+        { error: 'TABLE_NOT_FOUND', message: `No se encontró la tabla '${rawTableId}'` },
+        { status: 404 }
+      );
+    }
     const searchParams = req.nextUrl.searchParams;
     const userFieldNames = searchParams.get('user_field_names') === 'true';
     const body = await req.json();
