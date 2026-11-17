@@ -2,6 +2,50 @@
 
 ---
 
+## 🗓️ [2026-11-17] - Fase 10: Sistema de Pestañas Multi-Documento Unificado (Workspaces, Tablas, Dashboards y Catálogos Abiertos en Simultáneo) (Issue #33)
+
+### 🎯 Intención
+Eliminar la navegación excluyente por sustitución de pantalla completa ([Issue #33](https://github.com/snadales/BaserowLite/issues/33)) que forzaba al usuario a abandonar el contexto de su Espacio de Trabajo al abrir un dashboard o una tabla. Implementar una barra de pestañas multi-documento (`DocumentTabBar`) persistente en la cabecera para que el usuario pueda tener abiertas simultáneamente múltiples tablas (`T865`, `T026`), dashboards (`D001`, `D003`) y catálogos de negocio (`📁 Operaciones · Flujos n8n`), conmutando entre ellos con un solo clic o cerrándolos según lo requiera.
+
+### 📍 Estado Actual
+- **Barra de Pestañas Multi-Documento (`components/navigation/document-tab-bar.tsx`)**:
+  - Pestaña persistente fijada de inicio: `🏢 Espacios de Trabajo` (`type: 'workspaces'`, inamovible / no cerrable).
+  - Pestañas dinámicas para Tablas (`type: 'table'`, icono azul `TableIcon`, código `Txxx`, nombre de tabla y botón `×`).
+  - Pestañas dinámicas para Dashboards (`type: 'dashboard'`, icono rosa `BarChart2`, código `Dxxx`, nombre de panel y botón `×`).
+  - Pestañas dinámicas para Catálogos de Módulo (`type: 'catalog'`, icono ámbar `Folder`, nombre de módulo y botón `×`).
+  - Estilo visual de alta precisión: pestaña activa con fondo blanco/slate-800, tipografía semi-bold, borde superior azul cobalto `#1D5BD8`, y pestaña inactiva con micro-hover sutil.
+- **Unificación de Arquitectura en `app/page.tsx`**:
+  - Reemplazo de los tres `if (viewMode === ...) return (...)` excluyentes por un contenedor raíz único con `DocumentTabBar` en la cima y un área dinámica de documento debajo.
+  - Modales globales (Papelera, Usuarios, Tokens, Admin, Configuración, Comentarios y Auditoría) centralizados y accesibles desde cualquier pestaña.
+  - Manejadores de navegación integrados:
+    - `openTableTab(tableId, tableName)`: Busca si la tabla ya está abierta para enfocarla; si no, agrega la nueva pestaña y carga sus datos de inmediato.
+    - `openDashboardTab(dashId, code, name)`: Enfoca o crea la pestaña del dashboard seleccionado en el store analítico.
+    - `openCatalogTab(base, defaultTab)`: Enfoca o crea la pestaña del catálogo de negocio con su subcarpeta seleccionada.
+    - `handleCloseTab(tabId)`: Cierra la pestaña y, si era la activa, conmuta suavemente a la pestaña adyacente o al inicio de Espacios de Trabajo.
+- **Trazabilidad y Sincronización en Sidebar & Grid**:
+  - Al hacer clic en un dashboard, tabla o subcarpeta desde la cuadrícula de Workspaces o desde `AppSidebar`, se abre como pestaña sin perder el estado previo.
+
+### 🏁 Estado Deseado
+- Una experiencia fluida y moderna tipo IDE/OS de datos donde el usuario gestiona su sesión de trabajo con múltiples vistas abiertas a la vez, alternando instantáneamente entre edición de registros, inspección de KPIs ejecutivos y administración de espacios de trabajo.
+
+### ⚠️ Problemas Encontrados y Soluciones
+- *Problema:* El diseño anterior usaba retornos condicionales tempranos que destruían el estado y desmontaban el árbol de componentes al navegar a un dashboard.
+  *Solución:* Se unificó el layout en un contenedor maestro con `DocumentTabBar` global, manteniendo el montaje reactivo de la vista activa según la pestaña seleccionada.
+
+### 🔄 Iteraciones e Historial de Ejecución
+1. **Iteración 129**: Apertura de GitHub Issue #33 para el sistema de pestañas multi-documento.
+2. **Iteración 130**: Creación del componente `components/navigation/document-tab-bar.tsx`.
+3. **Iteración 131**: Refactorización de `app/page.tsx` con store de pestañas abiertas y handlers `openTableTab`, `openDashboardTab`, `openCatalogTab`, `handleCloseTab`.
+4. **Iteración 132**: Ejecución de suite de pruebas unitarias (`vitest` 64/64 aprobadas) y compilación limpia (`next build` 27/27 páginas).
+5. **Iteración 133**: Despliegue en contenedor Docker en ZBook (`tables.yarken.cl`).
+
+### 📊 Evidencia Empírica de Verificación
+- Pruebas Unitarias: 11 suites y 64 pruebas ejecutadas y aprobadas (`vitest run`).
+- Next.js Build: 27/27 páginas compiladas sin errores de tipo ni de sintaxis.
+- Despliegue en Bastión ZBook: Endpoint `http://localhost:8097/api/health` respondiendo `{"status":"ok","service":"FluxTable"}` con contenedor saludable.
+
+---
+
 ## 🗓️ [2026-11-17] - Fase 9: Framework Metabase Yarken - Subcarpetas Canónicas de Negocio (01 Indicadores, 02 Gráficos, 03 Tablas, 05 Dashboards) y Gestor de KPIs (Issue #32)
 
 ### 🎯 Intención

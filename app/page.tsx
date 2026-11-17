@@ -21,6 +21,7 @@ import { useDashboardStore } from '@/lib/bi/state/dashboard-store';
 import { FluxTableLogo } from '@/components/brand/yarken-logo';
 import { AppSidebar } from '@/components/navigation/app-sidebar';
 import { AssetCatalogView } from '@/components/assets/asset-catalog-view';
+import { DocumentTabBar, DocumentTab } from '@/components/navigation/document-tab-bar';
 import { CommentsDrawer } from '@/components/comments/comments-drawer';
 import { AuditLogDrawer } from '@/components/audit/audit-log-drawer';
 import { 
@@ -158,6 +159,26 @@ export default function HomePage() {
     base: any;
     defaultTab?: 'indicators' | 'charts' | 'tables' | 'dashboards';
   } | null>(null);
+
+  // Sistema de Pestañas Multi-Documento (Issue #33)
+  const [openTabs, setOpenTabs] = useState<DocumentTab[]>([
+    {
+      id: 'workspaces',
+      title: 'Espacios de Trabajo',
+      type: 'workspaces',
+      closable: false,
+    },
+    {
+      id: 'table-865',
+      title: 'Lotes de Importación',
+      code: 'T865',
+      type: 'table',
+      closable: true,
+      params: { tableId: '865' },
+    },
+  ]);
+  const [activeTabId, setActiveTabId] = useState<string>('workspaces');
+
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [workspaces, setWorkspaces] = useState<WorkspaceGroup[]>([]);
   const [activeWorkspaceId, setActiveWorkspaceId] = useState<string | null>(null);
@@ -327,7 +348,8 @@ export default function HomePage() {
           const firstTbl = tList[0];
           const tableIdentifier = firstTbl.legacyId ? String(firstTbl.legacyId) : firstTbl.id;
           setCurrentTableId(tableIdentifier);
-          await handleSwitchTable(tableIdentifier);
+          await openTableTab(tableIdentifier, firstTbl.name);
+          return;
         } else {
           await loadMetadata(baseId);
           setRows([]);
@@ -389,6 +411,145 @@ export default function HomePage() {
       loadData(tableIdentifier),
     ]);
   };
+
+  // Selección y Conmutación de Pestañas (Issue #33)
+  const handleSelectTab = useCallback(async (tabId: string) => {
+    setActiveTabId(tabId);
+    const targetTab = openTabs.find((t) => t.id === tabId);
+    if (!targetTab) return;
+
+    if (targetTab.type === 'workspaces') {
+      setViewMode('workspaces');
+    } else if (targetTab.type === 'table') {
+      const targetTableId = targetTab.params?.tableId;
+      if (targetTableId && targetTableId !== currentTableId) {
+        await handleSwitchTable(targetTableId);
+      }
+      setViewMode('database');
+    } else if (targetTab.type === 'dashboard') {
+      const targetDashId = targetTab.params?.dashboardId;
+      if (targetDashId) {
+        useDashboardStore.getState().selectDashboard(targetDashId);
+      }
+      setViewMode('analytics');
+    } else if (targetTab.type === 'catalog') {
+      if (targetTab.params?.base) {
+        setCatalogContext({
+          base: targetTab.params.base,
+          defaultTab: targetTab.params.defaultCatalogTab || 'indicators',
+        });
+      }
+      setViewMode('catalog');
+    }
+  }, [openTabs, currentTableId]);
+
+  // Abrir tabla en pestaña
+  const openTableTab = useCallback(async (tableIdentifier: string, nameHint?: string) => {
+    const tabId = `table-${tableIdentifier}`;
+    const foundTable = tablesList.find(t => t.id === tableIdentifier || String(t.legacyId) === tableIdentifier);
+    const title = nameHint || foundTable?.name || metadata.tableName || `Tabla ${tableIdentifier}`;
+    const code = foundTable?.legacyId ? `T${String(foundTable.legacyId).padStart(3, '0')}` : undefined;
+
+    setOpenTabs((prev) => {
+      const exists = prev.some((t) => t.id === tabId);
+      if (exists) {
+        return prev;
+      }
+      return [
+        ...prev,
+        {
+          id: tabId,
+          title,
+          type: 'table',
+          code,
+          closable: true,
+          params: { tableId: tableIdentifier },
+        },
+      ];
+    });
+
+    setActiveTabId(tabId);
+    await handleSwitchTable(tableIdentifier);
+    setViewMode('database');
+  }, [tablesList, metadata.tableName]);
+
+  // Abrir dashboard en pestaña
+  const openDashboardTab = useCallback((dashboardId: string, codeHint?: string, nameHint?: string) => {
+    const tabId = `dashboard-${dashboardId}`;
+    const dashboards = useDashboardStore.getState().dashboards;
+    const foundDash = dashboards.find(d => d.id === dashboardId || d.code === dashboardId);
+    const title = nameHint || foundDash?.name || `Dashboard ${dashboardId}`;
+    const code = codeHint || foundDash?.code || 'D';
+
+    setOpenTabs((prev) => {
+      const exists = prev.some((t) => t.id === tabId);
+      if (exists) {
+        return prev;
+      }
+      return [
+        ...prev,
+        {
+          id: tabId,
+          title,
+          type: 'dashboard',
+          code,
+          closable: true,
+          params: { dashboardId },
+        },
+      ];
+    });
+
+    setActiveTabId(tabId);
+    useDashboardStore.getState().selectDashboard(dashboardId);
+    setViewMode('analytics');
+  }, []);
+
+  // Abrir catálogo en pestaña
+  const openCatalogTab = useCallback((base: any, defaultTab: 'indicators' | 'charts' | 'tables' | 'dashboards' = 'indicators') => {
+    const tabId = `catalog-${base.id || base.name}`;
+    const title = `📁 ${base.name}`;
+
+    setOpenTabs((prev) => {
+      const exists = prev.some((t) => t.id === tabId);
+      if (exists) {
+        return prev.map(t => t.id === tabId ? { ...t, params: { base, defaultCatalogTab: defaultTab } } : t);
+      }
+      return [
+        ...prev,
+        {
+          id: tabId,
+          title,
+          type: 'catalog',
+          closable: true,
+          params: { base, defaultCatalogTab: defaultTab },
+        },
+      ];
+    });
+
+    setActiveTabId(tabId);
+    setCatalogContext({ base, defaultTab });
+    setViewMode('catalog');
+  }, []);
+
+  // Cerrar pestaña
+  const handleCloseTab = useCallback((tabId: string) => {
+    setOpenTabs((prev) => {
+      const idx = prev.findIndex((t) => t.id === tabId);
+      if (idx === -1) return prev;
+      const nextTabs = prev.filter((t) => t.id !== tabId);
+
+      if (tabId === activeTabId) {
+        const nextActive = nextTabs[Math.max(0, idx - 1)] || nextTabs[0];
+        if (nextActive) {
+          setTimeout(() => {
+            handleSelectTab(nextActive.id);
+          }, 0);
+        }
+      }
+
+      return nextTabs;
+    });
+  }, [activeTabId, handleSelectTab]);
 
   // Crear nueva tabla
   const handleCreateTable = async (newTableData: {
@@ -717,299 +878,236 @@ export default function HomePage() {
     }
   };
 
-  // Si estamos en modo Workspaces Dashboard (Print 7)
-  if (viewMode === 'workspaces') {
-    return (
-      <div className="relative h-screen overflow-hidden">
-        <WorkspacesDashboard
-          workspaces={workspaces}
-          activeWorkspaceId={activeWorkspaceId}
-          onSelectWorkspace={setActiveWorkspaceId}
-          onOpenDatabase={handleOpenDatabase}
-          onOpenDashboard={(dashId) => {
-            useDashboardStore.getState().selectDashboard(dashId);
-            setViewMode('analytics');
-          }}
-          onOpenCatalog={(base, defaultTab) => {
-            setCatalogContext({ base, defaultTab });
-            setViewMode('catalog');
-          }}
-          onCreateWorkspace={handleCreateWorkspace}
-          onCreateDatabase={handleCreateDatabaseInWorkspace}
-          onOpenTrash={() => {
-            loadTrash();
-            setShowTrashModal(true);
-          }}
-          onOpenAnalytics={() => setViewMode('analytics')}
-          user={{
-            name: user.name,
-            email: user.email,
-            role: user.role,
-          }}
-          onOpenUserMenu={() => setShowWorkspaceUserMenu(true)}
-        />
+  return (
+    <div className="flex flex-col h-screen overflow-hidden bg-slate-50 dark:bg-slate-950">
+      {/* 0. Barra de Pestañas Global Multi-Documento (Issue #33) */}
+      <DocumentTabBar
+        tabs={openTabs}
+        activeTabId={activeTabId}
+        onSelectTab={handleSelectTab}
+        onCloseTab={handleCloseTab}
+      />
 
-        {/* Modal de Papelera */}
-        {showTrashModal && (
-          <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden flex flex-col max-h-[80vh]">
-              <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Trash2 className="w-4 h-4 text-slate-500" />
-                  <span className="font-bold text-sm text-slate-900 dark:text-white">Papelera de Reciclaje</span>
+      {/* 1. Vista según viewMode / Pestaña Activa */}
+      <div className="flex-1 overflow-hidden relative">
+        {viewMode === 'workspaces' && (
+          <WorkspacesDashboard
+            workspaces={workspaces}
+            activeWorkspaceId={activeWorkspaceId}
+            onSelectWorkspace={setActiveWorkspaceId}
+            onOpenDatabase={handleOpenDatabase}
+            onOpenDashboard={(dashId) => {
+              openDashboardTab(dashId);
+            }}
+            onOpenCatalog={(base, defaultTab) => {
+              openCatalogTab(base, defaultTab);
+            }}
+            onCreateWorkspace={handleCreateWorkspace}
+            onCreateDatabase={handleCreateDatabaseInWorkspace}
+            onOpenTrash={() => {
+              loadTrash();
+              setShowTrashModal(true);
+            }}
+            onOpenAnalytics={() => openDashboardTab('D001')}
+            user={{
+              name: user.name,
+              email: user.email,
+              role: user.role,
+            }}
+            onOpenUserMenu={() => setShowWorkspaceUserMenu(true)}
+          />
+        )}
+
+        {viewMode === 'analytics' && (
+          <div className="flex h-full overflow-hidden bg-slate-100 dark:bg-slate-900">
+            <AppSidebar
+              isOpen={isSidebarOpen}
+              onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
+              workspaces={workspaces}
+              currentWorkspaceId={activeWorkspaceId || workspaces[0]?.id}
+              currentBaseId={currentBaseId}
+              currentTableId={currentTableId}
+              tablesList={tablesList}
+              rowCount={rows.length}
+              onSelectWorkspace={(wsId) => {
+                setActiveWorkspaceId(wsId);
+                handleSelectTab('workspaces');
+              }}
+              onSelectBase={(baseId) => {
+                handleOpenDatabase(baseId);
+              }}
+              onSelectTable={(tableId) => {
+                openTableTab(tableId);
+              }}
+              onSelectDashboard={(dashId) => {
+                openDashboardTab(dashId);
+              }}
+              onOpenCatalog={(base, defaultTab) => {
+                openCatalogTab(base, defaultTab);
+              }}
+              onOpenWorkspaces={() => handleSelectTab('workspaces')}
+              onOpenAnalytics={() => openDashboardTab('D001')}
+              onOpenTrash={() => {
+                loadTrash();
+                setShowTrashModal(true);
+              }}
+              onOpenAudit={() => setShowAuditDrawer(true)}
+              onOpenMembers={() => setShowBaseSettingsModal(true)}
+              onOpenApiDocs={() => setShowApiTokensModal(true)}
+              onOpenSnapshots={() => setShowSnapshotsModal(true)}
+              onRenameBase={() => setShowBaseSettingsModal(true)}
+              onCreateTable={() => setShowNewTableModal(true)}
+              onCreateBase={() => setShowNewTableModal(true)}
+            />
+            <div className="flex-1 flex flex-col h-full overflow-hidden min-w-0">
+              <header className="h-11 bg-white border-b border-slate-200 px-4 flex items-center justify-between shrink-0 shadow-xs">
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => handleSelectTab('workspaces')}
+                    className="flex items-center gap-1.5 px-2.5 py-1 text-xs text-slate-600 hover:text-blue-600 bg-slate-100 hover:bg-slate-200/60 rounded-md font-medium transition-colors"
+                  >
+                    <LayoutDashboard className="w-3.5 h-3.5" />
+                    <span>Workspaces</span>
+                  </button>
+                  <span className="text-slate-300">/</span>
+                  <div className="flex items-center gap-2 text-xs font-bold text-slate-800">
+                    <BarChart2 className="w-4 h-4 text-[#1D5BD8]" />
+                    <span>Dashboards & Analítica</span>
+                  </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setShowTrashModal(false)}
-                  className="p-1 rounded text-slate-400 hover:text-slate-700"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-              <div className="p-4 overflow-y-auto text-xs space-y-2">
-                {trashItems.length === 0 ? (
-                  <p className="text-center text-slate-400 py-6">La papelera está vacía.</p>
-                ) : (
-                  trashItems.map((item) => (
-                    <div
-                      key={item.id}
-                      className="flex items-center justify-between p-2.5 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700"
-                    >
-                      <span className="font-mono text-slate-700 dark:text-slate-300 truncate">
-                        {item.name || item.id}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => handleRestoreRow(item.id)}
-                        className="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-[11px] font-medium"
-                      >
-                        Restaurar
-                      </button>
-                    </div>
-                  ))
-                )}
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (currentTableId) {
+                        openTableTab(currentTableId);
+                      }
+                    }}
+                    className="flex items-center gap-1.5 px-2.5 py-1 text-xs text-slate-600 hover:text-blue-600 bg-slate-100 hover:bg-slate-200/60 rounded-md font-medium transition-colors"
+                  >
+                    <TableIcon className="w-3.5 h-3.5" />
+                    <span>Ver Tabla Activa</span>
+                  </button>
+                </div>
+              </header>
+              <div className="flex-1 overflow-y-auto">
+                <BiAnalyticsPage 
+                  onNavigateToTable={async (targetTableIdentifier) => {
+                    await openTableTab(targetTableIdentifier);
+                  }}
+                />
               </div>
             </div>
           </div>
         )}
 
-        {/* Menu desplegable de Usuario y Workspaces (Print 1) */}
-        <WorkspaceUserMenu
-          isOpen={showWorkspaceUserMenu}
-          onClose={() => setShowWorkspaceUserMenu(false)}
-          workspaces={workspaces.map((w) => ({
-            id: w.id,
-            name: w.name,
-            slug: w.slug,
-            role: w.role,
-            membersCount: w.membersCount,
-            itemsCount: w.itemsCount,
-          }))}
-          activeWorkspaceId={activeWorkspaceId}
-          onSelectWorkspace={(id) => {
-            setActiveWorkspaceId(id);
-            setViewMode('workspaces');
-          }}
-          onOpenNewWorkspace={handleCreateWorkspace}
-          onOpenAdminTools={() => setShowAdminToolsModal(true)}
-          onOpenMySettings={() => setShowMySettingsModal(true)}
-          user={{
-            name: user.name,
-            email: user.email,
-            role: user.role,
-            isZeroTrust: user.isZeroTrust,
-          }}
-        />
-
-        {/* Modal Admin Tools (Prints 2, 4, 5) */}
-        <AdminToolsModal
-          isOpen={showAdminToolsModal}
-          onClose={() => setShowAdminToolsModal(false)}
-        />
-
-        {/* Modal My Settings (Print 8) */}
-        <MySettingsModal
-          isOpen={showMySettingsModal}
-          onClose={() => setShowMySettingsModal(false)}
-          user={{
-            name: user.name,
-            email: user.email,
-            role: user.role,
-          }}
-          onUpdateUser={async (newName) => {
-            setUser((prev) => ({ ...prev, name: newName }));
-          }}
-        />
-      </div>
-    );
-  }
-
-  // Si estamos en modo BI & Analytics
-  if (viewMode === 'analytics') {
-    return (
-      <div className="flex flex-col h-screen overflow-hidden bg-slate-100">
-        <header className="h-11 bg-white border-b border-slate-200 px-4 flex items-center justify-between shrink-0 shadow-xs">
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={() => setViewMode('workspaces')}
-              className="flex items-center gap-1.5 px-2.5 py-1 text-xs text-slate-600 hover:text-blue-600 bg-slate-100 hover:bg-slate-200/60 rounded-md font-medium transition-colors"
-            >
-              <LayoutDashboard className="w-3.5 h-3.5" />
-              <span>Workspaces</span>
-            </button>
-            <span className="text-slate-300">/</span>
-            <div className="flex items-center gap-2 text-xs font-bold text-slate-800">
-              <BarChart2 className="w-4 h-4 text-[#1D5BD8]" />
-              <span>Dashboards & Analítica</span>
+        {viewMode === 'catalog' && catalogContext && (
+          <div className="flex h-full overflow-hidden bg-slate-50 dark:bg-slate-950">
+            <AppSidebar
+              isOpen={isSidebarOpen}
+              onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
+              workspaces={workspaces}
+              currentWorkspaceId={activeWorkspaceId || workspaces[0]?.id}
+              currentBaseId={currentBaseId}
+              currentTableId={currentTableId}
+              tablesList={tablesList}
+              rowCount={rows.length}
+              onSelectWorkspace={(wsId) => {
+                setActiveWorkspaceId(wsId);
+                handleSelectTab('workspaces');
+              }}
+              onSelectBase={(baseId) => {
+                handleOpenDatabase(baseId);
+              }}
+              onSelectTable={(tableId) => {
+                openTableTab(tableId);
+              }}
+              onSelectDashboard={(dashId) => {
+                openDashboardTab(dashId);
+              }}
+              onOpenCatalog={(base, defaultTab) => {
+                openCatalogTab(base, defaultTab);
+              }}
+              onOpenWorkspaces={() => handleSelectTab('workspaces')}
+              onOpenAnalytics={() => openDashboardTab('D001')}
+              onOpenTrash={() => {
+                loadTrash();
+                setShowTrashModal(true);
+              }}
+              onOpenAudit={() => setShowAuditDrawer(true)}
+              onOpenMembers={() => setShowBaseSettingsModal(true)}
+              onOpenApiDocs={() => setShowApiTokensModal(true)}
+              onOpenSnapshots={() => setShowSnapshotsModal(true)}
+              onRenameBase={() => setShowBaseSettingsModal(true)}
+              onCreateTable={() => setShowNewTableModal(true)}
+              onCreateBase={() => setShowNewTableModal(true)}
+            />
+            <div className="flex-1 flex flex-col h-full overflow-hidden">
+              <AssetCatalogView
+                moduleName={catalogContext.base?.name || 'Módulo de Negocio'}
+                workspaceName={workspaces.find((w) => w.id === activeWorkspaceId)?.name || 'Negocios'}
+                activeTab={catalogContext.defaultTab || 'indicators'}
+                indicators={catalogContext.base?.subfolders?.indicators || []}
+                charts={catalogContext.base?.subfolders?.charts || []}
+                tables={catalogContext.base?.subfolders?.tables || []}
+                dashboards={catalogContext.base?.subfolders?.dashboards || []}
+                onOpenTable={async (tblIdentifier) => {
+                  await openTableTab(tblIdentifier);
+                }}
+                onOpenDashboard={(dashId) => {
+                  openDashboardTab(dashId);
+                }}
+                onBackToWorkspace={() => handleSelectTab('workspaces')}
+              />
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setViewMode('database')}
-              className="flex items-center gap-1.5 px-2.5 py-1 text-xs text-slate-600 hover:text-blue-600 bg-slate-100 hover:bg-slate-200/60 rounded-md font-medium transition-colors"
-            >
-              <TableIcon className="w-3.5 h-3.5" />
-              <span>Ver Tablas de Datos</span>
-            </button>
-          </div>
-        </header>
-        <BiAnalyticsPage 
-          onNavigateToTable={async (targetTableIdentifier) => {
-            await handleSwitchTable(targetTableIdentifier);
-            setViewMode('database');
-          }}
-        />
-      </div>
-    );
-  }
+        )}
 
-  // Si estamos en modo Catálogo Metabase Yarken (01 Indicadores K, 02 Gráficos G, 03 Tablas T, 05 Dashboards D)
-  if (viewMode === 'catalog' && catalogContext) {
-    const activeWs = workspaces.find((w) => w.id === activeWorkspaceId) || workspaces[0];
-    const baseSubfolders = catalogContext.base?.subfolders || {
-      indicators: [],
-      charts: [],
-      tables: [],
-      dashboards: [],
-    };
+        {viewMode === 'database' && (
+          <div className="flex h-full overflow-hidden bg-slate-50 dark:bg-slate-950">
+            <AppSidebar
+              isOpen={isSidebarOpen}
+              onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
+              workspaces={workspaces}
+              currentWorkspaceId={activeWorkspaceId || workspaces[0]?.id}
+              currentBaseId={currentBaseId}
+              currentTableId={currentTableId}
+              tablesList={tablesList}
+              rowCount={rows.length}
+              onSelectWorkspace={(wsId) => {
+                setActiveWorkspaceId(wsId);
+                handleSelectTab('workspaces');
+              }}
+              onSelectBase={(baseId) => {
+                handleOpenDatabase(baseId);
+              }}
+              onSelectTable={(tableId) => {
+                openTableTab(tableId);
+              }}
+              onSelectDashboard={(dashId) => {
+                openDashboardTab(dashId);
+              }}
+              onOpenCatalog={(base, defaultTab) => {
+                openCatalogTab(base, defaultTab);
+              }}
+              onOpenWorkspaces={() => handleSelectTab('workspaces')}
+              onOpenAnalytics={() => openDashboardTab('D001')}
+              onOpenTrash={() => {
+                loadTrash();
+                setShowTrashModal(true);
+              }}
+              onOpenAudit={() => setShowAuditDrawer(true)}
+              onOpenMembers={() => setShowBaseSettingsModal(true)}
+              onOpenApiDocs={() => setShowApiTokensModal(true)}
+              onOpenSnapshots={() => setShowSnapshotsModal(true)}
+              onRenameBase={() => setShowBaseSettingsModal(true)}
+              onCreateTable={() => setShowNewTableModal(true)}
+              onCreateBase={() => setShowNewTableModal(true)}
+            />
 
-    return (
-      <div className="flex h-screen overflow-hidden bg-slate-50 dark:bg-slate-950">
-        <AppSidebar
-          isOpen={isSidebarOpen}
-          onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
-          workspaces={workspaces}
-          currentWorkspaceId={activeWorkspaceId || workspaces[0]?.id}
-          currentBaseId={currentBaseId}
-          currentTableId={currentTableId}
-          tablesList={tablesList}
-          rowCount={rows.length}
-          onSelectWorkspace={(wsId) => {
-            setActiveWorkspaceId(wsId);
-            setViewMode('workspaces');
-          }}
-          onSelectBase={(baseId) => {
-            handleOpenDatabase(baseId);
-          }}
-          onSelectTable={(tableId) => {
-            handleSwitchTable(tableId);
-            setViewMode('database');
-          }}
-          onSelectDashboard={(dashId) => {
-            useDashboardStore.getState().selectDashboard(dashId);
-            setViewMode('analytics');
-          }}
-          onOpenCatalog={(base, defaultTab) => {
-            setCatalogContext({ base, defaultTab });
-            setViewMode('catalog');
-          }}
-          onOpenWorkspaces={() => setViewMode('workspaces')}
-          onOpenAnalytics={() => setViewMode('analytics')}
-          onOpenTrash={() => {
-            loadTrash();
-            setShowTrashModal(true);
-          }}
-          onOpenAudit={() => setShowAuditDrawer(true)}
-          onOpenMembers={() => setShowBaseSettingsModal(true)}
-          onOpenApiDocs={() => setShowApiTokensModal(true)}
-          onOpenSnapshots={() => setShowSnapshotsModal(true)}
-          onRenameBase={() => setShowBaseSettingsModal(true)}
-          onCreateTable={() => setShowNewTableModal(true)}
-          onCreateBase={() => setShowNewTableModal(true)}
-        />
-        <div className="flex-1 flex flex-col h-screen overflow-hidden">
-          <AssetCatalogView
-            moduleName={catalogContext.base?.name || 'Módulo de Negocio'}
-            workspaceName={activeWs?.name || 'Negocios'}
-            activeTab={catalogContext.defaultTab || 'indicators'}
-            indicators={baseSubfolders.indicators || []}
-            charts={baseSubfolders.charts || []}
-            tables={baseSubfolders.tables || []}
-            dashboards={baseSubfolders.dashboards || []}
-            onOpenTable={async (tblIdentifier) => {
-              await handleSwitchTable(tblIdentifier);
-              setViewMode('database');
-            }}
-            onOpenDashboard={(dashId) => {
-              useDashboardStore.getState().selectDashboard(dashId);
-              setViewMode('analytics');
-            }}
-            onBackToWorkspace={() => setViewMode('workspaces')}
-          />
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex h-screen overflow-hidden bg-slate-50 dark:bg-slate-950">
-      {/* 1. Barra Lateral Jerárquica en Árbol (Issue #25) */}
-      <AppSidebar
-        isOpen={isSidebarOpen}
-        onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
-        workspaces={workspaces}
-        currentWorkspaceId={activeWorkspaceId || workspaces[0]?.id}
-        currentBaseId={currentBaseId}
-        currentTableId={currentTableId}
-        tablesList={tablesList}
-        rowCount={rows.length}
-        onSelectWorkspace={(wsId) => {
-          setActiveWorkspaceId(wsId);
-          setViewMode('workspaces');
-        }}
-        onSelectBase={(baseId) => {
-          handleOpenDatabase(baseId);
-        }}
-        onSelectTable={(tableId) => {
-          handleSwitchTable(tableId);
-        }}
-        onSelectDashboard={(dashId) => {
-          useDashboardStore.getState().selectDashboard(dashId);
-          setViewMode('analytics');
-        }}
-        onOpenCatalog={(base, defaultTab) => {
-          setCatalogContext({ base, defaultTab });
-          setViewMode('catalog');
-        }}
-        onOpenWorkspaces={() => setViewMode('workspaces')}
-        onOpenAnalytics={() => setViewMode('analytics')}
-        onOpenTrash={() => {
-          loadTrash();
-          setShowTrashModal(true);
-        }}
-        onOpenAudit={() => setShowAuditDrawer(true)}
-        onOpenMembers={() => setShowBaseSettingsModal(true)}
-        onOpenApiDocs={() => setShowApiTokensModal(true)}
-        onOpenSnapshots={() => setShowSnapshotsModal(true)}
-        onRenameBase={() => setShowBaseSettingsModal(true)}
-        onCreateTable={() => setShowNewTableModal(true)}
-        onCreateBase={() => setShowNewTableModal(true)}
-      />
-
-      {/* 2. Área Principal de Contenido */}
-      <div className="flex-1 flex flex-col h-full overflow-hidden min-w-0">
+            {/* 2. Área Principal de Contenido */}
+            <div className="flex-1 flex flex-col h-full overflow-hidden min-w-0">
         {/* Top Bar / App Navigation */}
         <header className="h-12 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center justify-between px-4 shrink-0 shadow-sm">
         <div className="flex items-center gap-3">
@@ -2167,6 +2265,10 @@ export default function HomePage() {
           </div>
         </div>
       )}
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Modal de Papelera */}
       {showTrashModal && (
@@ -2408,7 +2510,6 @@ export default function HomePage() {
         onClose={() => setShowAuditDrawer(false)}
         tableId={currentTableId}
       />
-      </div>
     </div>
   );
 }
