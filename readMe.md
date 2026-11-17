@@ -104,6 +104,44 @@ gunzip -c ./data/backups/baserow_lite_pg_archivo.sql.gz | docker exec -i baserow
 
 ---
 
+## 🌐 Endpoints y Gestión Completa por API REST
+
+BaserowLite permite gestionar programáticamente todas las bases, tablas, columnas (fields) y registros:
+
+### 1. Gestión de Tablas (`/api/database/tables`)
+- `GET /api/database/tables`: Lista todas las tablas activas con su metadata (icono, color, tags, descripción).
+- `POST /api/database/tables`: Crea una nueva tabla relacional con columna primaria por defecto.
+- `GET /api/database/tables/:tableId`: Obtiene la metadata y relación de base de una tabla específica.
+- `PATCH /api/database/tables/:tableId`: Actualiza nombre, descripción, icono, color y tags de la tabla o base.
+- `DELETE /api/database/tables/:tableId`: Mueve la tabla a la papelera (soft-delete).
+
+### 2. Gestión de Columnas / Esquema (`/api/database/fields`)
+- `GET /api/database/fields/table/:tableId`: Lista los campos tipados de la tabla ordenados.
+- `POST /api/database/fields/table/:tableId`: Crea una nueva columna (`text`, `number`, `currency`, `date`, `select`, `rating`, `progress`, `boolean`).
+- `GET /api/database/fields/:fieldId`: Obtiene la definición y opciones de un campo.
+- `PATCH /api/database/fields/:fieldId`: Actualiza nombre, opciones o ancho de la columna.
+- `DELETE /api/database/fields/:fieldId`: Soft-delete del campo.
+
+### 3. Operaciones de Registros y Lotes / Batch (`/api/database/rows`)
+- `GET /api/database/rows/table/:tableId?user_field_names=true`: Consulta paginada con nombres humanos.
+- `POST /api/database/rows/table/:tableId`: Inserta un registro individual.
+- `PATCH /api/database/rows/table/:tableId/:rowId`: Actualiza celdas con concurrencia optimista.
+- `DELETE /api/database/rows/table/:tableId/:rowId`: Envía registro a la papelera.
+- `POST /api/database/rows/table/:tableId/batch`: Inserción masiva de registros en una sola transacción.
+- `PATCH /api/database/rows/table/:tableId/batch`: Actualización masiva de registros (`{ items: [{ id, ...campos }] }`).
+- `DELETE /api/database/rows/table/:tableId/batch`: Eliminación masiva hacia la papelera (`{ items: [id1, id2, ...] }`).
+
+### 4. Calendario RFC 5545 e iCal Feed (`/api/v1/calendar/ical`)
+- `GET /api/v1/calendar/ical?tableId=:id&dateField=:field`: Genera un feed `.ics` estándar RFC 5545 para suscripción directa en Apple Calendar (`webcal://`), Google Calendar o Microsoft Outlook.
+
+### 5. Sesión, Tokens y Papelera
+- `GET /api/v1/auth/me`: Detecta usuario autenticado y sesión Zero Trust Cloudflare Access.
+- `GET|POST /api/v1/tokens`: Genera y lista tokens Bearer de base de datos (`baserow_lite_...`).
+- `GET /api/v1/trash`: Lista registros eliminados disponibles para recuperación.
+- `POST /api/v1/trash/:id/restore`: Restaura registros eliminados de vuelta a su tabla.
+
+---
+
 ## 🧪 Pruebas Automatizadas
 
 Para ejecutar la batería completa de 39 pruebas unitarias y de integración:

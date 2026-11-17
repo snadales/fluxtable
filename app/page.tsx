@@ -8,6 +8,8 @@ import { SortPopover, SortCondition } from '@/components/grid/sort-popover';
 import { FieldsPopover } from '@/components/grid/fields-popover';
 import { BaseSettingsModal, BaseMetadata } from '@/components/modals/base-settings-modal';
 import { ApiTokensModal } from '@/components/modals/api-tokens-modal';
+import { NewTableModal } from '@/components/modals/new-table-modal';
+import { NewFieldModal } from '@/components/modals/new-field-modal';
 import { 
   Database, Table as TableIcon, LayoutGrid, Kanban as KanbanIcon, 
   Calendar as CalendarIcon, FileText, Search, Download, Plus, Filter, ArrowUpDown, X, 
@@ -111,12 +113,26 @@ export default function HomePage() {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showBaseSettingsModal, setShowBaseSettingsModal] = useState(false);
   const [showApiTokensModal, setShowApiTokensModal] = useState(false);
+  const [showNewTableModal, setShowNewTableModal] = useState(false);
+  const [showNewFieldModal, setShowNewFieldModal] = useState(false);
+
+  // Tablas dinámicas y tabla activa
+  const [currentTableId, setCurrentTableId] = useState<string>('865');
+  const [tablesList, setTablesList] = useState<Array<{
+    id: string;
+    legacyId?: number | null;
+    name: string;
+    description?: string;
+    icon?: string;
+    color?: string;
+    tags?: string[];
+  }>>([]);
 
   // Cargar metadatos de tabla y usuario al iniciar
-  const loadMetadata = useCallback(async () => {
+  const loadMetadata = useCallback(async (targetId: string = currentTableId) => {
     try {
       const [tableRes, userRes] = await Promise.all([
-        fetch('/api/database/tables/865'),
+        fetch(`/api/database/tables/${targetId}`),
         fetch('/api/v1/auth/me'),
       ]);
 
@@ -151,52 +167,73 @@ export default function HomePage() {
     } catch (e) {
       console.error('Error cargando metadatos iniciales:', e);
     }
-  }, []);
+  }, [currentTableId]);
 
-  useEffect(() => {
-    loadMetadata();
-  }, [loadMetadata]);
-
-  // Guardar metadatos modificados
-  const handleSaveMetadata = async (newMeta: BaseMetadata) => {
-    const res = await fetch('/api/database/tables/865', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(newMeta),
-    });
-
-    if (res.ok) {
-      setMetadata(newMeta);
+  // Cargar lista de todas las tablas activas
+  const loadTablesList = useCallback(async () => {
+    try {
+      const res = await fetch('/api/database/tables');
+      if (res.ok) {
+        const list = await res.json();
+        setTablesList(list);
+      }
+    } catch (e) {
+      console.error('Error cargando lista de tablas:', e);
     }
-  };
+  }, []);
 
   // Columnas visibles según selección del usuario
   const visibleColumns = useMemo(() => {
     return columns.filter((c) => !hiddenFieldIds.includes(c.id));
   }, [columns, hiddenFieldIds]);
 
-  // 1. Cargar datos reales desde la API local en el arranque
-  const loadData = useCallback(async () => {
+  // 1. Cargar datos reales y columnas dinámicas desde la API local
+  const loadData = useCallback(async (targetId: string = currentTableId) => {
     try {
       setIsLoading(true);
-      const res = await fetch('/api/database/rows/table/865?user_field_names=true');
+
+      // Cargar campos dinámicos
+      let currentCols: ColumnDef[] = DEFAULT_COLUMNS;
+      try {
+        const fieldsRes = await fetch(`/api/database/fields/table/${targetId}`);
+        if (fieldsRes.ok) {
+          const fData = await fieldsRes.json();
+          if (Array.isArray(fData) && fData.length > 0) {
+            currentCols = fData.map((f: any) => ({
+              id: f.name,
+              name: f.name,
+              type: f.type,
+              width: f.width || 170,
+              isPrimary: !!f.isPrimary,
+              options: f.options || {},
+            }));
+            setColumns(currentCols);
+          } else {
+            setColumns(DEFAULT_COLUMNS);
+          }
+        }
+      } catch (fErr) {
+        console.warn('Usando columnas por defecto:', fErr);
+        setColumns(DEFAULT_COLUMNS);
+      }
+
+      // Cargar filas
+      const res = await fetch(`/api/database/rows/table/${targetId}?user_field_names=true`);
       if (res.ok) {
         const json = await res.json();
-        const mappedRows: RowData[] = (json.results || []).map((r: any) => ({
-          id: r.id,
-          order: parseFloat(r.order) || 1,
-          version: 1,
-          data: {
-            'Código Contenedor': r['Código Contenedor'] || 'CONT-SIN-CODIGO',
-            'Estado Embarque': r['Estado Embarque'] || 'opt_fabrica',
-            'Inversión FOB': r['Inversión FOB'] || 0,
-            'Costo Final Puesto': r['Costo Final Puesto'] || 0,
-            'Avance Logístico': r['Avance Logístico'] || 0,
-            'Calificación Naviera': r['Calificación Naviera'] || 3,
-            'Fecha Estimada Arribo': r['Fecha Estimada Arribo'] || '',
-          },
-          content: r.content || '## Bitácora de Registro\nNotas y documentación adjunta.',
-        }));
+        const mappedRows: RowData[] = (json.results || []).map((r: any) => {
+          const rowData: Record<string, any> = {};
+          currentCols.forEach((col) => {
+            rowData[col.id] = r[col.id] !== undefined ? r[col.id] : '';
+          });
+          return {
+            id: r.id,
+            order: parseFloat(r.order) || 1,
+            version: 1,
+            data: rowData,
+            content: r.content || '## Bitácora de Registro\nNotas y documentación adjunta.',
+          };
+        });
         setRows(mappedRows);
       }
     } catch (e) {
@@ -204,11 +241,90 @@ export default function HomePage() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [currentTableId]);
 
   useEffect(() => {
+    loadTablesList();
+    loadMetadata();
     loadData();
-  }, [loadData]);
+  }, [loadTablesList, loadMetadata, loadData]);
+
+  // Cambiar entre tablas
+  const handleSwitchTable = async (tableIdentifier: string) => {
+    setCurrentTableId(tableIdentifier);
+    await Promise.all([
+      loadMetadata(tableIdentifier),
+      loadData(tableIdentifier),
+    ]);
+  };
+
+  // Crear nueva tabla
+  const handleCreateTable = async (newTableData: {
+    name: string;
+    description: string;
+    icon: string;
+    color: string;
+    tags: string[];
+  }) => {
+    const res = await fetch('/api/database/tables', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newTableData),
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error || 'Error creando tabla');
+    }
+
+    const created = await res.json();
+    await loadTablesList();
+    await handleSwitchTable(created.id);
+  };
+
+  // Crear nueva columna
+  const handleCreateField = async (newFieldData: {
+    name: string;
+    type: string;
+    options?: Record<string, any>;
+    width?: number;
+  }) => {
+    const res = await fetch(`/api/database/fields/table/${currentTableId}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newFieldData),
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error || 'Error agregando columna');
+    }
+
+    const created = await res.json();
+    const newCol: ColumnDef = {
+      id: created.name,
+      name: created.name,
+      type: created.type,
+      width: created.width || 160,
+      isPrimary: !!created.isPrimary,
+      options: created.options || {},
+    };
+    setColumns((prev) => [...prev, newCol]);
+  };
+
+  // Guardar metadatos modificados
+  const handleSaveMetadata = async (newMeta: BaseMetadata) => {
+    const res = await fetch(`/api/database/tables/${currentTableId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newMeta),
+    });
+
+    if (res.ok) {
+      setMetadata(newMeta);
+      await loadTablesList();
+    }
+  };
 
   // Cargar papelera
   const loadTrash = async () => {
@@ -245,7 +361,7 @@ export default function HomePage() {
     // Guardado en segundo plano
     setSyncStatus('saving');
     try {
-      const patchRes = await fetch(`/api/database/rows/table/865/${rowId}?user_field_names=true`, {
+      const patchRes = await fetch(`/api/database/rows/table/${currentTableId}/${rowId}?user_field_names=true`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ [colId]: newValue }),
@@ -264,19 +380,30 @@ export default function HomePage() {
   // 3. Añadir nueva fila
   const handleAddRow = async () => {
     setSyncStatus('saving');
-    const newCode = `CONT-${Math.floor(100000 + Math.random() * 900000)}`;
-    const newPayload = {
-      'Código Contenedor': newCode,
-      'Estado Embarque': 'opt_fabrica',
-      'Inversión FOB': 20000,
-      'Costo Final Puesto': 19000000,
-      'Avance Logístico': 10,
-      'Calificación Naviera': 4,
-      'Fecha Estimada Arribo': new Date(Date.now() + 15 * 86400000).toISOString().split('T')[0],
-    };
+    const newPayload: Record<string, any> = {};
+    columns.forEach((c) => {
+      if (c.isPrimary) {
+        newPayload[c.id] = `${c.name.toUpperCase().slice(0, 4)}-${Math.floor(100000 + Math.random() * 900000)}`;
+      } else if (c.type === 'currency' || c.type === 'number') {
+        newPayload[c.id] = 1000;
+      } else if (c.type === 'select') {
+        const firstOpt = c.options?.options?.[0]?.id || c.options?.options?.[0]?.value || '';
+        newPayload[c.id] = firstOpt;
+      } else if (c.type === 'progress') {
+        newPayload[c.id] = 10;
+      } else if (c.type === 'rating') {
+        newPayload[c.id] = 4;
+      } else if (c.type === 'date') {
+        newPayload[c.id] = new Date().toISOString().split('T')[0];
+      } else if (c.type === 'boolean') {
+        newPayload[c.id] = false;
+      } else {
+        newPayload[c.id] = '';
+      }
+    });
 
     try {
-      const res = await fetch('/api/database/rows/table/865?user_field_names=true', {
+      const res = await fetch(`/api/database/rows/table/${currentTableId}?user_field_names=true`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newPayload),
@@ -289,7 +416,7 @@ export default function HomePage() {
           order: parseFloat(created.order) || rows.length + 1,
           version: 1,
           data: newPayload,
-          content: '## Nuevo Lote\nRegistro inicializado con éxito.',
+          content: '## Nuevo Registro\nRegistro inicializado con éxito.',
         };
         setRows((prev) => [newRow, ...prev]);
         setSyncStatus('saved');
@@ -307,7 +434,7 @@ export default function HomePage() {
     if (!confirm('¿Mover este registro a la papelera? Podrás restaurarlo en cualquier momento.')) return;
 
     try {
-      const res = await fetch(`/api/database/rows/table/865/${rowId}`, {
+      const res = await fetch(`/api/database/rows/table/${currentTableId}/${rowId}`, {
         method: 'DELETE',
       });
       if (res.ok) {
@@ -624,31 +751,80 @@ export default function HomePage() {
 
       {/* Notion-style Tabs Bar */}
       <div className="h-10 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center px-4 gap-2 shrink-0 overflow-x-auto">
-        {/* Pestaña de la Tabla Activa con su icono, color y tags */}
-        <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-lg border-b-2 border-blue-600 shadow-2xs">
-          <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-900 dark:text-white">
-            {renderIcon(metadata.tableIcon, 'w-3.5 h-3.5 text-blue-600')}
-            <span>{metadata.tableName}</span>
-            <span className="text-[10px] text-slate-400 font-mono">({rows.length})</span>
-          </div>
+        {tablesList.length > 0 ? (
+          tablesList.map((tbl) => {
+            const tableIdentifier = tbl.legacyId ? String(tbl.legacyId) : tbl.id;
+            const isActive = currentTableId === tableIdentifier || currentTableId === tbl.id;
+            return (
+              <div
+                key={tbl.id}
+                onClick={() => {
+                  if (!isActive) handleSwitchTable(tableIdentifier);
+                }}
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg cursor-pointer transition-all ${
+                  isActive
+                    ? 'bg-slate-100 dark:bg-slate-800 border-b-2 border-blue-600 shadow-2xs font-semibold text-slate-900 dark:text-white'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/60 font-medium'
+                }`}
+              >
+                <div className="flex items-center gap-1.5 text-xs">
+                  {renderIcon(tbl.icon || 'table', `w-3.5 h-3.5 ${isActive ? 'text-blue-600' : 'text-slate-400'}`)}
+                  <span>{tbl.name}</span>
+                  {isActive && <span className="text-[10px] text-slate-400 font-mono">({rows.length})</span>}
+                </div>
 
-          <div className="flex items-center gap-1 pl-1">
-            {metadata.tableTags.map((t) => (
-              <span key={t} className="text-[9px] font-mono px-1 py-0.2 rounded bg-slate-200 dark:bg-slate-700 text-slate-500">
-                #{t}
-              </span>
-            ))}
-          </div>
+                {tbl.tags && tbl.tags.length > 0 && (
+                  <div className="flex items-center gap-1 pl-1 hidden sm:flex">
+                    {tbl.tags.slice(0, 2).map((t) => (
+                      <span key={t} className="text-[9px] font-mono px-1 py-0.2 rounded bg-slate-200 dark:bg-slate-700 text-slate-500">
+                        #{t}
+                      </span>
+                    ))}
+                  </div>
+                )}
 
-          <button
-            type="button"
-            onClick={() => setShowBaseSettingsModal(true)}
-            className="p-0.5 text-slate-400 hover:text-slate-700 ml-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700"
-            title="Editar tabla, icono o tags"
-          >
-            <Settings className="w-3 h-3" />
-          </button>
-        </div>
+                {isActive && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowBaseSettingsModal(true);
+                    }}
+                    className="p-0.5 text-slate-400 hover:text-slate-700 ml-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700"
+                    title="Editar tabla, icono o tags"
+                  >
+                    <Settings className="w-3 h-3" />
+                  </button>
+                )}
+              </div>
+            );
+          })
+        ) : (
+          <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-lg border-b-2 border-blue-600 shadow-2xs">
+            <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-900 dark:text-white">
+              {renderIcon(metadata.tableIcon, 'w-3.5 h-3.5 text-blue-600')}
+              <span>{metadata.tableName}</span>
+              <span className="text-[10px] text-slate-400 font-mono">({rows.length})</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowBaseSettingsModal(true)}
+              className="p-0.5 text-slate-400 hover:text-slate-700 ml-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700"
+            >
+              <Settings className="w-3 h-3" />
+            </button>
+          </div>
+        )}
+
+        {/* Botón "+ Nueva Tabla" */}
+        <button
+          type="button"
+          onClick={() => setShowNewTableModal(true)}
+          className="flex items-center gap-1 px-2.5 py-1 text-xs text-slate-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/40 rounded-lg transition-colors border border-dashed border-slate-300 dark:border-slate-700 shrink-0"
+        >
+          <Plus className="w-3.5 h-3.5" />
+          <span>Nueva Tabla</span>
+        </button>
       </div>
 
       {/* Views & Controls Header */}
@@ -742,6 +918,17 @@ export default function HomePage() {
               />
             )}
           </div>
+
+          {/* Botón "+ Columna" */}
+          <button
+            type="button"
+            onClick={() => setShowNewFieldModal(true)}
+            className="flex items-center gap-1 px-2.5 py-1 text-xs rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/80 shadow-2xs font-medium"
+            title="Agregar una nueva columna a la tabla"
+          >
+            <Plus className="w-3.5 h-3.5 text-emerald-600" />
+            <span>Columna</span>
+          </button>
 
           {/* Popover Filtros */}
           <div className="relative">
@@ -1208,13 +1395,13 @@ export default function HomePage() {
                   <input
                     type="text"
                     readOnly
-                    value="https://tables.yarken.cl/api/v1/calendar/ical?tableId=865"
+                    value={`https://tables.yarken.cl/api/v1/calendar/ical?tableId=${currentTableId}`}
                     className="flex-1 bg-transparent font-mono text-[11px] outline-none text-slate-800 dark:text-white"
                   />
                   <button
                     type="button"
                     onClick={() => {
-                      navigator.clipboard.writeText('https://tables.yarken.cl/api/v1/calendar/ical?tableId=865');
+                      navigator.clipboard.writeText(`https://tables.yarken.cl/api/v1/calendar/ical?tableId=${currentTableId}`);
                       setCopiedIcal(true);
                       setTimeout(() => setCopiedIcal(false), 2000);
                     }}
@@ -1237,7 +1424,7 @@ export default function HomePage() {
 
               <div className="pt-2 flex flex-col gap-2">
                 <a
-                  href="webcal://tables.yarken.cl/api/v1/calendar/ical?tableId=865"
+                  href={`webcal://tables.yarken.cl/api/v1/calendar/ical?tableId=${currentTableId}`}
                   className="w-full py-2.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg text-center flex items-center justify-center gap-1.5 shadow-sm transition-colors"
                 >
                   <CalendarIcon className="w-3.5 h-3.5" />
@@ -1264,6 +1451,20 @@ export default function HomePage() {
       <ApiTokensModal
         isOpen={showApiTokensModal}
         onClose={() => setShowApiTokensModal(false)}
+      />
+
+      {/* Modal para Crear Nueva Tabla */}
+      <NewTableModal
+        isOpen={showNewTableModal}
+        onClose={() => setShowNewTableModal(false)}
+        onCreate={handleCreateTable}
+      />
+
+      {/* Modal para Crear Nueva Columna */}
+      <NewFieldModal
+        isOpen={showNewFieldModal}
+        onClose={() => setShowNewFieldModal(false)}
+        onCreate={handleCreateField}
       />
     </div>
   );

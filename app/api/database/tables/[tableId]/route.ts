@@ -100,3 +100,21 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     return NextResponse.json({ error: 'Error interno al actualizar' }, { status: 500 });
   }
 }
+
+export async function DELETE(request: NextRequest, context: RouteContext) {
+  try {
+    const { tableId: tableParam } = await context.params;
+    const tableId = await resolveTableId(tableParam);
+
+    if (!tableId) {
+      return NextResponse.json({ error: 'Tabla no encontrada' }, { status: 404 });
+    }
+
+    await db.update(tables).set({ deletedAt: new Date() }).where(eq(tables.id, tableId));
+
+    return NextResponse.json({ success: true, message: 'Tabla eliminada correctamente' });
+  } catch (error: any) {
+    console.error('Error eliminando tabla:', error);
+    return NextResponse.json({ error: 'Error interno al eliminar tabla' }, { status: 500 });
+  }
+}
