@@ -2,6 +2,55 @@
 
 ---
 
+## 🗓️ [2026-11-17] - Fase 3: Menú de Acciones por Columna, Altura de Fila, Formato Condicional y Resúmenes (Issue #26)
+
+### 🎯 Intención
+Llevar la cuadrícula interactiva (DataGrid) a paridad funcional con herramientas no-code avanzadas ([Issue #26](https://github.com/snadales/BaserowLite/issues/26)): dotar a cada columna de menú contextual en cabecera (filtrar, ordenar, ocultar, editar, duplicar, borrar), incorporar selector de altura de fila (Compacto 28px, Simple 36px, Ampliado 56px), formato condicional inteligente con colores de fila y filas intercaladas (zebra striping), agrupación dinámica de registros (Group By) con bloques colapsables y fila de resúmenes con agregaciones matemáticas en tiempo real.
+
+### 📍 Estado Actual
+- **Menú Contextual por Columna (`components/grid/data-grid.tsx`)**:
+  - Flecha interactiva en cada encabezado de columna que despliega menú de acciones rápidas:
+    - Filtrar automáticamente por el campo seleccionado.
+    - Ordenamiento en 1 clic: Ascendente ($A \rightarrow Z$, $0 \rightarrow 9$) o Descendente ($Z \rightarrow A$, $9 \rightarrow 0$).
+    - Ocultar campo de la vista actual.
+    - Editar metadatos del campo.
+    - Duplicar columna con generación de clon independiente.
+    - Eliminar campo (protegiendo el campo primario).
+- **Selector de Altura de Fila Dinámica**:
+  - Opciones: `Compacto` (28px - alta densidad de datos), `Simple / Medio` (36px - balance ergonómico) y `Ampliado` (56px - lectura cómoda de contenidos largos).
+  - Ajuste sincrónico de alturas `h-7`, `h-9`, `h-14` y espaciado de celdas.
+- **Formato Condicional y Reglas de Color**:
+  - Popover `Color` en la barra de herramientas.
+  - Reglas automáticas basadas en estados (`opt_bodega` verde suave, lagging ámbar).
+  - Filas intercaladas (`Zebra striping`) con `bg-surface-sunken/40` para lectura horizontal en tablas con muchas columnas.
+- **Agrupación de Filas (`Group By`)**:
+  - Botón y popover `Agrupar` en la barra superior con selector de columna o desagrupación instantánea.
+  - Generación de filas encabezado de grupo con badge de valor único, conteo de registros y botón de colapso/expansión.
+- **Fila Inferior de Resúmenes y Agregaciones (Summarizer Footer)**:
+  - Pie de tabla con menú por columna para alternar entre: `Ninguno`, `Conteo (Count)`, `Suma (Sum - Σ)`, `Promedio (Avg - μ)`, `Mínimo (Min)`, `Máximo (Max)`, `Vacíos` y `No vacíos`.
+  - Cálculo instantáneo sobre el conjunto de datos activo.
+- **Selector de Vistas Dropdown**:
+  - Reemplazo de pestañas planas por selector dropdown ergonómico con buscador y lista de vistas (Cuadrícula, Galería, Formulario, Kanban, Calendario, Línea de tiempo).
+
+### 🏁 Estado Deseado
+- Cuadrícula de datos con experiencia de usuario superior, permitiendo a los operadores filtrar, agrupar y analizar métricas clave sin salir de la vista.
+
+### ⚠️ Problemas Encontrados y Soluciones
+- *Problema:* El popover de filtros esperaba `fieldId` e `id` en el objeto `FilterCondition`, mientras que el callback inicial enviaba `columnId`.
+  *Solución:* Se ajustó la firma del generador de filtros en `onFilterByColumn` para emitir `id` único y `fieldId` coincidente con el tipo TypeScript.
+
+### 🔄 Iteraciones e Historial de Ejecución
+1. **Iteración 89**: Rediseño de `components/grid/data-grid.tsx` con menú de cabecera de columna, alturas dinámica y pie de agregaciones.
+2. **Iteración 90**: Implementación de lógica de particionado y colapso de grupos en `DataGrid`.
+3. **Iteración 91**: Integración de popovers de `Agrupar`, `Color`, `Altura` y View Switcher en `app/page.tsx`.
+4. **Iteración 92**: Verificación de compilación Next.js (24/24 páginas) y suite de pruebas Vitest (59/59 pasando).
+
+### 📊 Evidencia Empírica de Verificación
+- Next.js build: 24 páginas generadas con 0 errores TypeScript/linter.
+- Vitest: 59 pruebas pasando en 9 archivos.
+
+---
+
 ## 🗓️ [2026-11-17] - Fase 2: UI/UX, Logotipo y Navegación en Árbol (Issue #25)
 
 ### 🎯 Intención
