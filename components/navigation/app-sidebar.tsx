@@ -129,7 +129,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
             type="button"
             onClick={onOpenAnalytics}
             className="p-1.5 rounded-lg text-ink-3 hover:text-accent hover:bg-surface-sunken transition-colors"
-            title="Dashboards BI"
+            title="Dashboards & Analítica"
           >
             <BarChart3 className="w-4 h-4" />
           </button>
@@ -233,6 +233,21 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
 
       {/* 3. Navegación del Sistema (Print 4) */}
       <div className="px-2 py-1 space-y-0.5 shrink-0 text-xs text-ink-2 font-medium">
+        <button
+          type="button"
+          onClick={onOpenAnalytics}
+          className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl bg-blue-50/70 hover:bg-blue-100/70 text-accent transition-colors text-left font-semibold border border-blue-200/60"
+          title="Ver Dashboards & Analítica de Negocios y Homelab"
+        >
+          <div className="flex items-center gap-2">
+            <BarChart3 className="w-3.5 h-3.5 text-accent" />
+            <span>Dashboards & Analítica</span>
+          </div>
+          <span className="text-[9px] font-bold text-white bg-accent px-1.5 py-0.5 rounded-full uppercase tracking-wider">
+            BI
+          </span>
+        </button>
+
         <button
           type="button"
           onClick={onOpenWorkspaces}

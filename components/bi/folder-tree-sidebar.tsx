@@ -44,9 +44,9 @@ export function FolderTreeSidebar({ onNewDashboard, onNewFolder }: FolderTreeSid
       <div className="p-3 border-b border-slate-200">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
-            <BarChart3 className="w-4 h-4 text-blue-600" />
-            <h2 className="text-xs font-semibold text-slate-800 tracking-wide uppercase">
-              BI & Analytics
+            <BarChart3 className="w-4 h-4 text-[#1D5BD8]" />
+            <h2 className="text-xs font-bold text-slate-800 tracking-wide uppercase">
+              Dashboards & Analítica
             </h2>
           </div>
           <div className="flex items-center gap-1">

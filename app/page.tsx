@@ -846,8 +846,8 @@ export default function HomePage() {
             </button>
             <span className="text-slate-300">/</span>
             <div className="flex items-center gap-2 text-xs font-bold text-slate-800">
-              <BarChart2 className="w-4 h-4 text-blue-600" />
-              <span>BI & Analytics Engine</span>
+              <BarChart2 className="w-4 h-4 text-[#1D5BD8]" />
+              <span>Dashboards & Analítica</span>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -963,15 +963,15 @@ export default function HomePage() {
             <span className="hidden sm:inline">Workspaces</span>
           </button>
 
-          {/* Botón rápido a BI & Analytics */}
+          {/* Botón rápido a Dashboards & Analítica */}
           <button
             type="button"
             onClick={() => setViewMode('analytics')}
             className="flex items-center gap-1.5 px-2.5 py-1 text-xs text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors font-semibold border border-blue-200/60"
-            title="Ir al motor de BI & Dashboards"
+            title="Ir a Dashboards & Analítica"
           >
-            <BarChart2 className="w-3.5 h-3.5 text-blue-600" />
-            <span className="hidden sm:inline">Dashboards BI</span>
+            <BarChart2 className="w-3.5 h-3.5 text-[#1D5BD8]" />
+            <span className="hidden sm:inline">Dashboards & Analítica</span>
           </button>
 
           {/* Indicador de Sincronización */}

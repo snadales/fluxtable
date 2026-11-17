@@ -210,7 +210,7 @@ export const WorkspacesDashboard: React.FC<WorkspacesDashboardProps> = ({
                 >
                   <div className="flex items-center gap-2.5">
                     <BarChart3 className="w-4 h-4 text-accent" />
-                    <span>Dashboards BI</span>
+                    <span>Dashboards & Analítica</span>
                   </div>
                   <span className="text-[9px] font-bold px-1.5 py-0.5 bg-accent text-white rounded">
                     NUEVO
@@ -362,7 +362,7 @@ export const WorkspacesDashboard: React.FC<WorkspacesDashboardProps> = ({
             >
               <option value="all">Todos los elementos</option>
               <option value="database">Bases de datos</option>
-              <option value="dashboard">Dashboards BI</option>
+              <option value="dashboard">Dashboards & Analítica</option>
             </select>
 
             {/* Create Workspace Button */}
