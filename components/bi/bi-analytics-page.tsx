@@ -9,9 +9,15 @@ import { useDashboardStore } from '@/lib/bi/state/dashboard-store';
 
 interface BiAnalyticsPageProps {
   onNavigateToTable?: (tableId: string) => void;
+  hideFolderSidebar?: boolean;
+  onInspectKpi?: (kpiCode: string) => void;
 }
 
-export function BiAnalyticsPage({ onNavigateToTable }: BiAnalyticsPageProps = {}) {
+export function BiAnalyticsPage({ 
+  onNavigateToTable, 
+  hideFolderSidebar = true,
+  onInspectKpi,
+}: BiAnalyticsPageProps = {}) {
   const { fetchDashboardsAndFolders, isKioskMode } = useDashboardStore();
   const [isDashboardModalOpen, setIsDashboardModalOpen] = useState(false);
   const [isCardModalOpen, setIsCardModalOpen] = useState(false);
@@ -22,8 +28,8 @@ export function BiAnalyticsPage({ onNavigateToTable }: BiAnalyticsPageProps = {}
 
   return (
     <div className="flex-1 flex h-full overflow-hidden">
-      {/* Barra Lateral de Carpetas y Dashboards (oculta en modo Kiosko) */}
-      {!isKioskMode && (
+      {/* Barra Lateral de Carpetas y Dashboards (solo si no se oculta y no en Kiosko) */}
+      {!isKioskMode && !hideFolderSidebar && (
         <FolderTreeSidebar
           onNewDashboard={() => setIsDashboardModalOpen(true)}
         />
@@ -33,6 +39,7 @@ export function BiAnalyticsPage({ onNavigateToTable }: BiAnalyticsPageProps = {}
       <DashboardView
         onNewCard={() => setIsCardModalOpen(true)}
         onNavigateToTable={onNavigateToTable}
+        onInspectKpi={onInspectKpi}
       />
 
       {/* Modales de Creación */}

@@ -48,6 +48,7 @@ interface AppSidebarProps {
   onSelectTable: (tableId: string) => void;
   onSelectDashboard?: (dashboardCodeOrId: string) => void;
   onOpenCatalog?: (base: BaseItem, defaultTab?: 'indicators' | 'charts' | 'tables' | 'dashboards') => void;
+  onInspectKpi?: (kpiCode: string) => void;
   onOpenWorkspaces: () => void;
   onOpenAnalytics: () => void;
   onOpenTrash: () => void;
@@ -76,6 +77,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
   onSelectTable,
   onSelectDashboard,
   onOpenCatalog,
+  onInspectKpi,
   onOpenWorkspaces,
   onOpenAnalytics,
   onOpenTrash,
@@ -240,16 +242,16 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
       <div className="px-2 py-1 space-y-0.5 shrink-0 text-xs text-ink-2 font-medium">
         <button
           type="button"
-          onClick={onOpenAnalytics}
+          onClick={onOpenWorkspaces}
           className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl bg-blue-50/70 hover:bg-blue-100/70 text-accent transition-colors text-left font-semibold border border-blue-200/60"
-          title="Ver Dashboards & Analítica de Negocios y Homelab"
+          title="Ver todos los Espacios de Trabajo"
         >
           <div className="flex items-center gap-2">
-            <BarChart3 className="w-3.5 h-3.5 text-accent" />
-            <span>Dashboards & Analítica</span>
+            <Folder className="w-3.5 h-3.5 text-accent" />
+            <span>Espacios de Trabajo</span>
           </div>
-          <span className="text-[9px] font-bold text-white bg-accent px-1.5 py-0.5 rounded-full uppercase tracking-wider">
-            BI
+          <span className="text-[10px] font-mono font-bold text-accent">
+            {workspaces.length}
           </span>
         </button>
 
@@ -318,10 +320,10 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
 
       <div className="h-px bg-line mx-3 my-2" />
 
-      {/* 4. Sección de Bases de Datos con Árbol Expandible */}
+      {/* 4. Sección de Carpetas y Módulos de Negocio con Árbol Expandible */}
       <div className="flex-1 overflow-y-auto px-2 space-y-1">
         <div className="flex items-center justify-between px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider text-ink-3">
-          <span>Bases de datos</span>
+          <span>Carpetas y Módulos</span>
           <button
             type="button"
             onClick={onCreateBase}
@@ -528,10 +530,11 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
                               <button
                                 key={k.id}
                                 type="button"
-                                onClick={() => onOpenCatalog ? onOpenCatalog(b, 'indicators') : null}
-                                className="w-full flex items-center justify-between px-2 py-0.5 rounded text-[10px] text-ink-3 hover:text-ink hover:bg-surface-sunken/60 truncate"
+                                onClick={() => onInspectKpi ? onInspectKpi(k.code) : onOpenCatalog ? onOpenCatalog(b, 'indicators') : null}
+                                className="w-full flex items-center justify-between px-2 py-0.5 rounded text-[10px] text-ink-3 hover:text-ink hover:bg-surface-sunken/60 truncate cursor-pointer group/k"
+                                title={`Ver Receta Técnica de Construcción de ${k.code} (SQL, Umbrales y Linaje)`}
                               >
-                                <span className="font-mono text-blue-700 font-bold">{k.code}</span>
+                                <span className="font-mono text-blue-700 font-bold group-hover/k:underline">{k.code}</span>
                                 <span className="truncate max-w-[100px] text-left">{k.name}</span>
                                 <span className="font-mono font-semibold text-ink">{k.displayValue}</span>
                               </button>

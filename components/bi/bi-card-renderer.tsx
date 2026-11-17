@@ -29,9 +29,10 @@ interface BiCardRendererProps {
     }>;
   };
   onNavigateToTable?: (tableIdentifier: string) => void;
+  onInspectKpi?: (kpiCode: string) => void;
 }
 
-export function BiCardRenderer({ card, onNavigateToTable }: BiCardRendererProps) {
+export function BiCardRenderer({ card, onNavigateToTable, onInspectKpi }: BiCardRendererProps) {
   const chartRef = useRef<HTMLDivElement>(null);
   const chartInstance = useRef<echarts.ECharts | null>(null);
 
@@ -257,9 +258,18 @@ export function BiCardRenderer({ card, onNavigateToTable }: BiCardRendererProps)
       {/* Cabecera de la Tarjeta */}
       <div className="px-3.5 py-2.5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
         <div className="flex items-center gap-2 min-w-0 flex-1">
-          <span className="font-mono text-[10px] font-semibold px-1.5 py-0.5 bg-blue-50 text-blue-700 rounded border border-blue-200/60 shrink-0">
-            {card.code}
-          </span>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              if (onInspectKpi) onInspectKpi(card.code);
+            }}
+            className="font-mono text-[10px] font-semibold px-1.5 py-0.5 bg-blue-50 hover:bg-blue-100 text-blue-700 hover:text-blue-900 rounded border border-blue-200/60 hover:border-blue-300 transition-colors shrink-0 flex items-center gap-1 cursor-pointer"
+            title="Inspeccionar Receta de Construcción (SQL, Fórmula y Umbrales)"
+          >
+            <span>{card.code}</span>
+            <span className="text-[9px] opacity-70">🔍</span>
+          </button>
           <h3 className="text-xs font-semibold text-slate-800 truncate" title={card.name}>
             {card.name}
           </h3>

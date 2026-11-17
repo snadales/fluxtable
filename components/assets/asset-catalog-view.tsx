@@ -60,6 +60,7 @@ interface AssetCatalogViewProps {
   onOpenTable: (tableIdentifier: string) => void;
   onOpenDashboard: (dashboardIdOrCode: string) => void;
   onBackToWorkspace: () => void;
+  onInspectKpi?: (kpiCode: string) => void;
 }
 
 export const AssetCatalogView: React.FC<AssetCatalogViewProps> = ({
@@ -73,6 +74,7 @@ export const AssetCatalogView: React.FC<AssetCatalogViewProps> = ({
   onOpenTable,
   onOpenDashboard,
   onBackToWorkspace,
+  onInspectKpi,
 }) => {
   const [currentTab, setCurrentTab] = useState<'indicators' | 'charts' | 'tables' | 'dashboards'>(initialTab);
   const [searchQuery, setSearchQuery] = useState('');
@@ -250,9 +252,15 @@ export const AssetCatalogView: React.FC<AssetCatalogViewProps> = ({
                     >
                       <div>
                         <div className="flex items-center justify-between gap-2 mb-2">
-                          <span className="font-mono text-[10px] font-bold px-2 py-0.5 rounded bg-blue-50 text-blue-700 dark:bg-blue-950/70 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
-                            {kpi.code}
-                          </span>
+                          <button
+                            type="button"
+                            onClick={() => onInspectKpi ? onInspectKpi(kpi.code) : null}
+                            className="font-mono text-[10px] font-bold px-2 py-0.5 rounded bg-blue-50 text-blue-700 dark:bg-blue-950/70 dark:text-blue-300 border border-blue-200 dark:border-blue-800 hover:bg-blue-100 transition-colors flex items-center gap-1"
+                            title="Ver Receta Técnica de Construcción (SQL y Umbrales)"
+                          >
+                            <span>{kpi.code}</span>
+                            <span className="text-[9px] opacity-70">🔍</span>
+                          </button>
                           {kpi.dashboardCode && (
                             <button
                               type="button"
@@ -315,14 +323,25 @@ export const AssetCatalogView: React.FC<AssetCatalogViewProps> = ({
                           <span className="text-[11px] text-ink-3 italic">Sin tabla asignada</span>
                         )}
 
-                        <button
-                          type="button"
-                          onClick={() => onOpenDashboard(kpi.dashboardId || kpi.dashboardCode)}
-                          className="p-1 rounded text-ink-3 hover:text-accent hover:bg-surface-sunken transition-colors"
-                          title="Ver en Dashboard"
-                        >
-                          <Eye className="w-3.5 h-3.5" />
-                        </button>
+                        <div className="flex items-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() => onInspectKpi ? onInspectKpi(kpi.code) : null}
+                            className="px-2 py-1 rounded text-[11px] font-semibold text-[#1D5BD8] bg-blue-50 hover:bg-blue-100 border border-blue-200 transition-colors flex items-center gap-1"
+                            title="Inspeccionar Receta de Construcción"
+                          >
+                            <span>🔍 Receta</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => onOpenDashboard(kpi.dashboardId || kpi.dashboardCode)}
+                            className="p-1 rounded text-ink-3 hover:text-accent hover:bg-surface-sunken transition-colors"
+                            title="Ver en Dashboard"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
                       </div>
                     </div>
                   );

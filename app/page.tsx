@@ -24,6 +24,7 @@ import { AssetCatalogView } from '@/components/assets/asset-catalog-view';
 import { DocumentTabBar, DocumentTab } from '@/components/navigation/document-tab-bar';
 import { CommentsDrawer } from '@/components/comments/comments-drawer';
 import { AuditLogDrawer } from '@/components/audit/audit-log-drawer';
+import { KpiRecipeModal } from '@/components/modals/kpi-recipe-modal';
 import { 
   Database, Table as TableIcon, LayoutGrid, Kanban as KanbanIcon, 
   Calendar as CalendarIcon, FileText, Search, Download, Plus, Filter, ArrowUpDown, X, 
@@ -178,6 +179,7 @@ export default function HomePage() {
     },
   ]);
   const [activeTabId, setActiveTabId] = useState<string>('workspaces');
+  const [inspectingKpiCode, setInspectingKpiCode] = useState<string | null>(null);
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [workspaces, setWorkspaces] = useState<WorkspaceGroup[]>([]);
@@ -958,6 +960,7 @@ export default function HomePage() {
               onRenameBase={() => setShowBaseSettingsModal(true)}
               onCreateTable={() => setShowNewTableModal(true)}
               onCreateBase={() => setShowNewTableModal(true)}
+              onInspectKpi={(code) => setInspectingKpiCode(code)}
             />
             <div className="flex-1 flex flex-col h-full overflow-hidden min-w-0">
               <header className="h-11 bg-white border-b border-slate-200 px-4 flex items-center justify-between shrink-0 shadow-xs">
@@ -993,6 +996,8 @@ export default function HomePage() {
               </header>
               <div className="flex-1 overflow-y-auto">
                 <BiAnalyticsPage 
+                  hideFolderSidebar={true}
+                  onInspectKpi={(code) => setInspectingKpiCode(code)}
                   onNavigateToTable={async (targetTableIdentifier) => {
                     await openTableTab(targetTableIdentifier);
                   }}
@@ -1042,6 +1047,7 @@ export default function HomePage() {
               onRenameBase={() => setShowBaseSettingsModal(true)}
               onCreateTable={() => setShowNewTableModal(true)}
               onCreateBase={() => setShowNewTableModal(true)}
+              onInspectKpi={(code) => setInspectingKpiCode(code)}
             />
             <div className="flex-1 flex flex-col h-full overflow-hidden">
               <AssetCatalogView
@@ -1052,6 +1058,7 @@ export default function HomePage() {
                 charts={catalogContext.base?.subfolders?.charts || []}
                 tables={catalogContext.base?.subfolders?.tables || []}
                 dashboards={catalogContext.base?.subfolders?.dashboards || []}
+                onInspectKpi={(code) => setInspectingKpiCode(code)}
                 onOpenTable={async (tblIdentifier) => {
                   await openTableTab(tblIdentifier);
                 }}
@@ -1104,6 +1111,7 @@ export default function HomePage() {
               onRenameBase={() => setShowBaseSettingsModal(true)}
               onCreateTable={() => setShowNewTableModal(true)}
               onCreateBase={() => setShowNewTableModal(true)}
+              onInspectKpi={(code) => setInspectingKpiCode(code)}
             />
 
             {/* 2. Área Principal de Contenido */}
@@ -2509,6 +2517,19 @@ export default function HomePage() {
         isOpen={showAuditDrawer}
         onClose={() => setShowAuditDrawer(false)}
         tableId={currentTableId}
+      />
+
+      {/* Modal / Inspector de Receta de Construcción de KPIs (Issue #34) */}
+      <KpiRecipeModal
+        isOpen={!!inspectingKpiCode}
+        kpiCode={inspectingKpiCode}
+        onClose={() => setInspectingKpiCode(null)}
+        onOpenTable={(tableId) => {
+          openTableTab(tableId);
+        }}
+        onOpenDashboard={(dashboardId) => {
+          openDashboardTab(dashboardId);
+        }}
       />
     </div>
   );

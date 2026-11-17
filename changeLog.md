@@ -2,6 +2,61 @@
 
 ---
 
+## 🗓️ [2026-11-17] - Fase 11: Unificación Radical Workspaces-BI (Sidebar Único de Módulos) y Visor de Receta de Construcción de KPIs (Issue #34)
+
+### 🎯 Intención
+Resolver de raíz la dualidad estructural y el doble sidebar detectados por el usuario ([Issue #34](https://github.com/snadales/BaserowLite/issues/34)):
+1. Eliminar la barra lateral secundaria de `BiAnalyticsPage` (`FolderTreeSidebar`) que se montaba junto al `AppSidebar`, provocando interfaces duplicadas.
+2. Unificar la barra lateral principal (`AppSidebar`): reemplazar la lista plana de "Bases de datos" por **Carpetas y Módulos de Negocio** (`Operaciones · Flujos n8n`, `Seguridad · 1Password`, `Navarino · Compras`, `LinkedIn · Contenido`), organizados en sus 4 subcarpetas canónicas (`01 Indicadores`, `02 Gráficos`, `03 Tablas`, `05 Dashboards`).
+3. Crear el **Inspector y Ficha de Receta de Construcción de KPIs (`KpiRecipeModal`)**: permitir inspeccionar de forma granular cómo se construye cualquier métrica (ej. `K007` del dashboard `D003`), mostrando su valor en tiempo real, tabla de origen (`T026`), fórmula SQL analítica, ventana temporal, reglas de umbral/SLA y linaje de agentes.
+
+### 📍 Estado Actual
+- **Eliminación del Doble Sidebar**:
+  - `components/bi/bi-analytics-page.tsx`: Incorporada propiedad `hideFolderSidebar` (activa por defecto en la vista integrada), omitiendo el renderizado redundante de `FolderTreeSidebar`. Ahora el dashboard ocupa el 100% del canvas disponible junto al `AppSidebar` maestro.
+  - `bi_folders` en PostgreSQL de ZBook: Purgadas 8 carpetas duplicadas y huérfanas generadas por seeds previos, dejando exclusivamente las 4 carpetas vinculadas a dashboards activos.
+- **Transformación de `AppSidebar` a Módulos de Negocio**:
+  - `components/navigation/app-sidebar.tsx`: Eliminado el botón aislado "Dashboards & Analítica (BI)". La navegación ahora es 100% guiada por módulos de negocio bajo la sección `Carpetas y Módulos`.
+  - Al expandir un módulo, el usuario puede explorar directamente sus subcarpetas canónicas.
+  - Al hacer clic en un indicador (`K007`, `K008`, `K001`, etc.) en la subcarpeta `01 Indicadores` del sidebar, se abre inmediatamente el Inspector de Receta de Construcción.
+- **Inspector de Receta de Construcción de KPIs (`components/modals/kpi-recipe-modal.tsx`)**:
+  - Componente modal de alta fidelidad técnica con catálogo canónico para `K001` a `K012`:
+    - Código canónico en JetBrains Mono y título descriptivo.
+    - Valor en vivo (`1,420`, `$ 14.850.000.-`, `28 / 28`, `99.4%`) con comparativa MoM.
+    - Fórmula SQL y agregación técnica (ej. `SELECT COUNT(*) FROM t026_flujos_n8n WHERE status = 'success' AND executed_at >= NOW() - INTERVAL '24 hours'`).
+    - Ventana temporal y frecuencia de refresco (WebSockets / Webhooks n8n).
+    - Umbrales de alerta y semáforo SLA (🟢 Óptimo, 🟡 Advertencia, 🔴 Crítico).
+    - Linaje: generador (n8n/Odoo/Connect), consumidor (FluxTable BI) y supervisor humano.
+    - Botones de acción directa: `[Ver Tabla Fuente Txxx ↗]` y `[Ver en Dashboard Dxxx ↗]`.
+- **Interactividad en Tarjetas de Dashboard (`components/bi/bi-card-renderer.tsx`)**:
+  - El badge de código en la cabecera de cada tarjeta KPI (ej. `[K007 🔍]`) ahora es interactivo y abre directamente la Receta de Construcción.
+- **Interactividad en Catálogo de Negocio (`components/assets/asset-catalog-view.tsx`)**:
+  - Cada tarjeta de `01 Indicadores` incluye el botón `[🔍 Receta]` para ver su detalle de construcción sin tener que ir al dashboard.
+
+### 🏁 Estado Deseado
+- Una sola fuente de verdad jerárquica (Espacio de Trabajo ➔ Carpeta/Módulo de Negocio ➔ 01 Indicadores, 02 Gráficos, 03 Tablas, 05 Dashboards), con visualización transparente de las fórmulas analíticas de cada KPI y navegación fluida sin barras laterales duplicadas ni interfaces fragmentadas.
+
+### ⚠️ Problemas Encontrados y Soluciones
+- *Problema:* `FolderTreeSidebar` se renderizaba junto con `AppSidebar`, generando dos barras laterales paralelas y carpetas triplicadas (`Finanzas & Negocios`, etc.).
+  *Solución:* Se suprimió `FolderTreeSidebar` en el layout unificado y se depuraron 8 registros huérfanos en la tabla `bi_folders` de PostgreSQL en ZBook.
+- *Problema:* No existía una vista para entender cómo se calcula o construye una métrica KPI (`K007`).
+  *Solución:* Se construyó `KpiRecipeModal` con especificaciones técnicas completas (SQL, fuente, agregación, umbrales y linaje).
+
+### 🔄 Iteraciones e Historial de Ejecución
+1. **Iteración 134**: Apertura de GitHub Issue #34 para la unificación radical Workspaces-BI y visor de recetas KPI.
+2. **Iteración 135**: Depuración de 8 carpetas duplicadas en `bi_folders` en ZBook PostgreSQL.
+3. **Iteración 136**: Creación de `components/modals/kpi-recipe-modal.tsx` con catálogo de recetas para K001 a K012.
+4. **Iteración 137**: Supresión del segundo sidebar en `components/bi/bi-analytics-page.tsx`.
+5. **Iteración 138**: Vinculación de `onInspectKpi` en `AppSidebar`, `DashboardView`, `BiCardRenderer`, `AssetCatalogView` y `app/page.tsx`.
+6. **Iteración 139**: Ejecución de pruebas unitarias (64/64 aprobadas) y compilación limpia de Next.js (27/27 páginas).
+7. **Iteración 140**: Despliegue en contenedor Docker en Bastión ZBook (`tables.yarken.cl`).
+
+### 📊 Evidencia Empírica de Verificación
+- Pruebas Unitarias: 11 suites y 64 pruebas ejecutadas y aprobadas (`vitest run`).
+- Next.js Build: 27 páginas y endpoints compilados satisfactoriamente.
+- Despliegue en Bastión ZBook: Servicio respondiendo HTTP 200 en `http://localhost:8097/api/health`.
+
+---
+
 ## 🗓️ [2026-11-17] - Fase 10: Sistema de Pestañas Multi-Documento Unificado (Workspaces, Tablas, Dashboards y Catálogos Abiertos en Simultáneo) (Issue #33)
 
 ### 🎯 Intención
