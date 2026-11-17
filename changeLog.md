@@ -2,6 +2,57 @@
 
 ---
 
+## 🗓️ [2026-11-17] - Fase 6: Trazabilidad, Auditoría Forense y Atribución Cruzada de Agentes (Issue #29)
+
+### 🎯 Intención
+Implementar la arquitectura de auditoría forense y atribución de actores sintéticos y humanos ([Issue #29](https://github.com/snadales/BaserowLite/issues/29)) para responder con total certeza: ¿quién generó un registro, quién lo consultó y quién lo modificó?, diferenciando inequívocamente entre `n8n`, `Antigravity`, `Claude Code` y administradores humanos.
+
+### 📍 Estado Actual
+- **Modelo de Datos en Drizzle ORM y PostgreSQL (`db/schema.ts`)**:
+  - Incorporadas columnas `agent_client` a `api_tokens` (`n8n`, `antigravity`, `claude`, `external_script`, `human`).
+  - Incorporada columna `actor_lineage` JSONB a `records` conteniendo `{ createdBy, updatedBy, readBy }`.
+  - Verificada y conectada la tabla `audit_logs` con registro de `workspace_id`, `table_id`, `record_id`, `action` (`create`, `update`, `delete`), `actor_type`, `actor_id`, `ip_address`, `user_agent` y `changed_fields` (diff JSON de valor previo vs nuevo).
+- **Módulo de Trazabilidad (`lib/audit/audit-helper.ts`)**:
+  - Función `resolveActor(req)`: inspecciona tokens Bearer/Token (`brl_...`), cabeceras específicas `X-Agent-Client` / `X-Agent-Name` o cookies de sesión `fluxtable_session` resolviendo al actor con su rol y cliente de agente.
+  - Función `logAuditAction()`: persistencia asíncrona de eventos en `audit_logs`.
+  - Función `buildActorLineage()`: construcción inmutable del linaje con marcas temporales ISO y retención de historial.
+- **Endpoints de la API REST**:
+  - `app/api/v1/audit-logs/route.ts`: Endpoint `GET` con filtros por tabla, registro, acción, actor y límite.
+  - `app/api/v1/tokens/route.ts`: Gestión de tokens con etiqueta explícita de `agentClient` (`n8n`, `antigravity`, `claude`, `human`).
+  - `app/api/database/rows/table/[tableId]/route.ts`: Atribución automática en `POST` (creación) y exposición de `_actor_lineage` en `GET`.
+  - `app/api/database/rows/table/[tableId]/[rowId]/route.ts`: Atribución y cálculo automático de diff en `PATCH` (modificación) y registro forense en `DELETE`.
+- **Componentes UI**:
+  - `components/audit/audit-log-drawer.tsx`: Drawer interactivo con buscador por agente, filtro de acciones, badges visuales coloreados por agente (Púrpura para n8n, Azul Cobalto para Antigravity, Ámbar para Claude, Esmeralda para Humano) y visor de diff de campos alterados.
+  - `components/modals/api-tokens-modal.tsx`: Selector de agente para generación de credenciales dedicadas.
+  - Detalle de Fila en `app/page.tsx`: Bloque superior de linaje de agentes indicando origen (ej: `n8n: Facturación`), última edición (ej: `claude: Normalización SKU`) y acceso directo al registro forense.
+- **Pruebas Automatizadas y Verificación Empírica**:
+  - Creadas pruebas unitarias en `lib/audit/__tests__/audit-helper.test.ts` (64/64 pruebas pasando en 11 suites).
+  - Next.js build: 26 páginas estáticas compiladas sin errores.
+  - Verificación en vivo en PostgreSQL (`ef74174d-550a-4f5b-98d0-502ea7aba1e4`) registrando creación vía token `n8n` y mutación posterior vía agente `claude`.
+
+### 🏁 Estado Deseado
+- Cumplimiento estricto de gobernanza de datos y trazabilidad forense cruzada en el sistema, asegurando auditoría inmutable en cada mutación de datos.
+
+### ⚠️ Problemas Encontrados y Soluciones
+- *Problema:* Las mutaciones concurrentes o directas mediante scripts externos carecían de un identificador de actor unificado.
+  *Solución:* Se implementó `resolveActor` con fallback escalonado: Token Bearer con hash SHA-256 -> cabeceras `X-Agent-Client` -> cookie de sesión -> sistema central.
+
+### 🔄 Iteraciones e Historial de Ejecución
+1. **Iteración 103**: Adición de columnas `agent_client` y `actor_lineage` en PostgreSQL y Drizzle ORM.
+2. **Iteración 104**: Creación de `lib/audit/audit-helper.ts` y pruebas unitarias `lib/audit/__tests__/audit-helper.test.ts`.
+3. **Iteración 105**: Implementación del endpoint `app/api/v1/audit-logs/route.ts`.
+4. **Iteración 106**: Instrumentación de endpoints de filas para registro automático de linaje y diff de cambios.
+5. **Iteración 107**: Creación de `components/audit/audit-log-drawer.tsx` y actualización de `components/modals/api-tokens-modal.tsx`.
+6. **Iteración 108**: Integración en el detalle de fila y barra lateral en `app/page.tsx`.
+7. **Iteración 109**: Despliegue en contenedor Docker en ZBook y validación de trazabilidad con tokens reales.
+
+### 📊 Evidencia Empírica de Verificación
+- Vitest: 64/64 pruebas unitarias pasando.
+- Next.js build: 26 páginas compiladas exitosamente.
+- Test de auditoría real: Eventos de creación y edición persistidos y recuperados vía `/api/v1/audit-logs`.
+
+---
+
 ## 🗓️ [2026-11-17] - Fase 5: Sistema Polimórfico de Comentarios Contextuales (Issue #28)
 
 ### 🎯 Intención
