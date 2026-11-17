@@ -36,11 +36,11 @@ export class BiViewsGenerator {
   ): { viewName: string; createSql: string } {
     const safeTableId = tableId.replace(/-/g, '_');
     const sanitizedName = this.sanitizeIdentifier(tableName) || `table_${safeTableId}`;
-    const viewName = `tbl_${sanitizedName}`;
+    const viewName = `tbl_${sanitizedName}_${safeTableId.slice(0, 8)}`;
 
     const columnExpressions: string[] = [
       `id AS row_id`,
-      `order AS row_order`,
+      `"order" AS row_order`,
       `version AS row_version`,
       `created_at AS row_created_at`,
       `updated_at AS row_updated_at`,

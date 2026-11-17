@@ -23,8 +23,9 @@ describe('BI & Analytics Engine - Fase 1', () => {
 
       const { viewName, createSql } = BiViewsGenerator.generateViewSql(tableId, tableName, sampleFields);
 
-      expect(viewName).toBe('tbl_balance_negocios');
-      expect(createSql).toContain('CREATE OR REPLACE VIEW bi_views."tbl_balance_negocios"');
+      expect(viewName).toBe('tbl_balance_negocios_900c336b');
+      expect(createSql).toContain('CREATE OR REPLACE VIEW bi_views."tbl_balance_negocios_900c336b"');
+      expect(createSql).toContain('"order" AS row_order');
       expect(createSql).toContain('public.safe_numeric((data->>\'fld_monto\')) AS "monto_total"');
       expect(createSql).toContain('public.safe_timestamptz((data->>\'fld_fecha\')) AS "fecha_pago"');
       expect(createSql).toContain('CASE WHEN (data->>\'fld_activo\') = \'true\' THEN TRUE');
