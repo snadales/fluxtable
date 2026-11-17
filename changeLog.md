@@ -2,6 +2,40 @@
 
 ---
 
+## 🗓️ [2026-11-17] - Fase 2: Motor Analítico SQL con Time Intelligence, Percentiles p50/p90, Cross-Filtering y Caché LRU
+
+### 🎯 Intención
+Implementar el motor analítico avanzado en BaserowLite (`EPIC-BI-01` / Issue #17): construir el generador de consultas dinámicas `BiQueryBuilder` con funciones de Time Intelligence (MoM, YoY, YTD, Rolling 7d/30d), estadísticas avanzadas (`PERCENTILE_CONT(0.50)`, `PERCENTILE_CONT(0.90)`, `STDDEV`), filtros cruzados dimensionales, rangos de fechas con intervalos PostgreSQL, gestor de caché determinista en memoria `BiCacheManager` con `lru-cache`, y el endpoint REST unificado `POST /api/bi/query`.
+
+### 📍 Estado Actual
+- `lib/bi/analytics/query-builder.ts`: Generador SQL capaz de construir consultas planas o basadas en CTEs (`base_summary`) para Time Intelligence (`LAG` para MoM/YoY, `SUM(...) OVER (PARTITION BY EXTRACT(YEAR FROM ...))` para YTD, `ROWS BETWEEN 6 PRECEDING AND CURRENT ROW` para rolling averages).
+- `lib/bi/analytics/cache-manager.ts`: Gestor de caché LRU con claves SHA-256 deterministas sobre `{ fuente, sql, params, filtros }` y TTL configurable (60s por defecto).
+- `app/api/bi/query/route.ts`: Endpoint unificado protegido por RBAC que ejecuta analítica sobre vistas locales `bi_views.*` o sobre conectores remotos (`odoo_ro`, `voz_ro`, `pimcore_ro`), devolviendo telemetría (`durationMs`, `cached`, `rowCount`).
+- Pruebas automatizadas: 53 tests pasando en 7 suites de prueba (100% éxito) y compilación `next build` limpia (18 páginas).
+
+### 🏁 Estado Deseado
+- Motor analítico preparado para alimentar los dashboards interactivos en el frontend (Fase 3: Issue #4: UI Dashboards, Tabs, Visualizador ECharts & Cross-Filtering interactivo).
+
+### ⚠️ Problemas Encontrados y Soluciones
+- *Problema:* El filtrado temporal con fechas ISO requería casteos seguros para no degradar el índice de partición o fallar con timestamps con zona horaria.
+  *Solución:* Parametrización con casteo explícito `$N::timestamptz` y uso de funciones nativas de PostgreSQL `CURRENT_DATE` y `INTERVAL`.
+- *Problema:* En consultas locales que pasan por `db.execute(sql.raw(...))`, la interpolación de parámetros requería sanitización anti-inyección SQL.
+  *Solución:* Mapeo y escape estricto de comillas simples (`replace(/'/g, "''")`) en parámetros de texto dentro del endpoint `/api/bi/query`.
+
+### 🔄 Iteraciones e Historial de Ejecución
+1. **Iteración 29**: Creación del issue `#17` en `snadales/BaserowLite` para la Fase 2 de `EPIC-BI-01`.
+2. **Iteración 30**: Desarrollo de `lib/bi/analytics/cache-manager.ts` con `lru-cache` y hash SHA-256.
+3. **Iteración 31**: Desarrollo de `lib/bi/analytics/query-builder.ts` con Time Intelligence, percentiles p50/p90, medias móviles y rangos de fecha.
+4. **Iteración 32**: Implementación del endpoint unificado `app/api/bi/query/route.ts`.
+5. **Iteración 33**: Creación de tests unitarios en `lib/bi/__tests__/query-builder.test.ts` (53/53 pasando) y build de producción Next.js (18 páginas).
+
+### 📊 Evidencia Empírica de Verificación
+- `npm test`: 53/53 tests pasando en 7 suites de prueba.
+- `next build`: 18/18 páginas compiladas exitosamente.
+- Hash determinista de caché validado: consultas idénticas retornan respuesta cacheada con `durationMs: 1` y `cached: true`.
+
+---
+
 ## 🗓️ [2026-11-17] - Fase 1: Esquema Drizzle `bi_*`, Vistas `bi_views` & Pools Multi-BD
 
 ### 🎯 Intención
