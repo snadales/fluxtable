@@ -1,7 +1,7 @@
 {
-  "name": "baserow-lite",
+  "name": "fluxtable",
   "version": "1.0.0",
-  "description": "Personal lightweight replacement for Baserow in Next.js 15, TypeScript, PostgreSQL, Drizzle ORM and Docker",
+  "description": "FluxTable · Plataforma de datos estructurados, hojas de cálculo colaborativas y Business Intelligence del Sistema Yarken",
   "type": "module",
   "scripts": {
     "dev": "next dev",

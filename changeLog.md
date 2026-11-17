@@ -2,6 +2,45 @@
 
 ---
 
+## 🗓️ [2026-11-17] - Rebranding a FluxTable y Adopción Transversal del Brandbook Yarken Cobalto
+
+### 🎯 Intención
+Renombrar la plataforma de `BaserowLite` a **FluxTable** («FluxTable · Plataforma de Datos & BI | Sistema Yarken», Issue #22) y aplicar integralmente la identidad visual oficial del Brandbook Yarken v2 «Cobalto» (`referencia/marca-yarken/color`, `tipografia`, `simbolo`, `tokens`), garantizando consistencia cromática, tipográfica y de componentes visuales en toda la aplicación.
+
+### 📍 Estado Actual
+- **Tokens de Color Cobalto**: Configurados en `tailwind.config.ts` y `app/globals.css` (`bg: #F7F8FA`, `surface: #FFFFFF`, `surface-sunken: #EEF1F5`, `line: #E4E7EC`, `line-control: #7A8496`, `ink: #0F172A`, `ink-2: #475569`, `ink-3: #5B6577`, `accent: #1D5BD8`, `accent-strong: #1746A8`, `accent-tint: #E8EFFC`, estados semánticos `ok: #157038`, `warn: #B45309`, `error: #B91C1C`, `info: #0369A1`).
+- **Tipografía Dual**: Integración de fuentes Google Fonts `Manrope` (pesos 400, 500, 600, 700) para textos, cabeceras e interfaz, y `JetBrains Mono` (400, 500, 700) con `tabular-nums` para métricas numéricas KPI, timestamps y tokens de sistema en `app/layout.tsx`.
+- **Símbolo Canónico y Lockup**: Implementación de `components/brand/yarken-logo.tsx` con el isotipo Lechuza-Y canónico (`viewBox="0 0 200 200"`, radio de borde 22%) y el lockup horizontal con subtítulo `SISTEMA YARKEN` en tracking expandido (`0.08em`).
+- **Favicon Vectorial**: Creación de `public/favicon.svg` con la baldosa Cobalto y la Lechuza-Y oficial.
+- **Vistas y Modales Actualizados**: Actualización de marca y estilos en `app/layout.tsx`, `app/page.tsx`, `app/login/page.tsx`, `components/workspaces/workspaces-dashboard.tsx`, `components/modals/new-bi-card-modal.tsx`, `components/modals/my-settings-modal.tsx` y `components/modals/admin-tools-modal.tsx`.
+- **Paquete y Documentación**: Actualización de `package.json` (`name: "fluxtable"`) y reescritura de `readMe.md` bajo el título `🦉 FluxTable`.
+
+### 🏁 Estado Deseado
+- Aplicación completamente identificada como FluxTable bajo el Brandbook Cobalto en producción, integrada a la perfección en el ecosistema Yarken Homelab.
+
+### ⚠️ Problemas Encontrados y Soluciones
+- *Problema:* El fondo por defecto de la aplicación utilizaba blanco plano (`#FFFFFF`), violando el principio del Brandbook Yarken donde el fondo de lienzo debe ser `bg` (`#F7F8FA`) para otorgar contraste a las tarjetas `surface` (`#FFFFFF`).
+  *Solución:* Se ajustaron las clases globales y el contenedor raíz en `app/layout.tsx` a `bg-bg text-ink` y se revisaron las tarjetas del dashboard para elevarse sobre `surface` con bordes `line`.
+- *Problema:* Se detectaron referencias residuales en modales que todavía mencionaban `BaserowLite`.
+  *Solución:* Se realizó una búsqueda transversal y se reemplazaron por `FluxTable` tanto en UI como en títulos modales.
+
+### 🔄 Iteraciones e Historial de Ejecución
+1. **Iteración 60**: Apertura de issue `#22` en `snadales/BaserowLite` con plantilla de atribución.
+2. **Iteración 61**: Consulta y extracción de directrices del Brandbook v2 Cobalto desde Wiki.js (`referencia/marca-yarken/*`).
+3. **Iteración 62**: Adición de paleta de tokens en `tailwind.config.ts` y clases de utilidad en `app/globals.css`.
+4. **Iteración 63**: Creación del componente `components/brand/yarken-logo.tsx` y favicon SVG.
+5. **Iteración 64**: Refactorización de `app/layout.tsx`, `app/login/page.tsx`, navbar principal y modales.
+6. **Iteración 65**: Actualización de `package.json` y `readMe.md`.
+7. **Iteración 66**: Compilación y pruebas locales: 58/58 tests unitarios pasando, `npm run build` compilando 22 páginas estáticas/SSR con 0 errores.
+8. **Iteración 67**: Despliegue en producción en ZBook (`baserow_lite_app`), reinicio de contenedor y verificación HTTP 200 con verificación del nuevo título y logo.
+
+### 📊 Evidencia Empírica de Verificación
+- Tests: 58/58 unit tests en Jest pasando exitosamente.
+- Build Next.js: 22 rutas compiladas limpiamente sin errores de tipo ni de lint.
+- Health Check ZBook: `curl -s http://127.0.0.1:8097/` retorna `<title>FluxTable · Plataforma de Datos & BI | Sistema Yarken</title>`.
+
+---
+
 ## 🗓️ [2026-11-17] - Certificación Integral: Desempeño, Concurrencia, Pruebas Ácidas y Pentest Defensivo
 
 ### 🎯 Intención

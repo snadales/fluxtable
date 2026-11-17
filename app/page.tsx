@@ -17,6 +17,7 @@ import { MySettingsModal } from '@/components/modals/my-settings-modal';
 import { TableWebhooksModal } from '@/components/modals/table-webhooks-modal';
 import { TableSnapshotsModal } from '@/components/modals/table-snapshots-modal';
 import { BiAnalyticsPage } from '@/components/bi/bi-analytics-page';
+import { FluxTableLogo } from '@/components/brand/yarken-logo';
 import { 
   Database, Table as TableIcon, LayoutGrid, Kanban as KanbanIcon, 
   Calendar as CalendarIcon, FileText, Search, Download, Plus, Filter, ArrowUpDown, X, 
@@ -841,22 +842,16 @@ export default function HomePage() {
       {/* Top Bar / App Navigation */}
       <header className="h-12 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center justify-between px-4 shrink-0 shadow-sm">
         <div className="flex items-center gap-3">
-          {/* Logo y versión */}
+          {/* Logo y marca Yarken */}
           <div
             onClick={() => setViewMode('workspaces')}
-            className="flex items-center gap-2 font-bold text-sm tracking-tight text-slate-800 dark:text-white cursor-pointer hover:opacity-80 transition-opacity"
+            className="cursor-pointer hover:opacity-85 transition-opacity"
             title="Volver a Workspaces Dashboard"
           >
-            <div className={`w-6 h-6 rounded ${getThemeColor(metadata.baseColor).bg} flex items-center justify-center text-white text-xs font-black shadow-sm`}>
-              BL
-            </div>
-            <span>BaserowLite</span>
-            <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 border border-blue-200 font-normal">
-              v1.0
-            </span>
+            <FluxTableLogo size={24} showWordmark={true} />
           </div>
 
-          <div className="h-4 w-px bg-slate-200 dark:bg-slate-700 mx-1" />
+          <div className="h-4 w-px bg-line mx-1" />
 
           {/* Breadcrumb: Workspaces / Negocios / Base */}
           <div className="flex items-center gap-1.5 text-xs">

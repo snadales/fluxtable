@@ -3,18 +3,87 @@
 @tailwind utilities;
 
 :root {
-  --background: #f8fafc;
-  --foreground: #0f172a;
+  --font-sans: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: 'JetBrains Mono', Menlo, Consolas, monospace;
+
+  /* Yarken Cobalto v2 Tokens (Claro) */
+  --bg: #F7F8FA;
+  --surface: #FFFFFF;
+  --surface-sunken: #EEF1F5;
+  --line: #E4E7EC;
+  --line-control: #7A8496;
+
+  --ink: #0F172A;
+  --ink-2: #475569;
+  --ink-3: #5B6577;
+
+  --accent: #1D5BD8;
+  --accent-strong: #1746A8;
+  --accent-tint: #E8EFFC;
+  --on-accent: #FFFFFF;
+  --focus: #1D5BD8;
+
+  --ok: #157038;
+  --ok-tint: #E7F6EC;
+  --warn: #B45309;
+  --warn-tint: #FEF3E2;
+  --error: #B91C1C;
+  --error-tint: #FDECEC;
+  --info: #0369A1;
+  --info-tint: #E6F2FA;
+
+  --background: var(--bg);
+  --foreground: var(--ink);
 }
 
 .dark {
-  --background: #090d16;
-  --foreground: #f8fafc;
+  /* Yarken Cobalto v2 Tokens (Oscuro - Monitoreo) */
+  --bg: #0F141C;
+  --surface: #171E29;
+  --surface-sunken: #1E2734;
+  --line: #283142;
+  --line-control: #6B7890;
+
+  --ink: #EEF1F6;
+  --ink-2: #B4BDCC;
+  --ink-3: #A3ADBD;
+
+  --accent: #7AA2FF;
+  --accent-strong: #A5C0FF;
+  --accent-tint: #1B2740;
+  --on-accent: #0B1220;
+  --focus: #7AA2FF;
+
+  --ok: #4ADE80;
+  --ok-tint: #12291C;
+  --warn: #FBBF24;
+  --warn-tint: #2E2410;
+  --error: #F87171;
+  --error-tint: #331A1A;
+  --info: #38BDF8;
+  --info-tint: #0F2733;
+
+  --background: var(--bg);
+  --foreground: var(--ink);
 }
 
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
 }
+
+/* Clases tipográficas canónicas del Brandbook Sistema Yarken */
+.h1 { font: 700 32px/40px var(--font-sans); letter-spacing: -0.01em; color: var(--ink); }
+.h2 { font: 700 24px/32px var(--font-sans); letter-spacing: -0.005em; color: var(--ink); }
+.h3 { font: 600 19px/26px var(--font-sans); color: var(--ink); }
+.body { font: 400 16px/24px var(--font-sans); color: var(--ink); }
+.body-sm { font: 400 15px/22px var(--font-sans); color: var(--ink); }
+.button { font: 600 15px/20px var(--font-sans); }
+.label { font: 700 12px/16px var(--font-sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3); }
+.footnote { font: 500 13px/20px var(--font-sans); color: var(--ink-3); }
+.wordmark { font: 700 15px/20px var(--font-sans); letter-spacing: 0.28em; color: var(--ink); }
+.metric { font: 600 28px/32px var(--font-mono); font-variant-numeric: tabular-nums; }
+.mono { font: 400 14px/20px var(--font-mono); }
+.mono-label { font: 600 12px/16px var(--font-mono); }

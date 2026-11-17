@@ -488,7 +488,7 @@ export const AdminToolsModal: React.FC<AdminToolsModalProps> = ({
                   Authentication Providers
                 </h3>
                 <p className="text-xs text-slate-500">
-                  Proveedores de autenticación habilitados para BaserowLite en Yarken Homelab.
+                  Proveedores de autenticación habilitados para FluxTable en Yarken Homelab.
                 </p>
 
                 <div className="space-y-3">
@@ -519,11 +519,11 @@ export const AdminToolsModal: React.FC<AdminToolsModalProps> = ({
                 </h3>
                 <div className="p-4 rounded-xl border border-blue-200 dark:border-blue-800 bg-blue-50/60 dark:bg-blue-950/20 space-y-2">
                   <div className="flex items-center gap-2 text-blue-900 dark:text-blue-200 font-bold text-sm">
-                    <ShieldCheck className="w-5 h-5 text-blue-600" />
-                    <span>BaserowLite Self-Hosted · Edición Ilimitada</span>
+                    <ShieldCheck className="w-5 h-5 text-accent" />
+                    <span>FluxTable · Edición Ilimitada (Sistema Yarken)</span>
                   </div>
                   <p className="text-xs text-blue-800 dark:text-blue-300">
-                    A diferencia de Baserow clásico que bloquea SSO, auditoría y vistas avanzadas bajo planes de pago Premium y Advanced, BaserowLite incluye todas las capacidades habilitadas de forma 100% gratuita y sin límites de asientos.
+                    A diferencia de Baserow clásico que bloquea SSO, auditoría y vistas avanzadas bajo planes de pago Premium y Advanced, FluxTable incluye todas las capacidades de base de datos y BI analítico habilitadas de forma 100% gratuita y soberana.
                   </p>
                 </div>
               </div>

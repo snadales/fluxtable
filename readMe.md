@@ -1,21 +1,24 @@
-# 📌 BaserowLite
+# 🦉 FluxTable
 
-> Reemplazo personal, moderno y ligero para Baserow self-hosted, construido con **Next.js 15 (App Router)**, **TypeScript**, **PostgreSQL 16**, **Drizzle ORM** y **Docker Compose**.
+> Plataforma unificada de datos estructurados, hojas de cálculo colaborativas y Business Intelligence analítico de alto rendimiento del **Sistema Yarken**, construida con **Next.js 15 (App Router)**, **TypeScript**, **PostgreSQL 16**, **Drizzle ORM** y **Docker Compose**.
+> Aplica el **Brandbook Yarken v2 «Cobalto»** (`Manrope` + `JetBrains Mono` y paleta de contraste accesible WCAG AAA).
 
 ---
 
 ## 🎯 Objetivo y Descripción
 
 ### Objetivo
-Proporcionar una plataforma de base de datos relacional no-code de inicio rápido local con un único comando (`docker compose up -d`), con una huella de memoria mínima (<250 MB de RAM), sin intermediarios asíncronos pesados (sin Celery ni Redis), enfocada en la gestión de colores, formatos numéricos/monetarios (`es-CL`), vistas canónicas (Grid, Kanban, Formulario, Detalle) y API REST tokenizada 100% compatible con Baserow API v2.
+Proporcionar una plataforma integral de datos y BI analítico de inicio rápido local con un único comando (`docker compose up -d`), con una huella de memoria mínima (<100 MB de RAM total), sin intermediarios asíncronos pesados (sin JVM, sin Celery ni Redis), combinando hojas de cálculo colaborativas con un motor analítico avanzado (Time Intelligence MoM/YoY/YTD, percentiles p50/p90, semáforos, cross-filtering dimensional en caliente y alertas a Telegram/n8n).
 
 ### Descripción
-BaserowLite implementa el modelo estructurado **Workspace ➔ Base ➔ Tabla ➔ Campo ➔ Registro ➔ Vista**:
-- **Almacenamiento Híbrido:** Esquema relacional estricto gestionado con Drizzle ORM combinado con columnas JSONB tipadas para campos dinámicos sin penalización DDL.
+FluxTable implementa el modelo estructurado **Workspace ➔ Base ➔ Tabla ➔ Campo ➔ Registro ➔ Vista** y el módulo analítico **Carpeta ➔ Dashboard ➔ Pestaña ➔ Tarjeta (KPI / ECharts / Tabla / Markdown)**:
+- **Identidad Visual y Brandbook:** Dirección estética «Cobalto» v2 con tokens semánticos (`bg`, `surface`, `ink`, `accent` `#1D5BD8`, `ok`, `warn`, `error`, `info`), tipografía dual `Manrope` (lectura/títulos) y `JetBrains Mono` (métricas/KPIs), y símbolo canónico de la Lechuza-Y Yarken.
+- **Motor Analítico BI Integrado:** Reemplazo nativo para Metabase con soporte para percentiles continuos (`PERCENTILE_CONT`), comparativas entre periodos, caché LRU determinista (1 ms de respuesta) y conectores de sólo lectura a Odoo 20, Voz-Service y Pimcore PIM.
+- **Almacenamiento Híbrido:** Esquema relacional estricto gestionado con Drizzle ORM combinado con columnas JSONB tipadas y vistas analíticas materializables `bi_views`.
 - **Rico Soporte Visual:** Paleta semántica de 9 colores para etiquetas y estados, formato de moneda chilena (`$ 190.000`) e internacional (`US$ 1,250.50`), fechas y formateo condicional de filas/celdas.
 - **Vistas Canónicas:** Grid virtualizado con edición en celda y teclado, Kanban interactivo con drag-and-drop, Formularios públicos de captura con validación Zod y Vista Detalle con notas Markdown (estilo Notion).
 - **Motor de Fórmulas Ligeras (`formula-lite`):** Evaluador seguro con analizador sintáctico AST propio en TypeScript (sin `eval()`) con soporte para códigos de error (`#DIV/0!`, `#REF!`, `#VALUE!`).
-- **Seguridad e Integridad:** Concurrencia optimista basada en versiones (`version`), auditoría forense (`audit_logs`), papelera con restauración y API REST dinámica asegurada con tokens Bearer.
+- **Seguridad e Integridad:** Concurrencia optimista basada en versiones (`version`), auditoría forense (`audit_logs`), papelera con restauración y API REST dinámica asegurada con tokens Bearer y Cloudflare Zero Trust.
 - **Webhooks y Snapshots:** Disparador asíncrono de eventos HTTP a n8n (`rows.created`, `rows.updated`, `rows.deleted`) y sistema de snapshots atómicos en JSONB para respaldo y rollback instantáneo con 1 clic.
 - **Conector Nativo para n8n (`n8n-nodes-baserow-lite`):** Nodo comunitario empaquetado con soporte para operaciones masivas de 500 filas (`batchCreate`, `batchUpdate`, `batchDelete`), gestión dinámica de campos y trigger webhook.
 

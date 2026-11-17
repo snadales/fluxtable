@@ -171,7 +171,7 @@ export function NewBiCardModal({ isOpen, onClose }: NewBiCardModalProps) {
                 onChange={(e) => setSourceType(e.target.value)}
                 className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-blue-500 bg-white"
               >
-                <option value="local_baserow">BaserowLite (Local PG)</option>
+                <option value="local_baserow">FluxTable (Local PG)</option>
                 <option value="odoo_ro">Odoo 20 (RO Pool)</option>
                 <option value="voz_ro">Voz Service (RO Pool)</option>
                 <option value="pimcore_ro">Pimcore PIM (MariaDB)</option>

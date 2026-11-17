@@ -281,11 +281,11 @@ export const MySettingsModal: React.FC<MySettingsModalProps> = ({
                   Model Context Protocol (MCP)
                 </h3>
                 <p className="text-slate-600 dark:text-slate-400 text-xs">
-                  Permite a asistentes IA (Antigravity, LiteLLM, Claude Code) consultar y modificar tablas de BaserowLite en tiempo real mediante el protocolo MCP estándar.
+                  Permite a asistentes IA (Antigravity, LiteLLM, Claude Code) consultar y modificar tablas de FluxTable en tiempo real mediante el protocolo MCP estándar.
                 </p>
 
                 <div className="p-3 rounded-lg bg-slate-900 text-slate-200 font-mono text-[11px] border border-slate-800 space-y-1 relative">
-                  <div>{`// Conexión MCP BaserowLite`}</div>
+                  <div>{`// Conexión MCP FluxTable`}</div>
                   <div className="text-emerald-400">ENDPOINT = "https://tables.yarken.cl/api"</div>
                   <div className="text-amber-300">AUTH = "Bearer baserow_lite_..."</div>
                   <button

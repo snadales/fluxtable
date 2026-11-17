@@ -2,7 +2,8 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Database, ShieldCheck, ArrowRight, Lock, Mail } from 'lucide-react';
+import { ShieldCheck, ArrowRight, Lock, Mail } from 'lucide-react';
+import { YarkenSymbol } from '@/components/brand/yarken-logo';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -24,28 +25,33 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-bg px-4">
       <div className="w-full max-w-sm space-y-6">
-        {/* Logo y Encabezado */}
+        {/* Logo y Encabezado con Brandbook Cobalto */}
         <div className="text-center space-y-2">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-blue-600 text-white shadow-md shadow-blue-500/20">
-            <Database className="w-6 h-6" />
+          <div className="inline-flex items-center justify-center">
+            <YarkenSymbol size={52} variant="tile" />
           </div>
-          <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
-            Iniciar Sesión en BaserowLite
-          </h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
-            Base de datos estructurada personal, rápida y 100% soberana
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-ink">
+              FluxTable
+            </h1>
+            <p className="text-[11px] font-bold tracking-[0.08em] uppercase text-ink-3 mt-0.5">
+              SISTEMA YARKEN
+            </p>
+          </div>
+          <p className="text-xs text-ink-2 max-w-xs mx-auto">
+            Plataforma unificada de datos colaborativos y Business Intelligence
           </p>
         </div>
 
         {/* Tarjeta de Inicio de Sesión */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm space-y-4">
+        <div className="bg-surface border border-line rounded-2xl p-6 shadow-sm space-y-4">
           {/* Botón de Google SSO */}
           <button
             type="button"
             onClick={handleGoogleLogin}
-            className="w-full flex items-center justify-center gap-3 py-2.5 px-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700/60 text-slate-700 dark:text-slate-200 text-xs font-semibold shadow-sm transition-all hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full flex items-center justify-center gap-3 py-2.5 px-4 rounded-xl border border-line-control bg-surface hover:bg-surface-sunken text-ink text-xs font-semibold shadow-2xs transition-all focus:outline-none focus:ring-2 focus:ring-accent"
           >
             <svg className="w-4 h-4" viewBox="0 0 24 24">
               <path

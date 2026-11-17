@@ -6,6 +6,7 @@ import {
   Settings, Users, Trash2, Clock, FileText, ChevronRight, Check,
   Folder, ShieldCheck, BarChart3
 } from 'lucide-react';
+import { FluxTableLogo, YarkenSymbol } from '@/components/brand/yarken-logo';
 
 export interface BaseItem {
   id: string;
@@ -190,17 +191,9 @@ export const WorkspacesDashboard: React.FC<WorkspacesDashboardProps> = ({
           </div>
         </div>
 
-        {/* Sidebar Footer Brand (Print 7) */}
-        <div className="p-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
-          <div className="flex items-center gap-2 font-bold tracking-tight text-slate-800 dark:text-white">
-            <div className="w-5 h-5 rounded bg-blue-600 flex items-center justify-center text-white text-[10px] font-black">
-              BL
-            </div>
-            <span>BaserowLite</span>
-            <span className="text-[9px] font-mono px-1 py-0.2 rounded bg-blue-50 text-blue-600 border border-blue-200">
-              v1.0
-            </span>
-          </div>
+        {/* Sidebar Footer Brand con Sistema Yarken */}
+        <div className="p-3 border-t border-line flex items-center justify-between text-xs bg-surface-sunken/40">
+          <FluxTableLogo size={22} showWordmark={true} />
         </div>
       </aside>
 
