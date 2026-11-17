@@ -29,7 +29,7 @@ describe('E2E Transformation and Core Loop', () => {
     expect(totalResult.error).toBeUndefined();
 
     // 3. Formateo de Moneda Localizada (es-CL vs USD)
-    const formattedUsd = formatCurrency(totalResult.value, {
+    const formattedUsd = formatCurrency(totalResult.value as number, {
       currencySymbol: 'US$',
       precision: 2,
       thousandsSeparator: ',',

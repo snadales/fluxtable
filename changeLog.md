@@ -54,3 +54,8 @@ Inicializar el repositorio independiente `07_BaserowLite` y elaborar el diseño 
     - Se agregó la regla de Ingress en Cloudflare Tunnel ('a8bc2e17-8551-438e-aa99-c4a69f8e4069') para 'baserow-lite.yarken.cl' -> 'http://127.0.0.1:8097'.
     - Se habilitó la regla de red en UFW de ZBook para la subred LAN '192.168.0.0/16' en el puerto 8097.
     - Acceso HTTPS verificado y operativo desde dispositivos móviles (iPhone) y externos bajo 'https://baserow-lite.yarken.cl'.
+14. **Iteración 14**: Split-Horizon DNS en AdGuard Home y optimización exclusiva a vista de Tabla:
+    - Configuración de DNS rewrites en AdGuard Home (`192.168.60.25` y réplica en `192.168.60.22`) para `baserow-lite.yarken.cl` y `tables.yarken.cl` resolviendo en 0ms hacia Caddy (`192.168.60.25`).
+    - Simplificación visual de la UI principal (`app/page.tsx`) enfocada 100% en la experiencia de Tabla (Grid), eliminando pestañas superfluas (Kanban/Formulario) para maximizar área de trabajo y velocidad en dispositivos móviles.
+    - Barra de herramientas optimizada: búsqueda integrada con botón de limpieza, exportación a CSV, adición de filas optimistas y sincronización en tiempo real con PostgreSQL 16.
+    - Suite de 39 pruebas automáticas en vitest verificadas y compilación TypeScript limpia.
