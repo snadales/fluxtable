@@ -2,6 +2,39 @@
 
 ---
 
+## 🗓️ [2026-11-17] - Fase 4: Automatizaciones, Umbrales de Semáforo y Alertas hacia n8n/Telegram
+
+### 🎯 Intención
+Construir el subsistema de observabilidad analítica, umbrales y alertas automáticas en BaserowLite (`EPIC-BI-01` / Issue #19): implementar la clase evaluadora `ThresholdChecker` para clasificar métricas en tres niveles (`normal`, `warning`, `critical`) en dirección ascendente o descendente, desarrollar el despachador de alertas `POST /api/bi/alerts/evaluate` con integración hacia webhooks de n8n o hacia `yarken-comms:8105` para despacho inmediato a Telegram, y crear el modal interactivo `ThresholdConfigModal` para configurar umbrales por tarjeta.
+
+### 📍 Estado Actual
+- `lib/bi/alerts/threshold-checker.ts`: Evaluador matemático de umbrales condicionales con mapeo de clases CSS (`bg-emerald-50`, `bg-amber-50`, `bg-rose-50 animate-pulse`), mensajes informativos y compatibilidad con directivas `above` (sobrecostos, retrasos) y `below` (márgenes, stock de seguridad).
+- `app/api/bi/alerts/evaluate/route.ts`: Endpoint REST protegido por RBAC que escanea las reglas activas de `bi_alerts`, ejecuta la consulta analítica más reciente de la tarjeta, compara los valores contra los umbrales configurados en `bi_thresholds` y despacha el webhook saliente en caso de transgresión.
+- `components/modals/threshold-config-modal.tsx`: Modal visual para parametrizar umbrales de advertencia, críticos, dirección del semáforo y URL del webhook de notificación.
+- Pruebas automatizadas: 58 tests pasando en 9 suites de prueba (100% éxito) y compilación `next build` limpia (22 páginas).
+
+### 🏁 Estado Deseado
+- Sistema analítico con observabilidad proactiva capaz de alertar a Sebastián en Telegram cuando un KPI del homelab o negocio se desvíe de los umbrales operativos.
+- Preparado para la Fase 5 (Issue #6: Migración y Validación en Paralelo frente a Metabase y Baserow clásico).
+
+### ⚠️ Problemas Encontrados y Soluciones
+- *Problema:* Error de casteo en TypeScript al invocar `BiQueryBuilder.buildQuery(card.queryConfigJson)` por inferencia estricta de interfaz.
+  *Solución:* Se casteó explícitamente el campo JSONB a la interfaz analítica `BiQueryConfig`.
+
+### 🔄 Iteraciones e Historial de Ejecución
+1. **Iteración 42**: Creación del issue `#19` en `snadales/BaserowLite` para la Fase 4 de `EPIC-BI-01`.
+2. **Iteración 43**: Desarrollo de `lib/bi/alerts/threshold-checker.ts` con lógica de semáforos tricolor.
+3. **Iteración 44**: Implementación de `app/api/bi/alerts/evaluate/route.ts` con evaluador y despachador de webhooks.
+4. **Iteración 45**: Creación de `components/modals/threshold-config-modal.tsx`.
+5. **Iteración 46**: Creación de tests unitarios en `lib/bi/__tests__/threshold-checker.test.ts` (58/58 pasando) y build de producción Next.js (22 páginas).
+
+### 📊 Evidencia Empírica de Verificación
+- `npm test`: 58/58 tests pasando en 9 suites de prueba.
+- `next build`: 22/22 páginas compiladas exitosamente.
+- `ThresholdChecker`: Pruebas de dirección ascendente y descendente verificadas con rangos de advertencia y crítico.
+
+---
+
 ## 🗓️ [2026-11-17] - Fase 3: UI de Dashboards, Pestañas, Visualizador ECharts & Cross-Filtering interactivo
 
 ### 🎯 Intención
