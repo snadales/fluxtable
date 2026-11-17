@@ -1,0 +1,45 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: baserow_lite_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-baserow_lite}
+      POSTGRES_USER: ${POSTGRES_USER:-baserow_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-baserow_pass}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-baserow_user} -d ${POSTGRES_DB:-baserow_lite}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: baserow_lite_app
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATABASE_URL: postgresql://${POSTGRES_USER:-baserow_user}:${POSTGRES_PASSWORD:-baserow_pass}@postgres:5432/${POSTGRES_DB:-baserow_lite}
+      APP_SECRET: ${APP_SECRET:-default_secret_key_change_me_32_bytes}
+      STORAGE_DRIVER: ${STORAGE_DRIVER:-local}
+      LOCAL_STORAGE_PATH: /app/storage/uploads
+      ALLOWED_EMAILS: ${ALLOWED_EMAILS:-snadales@gmail.com}
+    ports:
+      - "${PORT:-3000}:3000"
+    volumes:
+      - ./data/uploads:/app/storage/uploads
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/_health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
