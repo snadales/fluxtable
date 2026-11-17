@@ -19,6 +19,7 @@ import { TableSnapshotsModal } from '@/components/modals/table-snapshots-modal';
 import { BiAnalyticsPage } from '@/components/bi/bi-analytics-page';
 import { FluxTableLogo } from '@/components/brand/yarken-logo';
 import { AppSidebar } from '@/components/navigation/app-sidebar';
+import { CommentsDrawer } from '@/components/comments/comments-drawer';
 import { 
   Database, Table as TableIcon, LayoutGrid, Kanban as KanbanIcon, 
   Calendar as CalendarIcon, FileText, Search, Download, Plus, Filter, ArrowUpDown, X, 
@@ -26,7 +27,7 @@ import {
   CheckCircle2, AlertCircle, Sparkles, PlusCircle, Eye, Rss, Copy, Check,
   Ship, Package, ShoppingCart, Briefcase, BarChart2, Globe, Tag, Settings,
   Key, User, LogOut, ChevronDown, Folder, Palette, ChevronRight, Home, ArrowLeft, LayoutDashboard,
-  Webhook, History, Layers, MoreHorizontal
+  Webhook, History, Layers, MoreHorizontal, MessageSquare
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { ProgressBar } from '@/components/ui/progress-bar';
@@ -98,6 +99,18 @@ export default function HomePage() {
   const [showColorPopover, setShowColorPopover] = useState(false);
   const [showRowHeightPopover, setShowRowHeightPopover] = useState(false);
   const [showViewPickerPopover, setShowViewPickerPopover] = useState(false);
+
+  // Estados de Comentarios Contextuales (Issue #28)
+  const [showCommentsDrawer, setShowCommentsDrawer] = useState(false);
+  const [activeCommentTarget, setActiveCommentTarget] = useState<{
+    type: 'row' | 'table' | 'dashboard' | 'card';
+    id: string;
+    title: string;
+  }>({
+    type: 'table',
+    id: '865',
+    title: 'Lotes de Importación',
+  });
 
   // Metadatos de Base y Tabla (Nombres, Descripciones, Categorías, Iconos, Colores, Tags)
   const [metadata, setMetadata] = useState<BaseMetadata>({
@@ -1511,6 +1524,24 @@ export default function HomePage() {
             <span>Snapshots</span>
           </button>
 
+          {/* Botón Comentarios de Tabla (Issue #28) */}
+          <button
+            type="button"
+            onClick={() => {
+              setActiveCommentTarget({
+                type: 'table',
+                id: currentTableId,
+                title: metadata.tableName,
+              });
+              setShowCommentsDrawer(true);
+            }}
+            className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/60 rounded-md transition-colors shadow-2xs"
+            title="Abrir panel de comentarios de la tabla"
+          >
+            <MessageSquare className="w-3.5 h-3.5 text-accent" />
+            <span>Comentarios</span>
+          </button>
+
           <button
             type="button"
             onClick={handleAddRow}
@@ -1892,6 +1923,21 @@ export default function HomePage() {
             <div className="flex items-center gap-1">
               <button
                 type="button"
+                onClick={() => {
+                  setActiveCommentTarget({
+                    type: 'row',
+                    id: selectedRecord.id,
+                    title: `Fila ${selectedRecord.data['Código Contenedor'] || selectedRecord.id}`,
+                  });
+                  setShowCommentsDrawer(true);
+                }}
+                title="Comentarios de este registro"
+                className="p-1 rounded-md text-accent hover:bg-accent/10 transition-colors"
+              >
+                <MessageSquare className="w-4 h-4" />
+              </button>
+              <button
+                type="button"
                 onClick={() => handleDeleteRow(selectedRecord.id)}
                 title="Mover a la papelera"
                 className="p-1 rounded-md text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40"
@@ -2204,6 +2250,16 @@ export default function HomePage() {
         onSnapshotRestored={() => {
           loadData();
         }}
+      />
+
+      {/* Drawer de Comentarios Polimórficos (Issue #28) */}
+      <CommentsDrawer
+        isOpen={showCommentsDrawer}
+        onClose={() => setShowCommentsDrawer(false)}
+        targetType={activeCommentTarget.type}
+        targetId={activeCommentTarget.id}
+        targetTitle={activeCommentTarget.title}
+        currentUser={{ name: user.name, email: user.email }}
       />
       </div>
     </div>

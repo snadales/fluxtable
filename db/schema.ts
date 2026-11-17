@@ -395,3 +395,24 @@ export const biSyncRuns = pgTable('bi_sync_runs', {
 }, (t) => [
   index('bi_sync_runs_dataset_idx').on(t.datasetId),
 ]);
+
+// -----------------------------------------------------------------------------
+// 6. Comentarios Polimórficos (Filas, Tablas, Dashboards, KPIs) - Issue #28
+// -----------------------------------------------------------------------------
+export const comments = pgTable('comments', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  targetType: text('target_type', {
+    enum: ['row', 'table', 'dashboard', 'card'],
+  }).notNull(),
+  targetId: text('target_id').notNull(),
+  userId: uuid('user_id'),
+  authorName: text('author_name').default('Sebastián Nadales').notNull(),
+  authorEmail: text('author_email'),
+  content: text('content').notNull(),
+  resolved: boolean('resolved').default(false).notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+}, (t) => [
+  index('comments_target_idx').on(t.targetType, t.targetId),
+  index('comments_resolved_idx').on(t.resolved),
+]);

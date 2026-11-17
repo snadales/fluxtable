@@ -2,6 +2,50 @@
 
 ---
 
+## 🗓️ [2026-11-17] - Fase 5: Sistema Polimórfico de Comentarios Contextuales (Issue #28)
+
+### 🎯 Intención
+Implementar un sistema de colaboración y discusión contextual polimórfico ([Issue #28](https://github.com/snadales/BaserowLite/issues/28)) para permitir a operadores, revisores y agentes de IA registrar observaciones de mejora, justificar discrepancias operativas o comentar decisiones directamente sobre filas, tablas, dashboards y tarjetas KPI.
+
+### 📍 Estado Actual
+- **Modelo de Datos en Drizzle ORM (`db/schema.ts`)**:
+  - Creada tabla `comments` con soporte polimórfico mediante `target_type` (`row`, `table`, `dashboard`, `card`) y `target_id`.
+  - Atributos: `id`, `author_name`, `author_email`, `content` (Markdown multilínea), `resolved` (booleano de seguimiento) y timestamps con índices de búsqueda optimizados.
+- **API REST de Comentarios**:
+  - `app/api/comments/route.ts`: Endpoint `GET` con filtros por `targetType` y `targetId` ordenados cronológicamente; endpoint `POST` con validación exhaustiva mediante esquema Zod.
+  - `app/api/comments/[id]/route.ts`: Endpoint `PATCH` para alternar estado de resolución (`resolved`) o actualizar contenido; endpoint `DELETE` para eliminación segura.
+- **Componente React `CommentsDrawer` (`components/comments/comments-drawer.tsx`)**:
+  - Panel lateral deslizante con indicador dinámico del elemento en discusión.
+  - Stream de comentarios con avatares tipificados (distintivo púrpura `AGENTE` para bots como n8n, Antigravity y Claude; distintivo azul para usuarios humanos).
+  - Filtro por estado: `Todos`, `Abiertos` y `Resueltos`.
+  - Acción rápida de marcado como resuelto (`CheckCircle2`) y eliminación.
+  - Formulario de entrada con soporte para `@menciones` y atajo de teclado (`Cmd+Enter`).
+- **Integración UI**:
+  - Botón `Comentarios` en la barra superior de acciones de la tabla.
+  - Botón de comentarios específico en el Drawer de Detalle de Fila.
+- **Pruebas Automatizadas**:
+  - Creado archivo de pruebas unitarias `lib/__tests__/comments.test.ts` evaluando la estructura de comentarios polimórficos, contenido y toggle de resolución (61/61 tests pasando).
+
+### 🏁 Estado Deseado
+- Capacidad colaborativa nativa integrada en todos los niveles del ecosistema de datos, permitiendo auditar el razonamiento humano y sintético sobre cada registro.
+
+### ⚠️ Problemas Encontrados y Soluciones
+- *Problema:* El esquema inicial no contemplaba la distinción visual entre comentarios de agentes sintéticos y usuarios humanos.
+  *Solución:* Se incorporó detección heurística en `CommentsDrawer` identificando prefijos/nombres de agentes (`n8n`, `antigravity`, `claude`) para asignar badges y avatares dedicados.
+
+### 🔄 Iteraciones e Historial de Ejecución
+1. **Iteración 98**: Definición de la tabla `comments` con índices en `db/schema.ts`.
+2. **Iteración 99**: Creación de los endpoints `app/api/comments/route.ts` y `app/api/comments/[id]/route.ts`.
+3. **Iteración 100**: Desarrollo del componente `components/comments/comments-drawer.tsx`.
+4. **Iteración 101**: Integración de `CommentsDrawer` en `app/page.tsx` para vistas de tabla y fila.
+5. **Iteración 102**: Creación de pruebas unitarias en `lib/__tests__/comments.test.ts` (61/61 pasando) y build exitoso (25/25 páginas).
+
+### 📊 Evidencia Empírica de Verificación
+- Next.js build: 25 páginas generadas con 0 errores TypeScript/linter.
+- Vitest: 61 pruebas pasando en 10 archivos.
+
+---
+
 ## 🗓️ [2026-11-17] - Fase 4: Drag & Drop en Kanban, Calendario Multiescala, Formulario con Help Text, Galería y Timeline (Issue #27)
 
 ### 🎯 Intención
