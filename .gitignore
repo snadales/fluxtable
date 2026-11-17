@@ -1,0 +1,24 @@
+# Archivos de entorno y credenciales (crítico)
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+secrets.json
+
+# Archivos de sistema y editores
+.DS_Store
+.vscode/
+.idea/
+
+# Artefactos de construcción y dependencias
+node_modules/
+.next/
+dist/
+build/
+coverage/
+
+# Datos persistentes de Docker
+data/
+data/postgres/
+data/uploads/
