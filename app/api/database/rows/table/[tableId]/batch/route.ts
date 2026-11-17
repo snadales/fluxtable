@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db, schema } from '@/db';
 import { eq, and, isNull, inArray } from 'drizzle-orm';
 import { resolveTableId } from '@/lib/table-resolver';
+import { triggerTableWebhooks } from '@/lib/webhook-dispatcher';
 
 interface RouteContext {
   params: Promise<{ tableId: string }>;
@@ -70,6 +71,9 @@ export async function POST(req: NextRequest, context: RouteContext) {
       }
       return rowResult;
     });
+
+    // Disparar Webhooks salientes para filas creadas en lote
+    triggerTableWebhooks(tableId, 'rows.created', results);
 
     return NextResponse.json({ items: results }, { status: 201 });
   } catch (err: any) {
@@ -151,6 +155,9 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
       updatedResults.push(rowResult);
     }
 
+    // Disparar Webhooks salientes para filas actualizadas en lote
+    triggerTableWebhooks(tableId, 'rows.updated', updatedResults);
+
     return NextResponse.json({ items: updatedResults });
   } catch (err: any) {
     console.error('Error en batch update:', err);
@@ -184,6 +191,9 @@ export async function DELETE(req: NextRequest, context: RouteContext) {
       .update(schema.records)
       .set({ deletedAt: new Date() })
       .where(and(eq(schema.records.tableId, tableId as any), inArray(schema.records.id, stringIds)));
+
+    // Disparar Webhooks salientes para filas eliminadas en lote
+    triggerTableWebhooks(tableId, 'rows.deleted', stringIds.map(id => ({ id })));
 
     return NextResponse.json({ success: true, deletedCount: stringIds.length });
   } catch (err: any) {

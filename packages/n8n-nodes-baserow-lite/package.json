@@ -1,0 +1,35 @@
+{
+  "name": "n8n-nodes-baserow-lite",
+  "version": "1.0.0",
+  "description": "Conector especializado de n8n para BaserowLite con soporte de operaciones batch, gestión de esquemas, snapshots y webhooks instantáneos",
+  "license": "MIT",
+  "homepage": "https://wiki.yarken.cl",
+  "keywords": [
+    "n8n-community-node-package"
+  ],
+  "author": {
+    "name": "Sebastián Nadales",
+    "email": "snadales@gmail.com"
+  },
+  "main": "dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc"
+  },
+  "n8n": {
+    "n8nNodesApiVersion": 1,
+    "nodes": [
+      "dist/nodes/BaserowLite/BaserowLite.node.js",
+      "dist/nodes/BaserowLite/BaserowLiteTrigger.node.js"
+    ],
+    "credentials": [
+      "dist/credentials/BaserowLiteApi.credentials.js"
+    ]
+  },
+  "devDependencies": {
+    "n8n-workflow": "^1.60.0",
+    "typescript": "^5.6.3"
+  }
+}

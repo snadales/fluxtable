@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db, schema } from '@/db';
 import { eq, and, isNull } from 'drizzle-orm';
 import { resolveTableId } from '@/lib/table-resolver';
+import { triggerTableWebhooks } from '@/lib/webhook-dispatcher';
 
 export async function GET(
   req: NextRequest,
@@ -121,6 +122,9 @@ export async function POST(
       const fieldName = userFieldNames ? (tableFields.find(f => f.id === k)?.name || k) : k;
       responseResult[fieldName] = v;
     }
+
+    // Disparar Webhooks salientes de forma asíncrona
+    triggerTableWebhooks(tableId, 'rows.created', [responseResult]);
 
     return NextResponse.json(responseResult, { status: 201 });
   } catch (err: any) {

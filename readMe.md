@@ -16,6 +16,8 @@ BaserowLite implementa el modelo estructurado **Workspace ➔ Base ➔ Tabla ➔
 - **Vistas Canónicas:** Grid virtualizado con edición en celda y teclado, Kanban interactivo con drag-and-drop, Formularios públicos de captura con validación Zod y Vista Detalle con notas Markdown (estilo Notion).
 - **Motor de Fórmulas Ligeras (`formula-lite`):** Evaluador seguro con analizador sintáctico AST propio en TypeScript (sin `eval()`) con soporte para códigos de error (`#DIV/0!`, `#REF!`, `#VALUE!`).
 - **Seguridad e Integridad:** Concurrencia optimista basada en versiones (`version`), auditoría forense (`audit_logs`), papelera con restauración y API REST dinámica asegurada con tokens Bearer.
+- **Webhooks y Snapshots:** Disparador asíncrono de eventos HTTP a n8n (`rows.created`, `rows.updated`, `rows.deleted`) y sistema de snapshots atómicos en JSONB para respaldo y rollback instantáneo con 1 clic.
+- **Conector Nativo para n8n (`n8n-nodes-baserow-lite`):** Nodo comunitario empaquetado con soporte para operaciones masivas de 500 filas (`batchCreate`, `batchUpdate`, `batchDelete`), gestión dinámica de campos y trigger webhook.
 
 ---
 

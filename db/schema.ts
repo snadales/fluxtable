@@ -224,3 +224,43 @@ export const apiTokens = pgTable('api_tokens', {
   expiresAt: timestamp('expires_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 });
+
+// -----------------------------------------------------------------------------
+// 11. Webhooks Salientes (Notificaciones a n8n y sistemas externos)
+// -----------------------------------------------------------------------------
+export const webhooks = pgTable('webhooks', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  tableId: uuid('table_id').references(() => tables.id, { onDelete: 'cascade' }).notNull(),
+  name: text('name').notNull(),
+  url: text('url').notNull(),
+  events: jsonb('events').$type<string[]>().default(['rows.created', 'rows.updated', 'rows.deleted']).notNull(),
+  requestType: text('request_type').default('POST').notNull(),
+  headers: jsonb('headers').$type<Record<string, string>>().default({}).notNull(),
+  isActive: boolean('is_active').default(true).notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+}, (t) => [
+  index('webhooks_table_id_idx').on(t.tableId),
+]);
+
+// -----------------------------------------------------------------------------
+// 12. Snapshots de Tablas y Bases (Respaldos en caliente)
+// -----------------------------------------------------------------------------
+export const snapshots = pgTable('snapshots', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  name: text('name').notNull(),
+  tableId: uuid('table_id').references(() => tables.id, { onDelete: 'cascade' }),
+  baseId: uuid('base_id').references(() => bases.id, { onDelete: 'cascade' }),
+  data: jsonb('data').$type<{
+    table?: any;
+    fields?: any[];
+    views?: any[];
+    records?: any[];
+    base?: any;
+  }>().notNull(),
+  createdById: uuid('created_by_id').references(() => users.id, { onDelete: 'set null' }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+}, (t) => [
+  index('snapshots_table_id_idx').on(t.tableId),
+  index('snapshots_base_id_idx').on(t.baseId),
+]);

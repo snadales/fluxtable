@@ -3,6 +3,7 @@ node_modules
 .git
 data
 storage
+packages
 *.log
 .env
 .env.*

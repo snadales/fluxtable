@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db, schema } from '@/db';
 import { eq, and, isNull } from 'drizzle-orm';
 import { resolveTableId } from '@/lib/table-resolver';
+import { triggerTableWebhooks } from '@/lib/webhook-dispatcher';
 
 export async function GET(
   req: NextRequest,
@@ -113,6 +114,9 @@ export async function PATCH(
       responseResult[fieldName] = v;
     }
 
+    // Disparar Webhooks salientes para fila actualizada
+    triggerTableWebhooks(tableId, 'rows.updated', [responseResult]);
+
     return NextResponse.json(responseResult);
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
@@ -124,13 +128,18 @@ export async function DELETE(
   { params }: { params: Promise<{ tableId: string; rowId: string }> }
 ) {
   try {
-    const { rowId } = await params;
+    const { tableId: rawTableId, rowId } = await params;
+    const tableId = await resolveTableId(rawTableId);
 
     // Soft delete
     await db
       .update(schema.records)
       .set({ deletedAt: new Date() })
       .where(eq(schema.records.id, rowId as any));
+
+    if (tableId) {
+      triggerTableWebhooks(tableId, 'rows.deleted', [{ id: rowId }]);
+    }
 
     return new NextResponse(null, { status: 204 });
   } catch (err: any) {

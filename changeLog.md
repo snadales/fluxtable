@@ -2,7 +2,48 @@
 
 ---
 
-## 🗓️ [2026-11-16] - Inicialización y Diseño Técnico Completo
+## 🗓️ [2026-11-17] - Paridad Total (Webhooks, Snapshots) y Conector Especializado para n8n
+
+### 🎯 Intención
+Implementar la paridad funcional completa en BaserowLite requerida por la auditoría visual frente a Baserow clásico (Webhooks salientes asíncronos y Snapshots con rollback en caliente), omitiendo la migración de datos reales por orden explícita del usuario, y desarrollar e instalar el conector especializado nativo para n8n (`n8n-nodes-baserow-lite`).
+
+### 📍 Estado Actual
+- Webhooks salientes operativos en PostgreSQL y despachador en `lib/webhook-dispatcher.ts` con disparadores automáticos en `/rows` y `/batch` (crear, actualizar, eliminar).
+- Endpoints REST `/api/database/webhooks/table/[tableId]` y `/api/database/webhooks/[webhookId]/test` verificados (HTTP 200/201).
+- Snapshots en caliente operativos con guardado atómico en JSONB y restauración instantánea (`POST /api/database/snapshots/[id]/restore`).
+- Modales interactivos `TableWebhooksModal` y `TableSnapshotsModal` integrados en la barra de herramientas de la tabla.
+- Paquete npm de conector comunitario de n8n `n8n-nodes-baserow-lite` desarrollado, compilado con TypeScript, desplegado en ZBook en `/home/snadales/docker/n8n/n8n_data/nodes/node_modules/n8n-nodes-baserow-lite/`, y registrado en `package.json` de n8n.
+- Contenedores en ZBook: `baserow_lite_app` (45.42 MiB) y `baserow_lite_db` (38.9 MiB) saludables (~84 MiB de consumo total vs 2.55 GiB de Baserow clásico).
+- Suite de pruebas vitest: 41/41 pasando. Build de Next.js: 16/16 rutas estáticas y dinámicas compiladas.
+
+### 🏁 Estado Deseado
+- Sistema 100% preparado para reemplazar a Baserow clásico cuando el usuario ordene la migración de datos.
+- n8n con nodo dedicado capaz de ejecutar operaciones batch de 500 filas en una sola petición HTTP, manipular esquemas dinámicamente y disparar triggers instantáneos por webhook.
+
+### ⚠️ Problemas Encontrados y Soluciones
+- *Problema:* El healthcheck del contenedor `baserow_lite_app` fallaba reportando "connection refused" en `[::1]:3000`.
+  *Causa:* `localhost` resolvía a IPv6 `::1`, mientras que Node/Next.js escuchaba en IPv4.
+  *Solución:* Se actualizó el healthcheck en `docker-compose.yml` para apuntar explícitamente a `http://127.0.0.1:3000/api/health`.
+- *Problema:* El build de Docker de Next.js fallaba al escanear los tipos de `packages/n8n-nodes-baserow-lite/credentials/BaserowLiteApi.credentials.ts` por falta de `n8n-workflow`.
+  *Solución:* Se excluyó `packages/` en `tsconfig.json` y `.dockerignore` del proyecto Next.js raíz, manteniendo el paquete de n8n desacoplado e independiente.
+
+### 🔄 Iteraciones e Historial de Ejecución
+1. **Iteración 10**: Creación del issue `#14` en `snadales/BaserowLite` con atribución automática.
+2. **Iteración 11**: Extensión del esquema de base de datos Drizzle (`db/schema.ts`) con las tablas `webhooks` y `snapshots`, y migración SQL `0001_webhooks_and_snapshots.sql`.
+3. **Iteración 12**: Desarrollo del despachador asíncrono `lib/webhook-dispatcher.ts` con soporte de eventos (`rows.created`, `rows.updated`, `rows.deleted`, `test.ping`) y vinculación a los endpoints de filas simples y por lote.
+4. **Iteración 13**: Creación de las rutas REST para Webhooks (`/api/database/webhooks/...`) y Snapshots (`/api/database/snapshots/...`).
+5. **Iteración 14**: Creación de los componentes visuales `TableWebhooksModal` y `TableSnapshotsModal` e integración en el toolbar de la tabla en `app/page.tsx`.
+6. **Iteración 15**: Desarrollo completo del conector para n8n `n8n-nodes-baserow-lite` (Credential `BaserowLiteApi`, Node `BaserowLite` y Trigger `BaserowLiteTrigger`), compilación en TypeScript y despliegue en ZBook dentro de `/home/snadales/docker/n8n/n8n_data/nodes/node_modules/`.
+7. **Iteración 16**: Reinicio y validación de `n8n_core` y despliegue del contenedor `baserow_lite_app` en producción.
+
+### 📊 Evidencia Empírica de Verificación
+- `npm test`: 41/41 tests passing.
+- `next build`: 16/16 páginas generadas.
+- `POST /api/database/snapshots/table/865`: Snapshot creado con 5 registros.
+- `POST /api/database/snapshots/[id]/restore`: Tabla restaurada con 5 registros recuperados.
+- `POST /api/database/webhooks/table/865`: Webhook creado con URL `https://n8n.yarken.cl/webhook/test-lotes`.
+- Consumo RAM en ZBook: `baserow_lite_app` (45.42 MiB) + `baserow_lite_db` (38.9 MiB) = 84.32 MiB.
+- `n8n_core`: Saludable, clases `{ BaserowLite, BaserowLiteTrigger, BaserowLiteApi }` cargadas.
 
 ### 🎯 Intención
 Inicializar el repositorio independiente `07_BaserowLite` y elaborar el diseño técnico de arquitectura exhaustivo para reemplazar la instancia de Baserow por una solución moderna, ligera y de alto rendimiento basada en Next.js 15, TypeScript, PostgreSQL, Drizzle ORM y Docker Compose.

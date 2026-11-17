@@ -14,13 +14,16 @@ import { WorkspacesDashboard, WorkspaceGroup } from '@/components/workspaces/wor
 import { WorkspaceUserMenu } from '@/components/modals/workspace-user-menu';
 import { AdminToolsModal } from '@/components/modals/admin-tools-modal';
 import { MySettingsModal } from '@/components/modals/my-settings-modal';
+import { TableWebhooksModal } from '@/components/modals/table-webhooks-modal';
+import { TableSnapshotsModal } from '@/components/modals/table-snapshots-modal';
 import { 
   Database, Table as TableIcon, LayoutGrid, Kanban as KanbanIcon, 
   Calendar as CalendarIcon, FileText, Search, Download, Plus, Filter, ArrowUpDown, X, 
   ExternalLink, Clock, ShieldCheck, Trash2, RotateCcw, RefreshCw,
   CheckCircle2, AlertCircle, Sparkles, PlusCircle, Eye, Rss, Copy, Check,
   Ship, Package, ShoppingCart, Briefcase, BarChart2, Globe, Tag, Settings,
-  Key, User, LogOut, ChevronDown, Folder, Palette, ChevronRight, Home, ArrowLeft, LayoutDashboard
+  Key, User, LogOut, ChevronDown, Folder, Palette, ChevronRight, Home, ArrowLeft, LayoutDashboard,
+  Webhook, History
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { ProgressBar } from '@/components/ui/progress-bar';
@@ -127,6 +130,8 @@ export default function HomePage() {
   const [showWorkspaceUserMenu, setShowWorkspaceUserMenu] = useState(false);
   const [showAdminToolsModal, setShowAdminToolsModal] = useState(false);
   const [showMySettingsModal, setShowMySettingsModal] = useState(false);
+  const [showWebhooksModal, setShowWebhooksModal] = useState(false);
+  const [showSnapshotsModal, setShowSnapshotsModal] = useState(false);
 
   // Tablas dinámicas y tabla activa
   const [currentTableId, setCurrentTableId] = useState<string>('865');
@@ -1200,6 +1205,28 @@ export default function HomePage() {
             <span>CSV</span>
           </button>
 
+          {/* Botón Webhooks para n8n */}
+          <button
+            type="button"
+            onClick={() => setShowWebhooksModal(true)}
+            className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/50 hover:bg-indigo-100 dark:hover:bg-indigo-900 border border-indigo-200 dark:border-indigo-800 rounded-md transition-colors shadow-2xs"
+            title="Configurar Webhooks salientes a n8n"
+          >
+            <Webhook className="w-3.5 h-3.5 text-indigo-500" />
+            <span>Webhooks</span>
+          </button>
+
+          {/* Botón Snapshots de Tabla */}
+          <button
+            type="button"
+            onClick={() => setShowSnapshotsModal(true)}
+            className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 dark:hover:bg-emerald-900 border border-emerald-200 dark:border-emerald-800 rounded-md transition-colors shadow-2xs"
+            title="Historial de Snapshots y Rollback"
+          >
+            <History className="w-3.5 h-3.5 text-emerald-500" />
+            <span>Snapshots</span>
+          </button>
+
           <button
             type="button"
             onClick={handleAddRow}
@@ -1678,6 +1705,25 @@ export default function HomePage() {
         }}
         onUpdateUser={async (newName) => {
           setUser((prev) => ({ ...prev, name: newName }));
+        }}
+      />
+
+      {/* Modal de Webhooks Salientes para n8n */}
+      <TableWebhooksModal
+        isOpen={showWebhooksModal}
+        onClose={() => setShowWebhooksModal(false)}
+        tableId={currentTableId}
+        tableName={metadata.tableName || 'Lotes de Importación'}
+      />
+
+      {/* Modal de Snapshots y Rollback */}
+      <TableSnapshotsModal
+        isOpen={showSnapshotsModal}
+        onClose={() => setShowSnapshotsModal(false)}
+        tableId={currentTableId}
+        tableName={metadata.tableName || 'Lotes de Importación'}
+        onSnapshotRestored={() => {
+          loadData();
         }}
       />
     </div>
