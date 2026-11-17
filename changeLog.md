@@ -45,3 +45,8 @@ Inicializar el repositorio independiente `07_BaserowLite` y elaborar el diseño 
     - Soporte transparente para IDs numéricos legacy (`legacy_id` en PostgreSQL y `lib/table-resolver.ts`), permitiendo invocar `/api/database/rows/table/865/?user_field_names=true` sin cambiar scripts clientes.
     - Validación de ciclo de vida completo: Healthcheck 200 OK, endpoints de CRUD, papelera con restore, subida y descarga de adjuntos, y ejecución exitosa del script de backup con réplica al NAS.
     - Cierre exitoso del Hito 5 con issue `#13` en `snadales/BaserowLite`.
+12. **Iteración 12**: Formalización de la estrategia de convivencia en paralelo y validación continua (Zero Impact):
+    - Se excluye expresamente cualquier migración destructiva o cambio de DNS del plan operativo.
+    - Baserow clásico se mantiene 100% activo en `:8090` atendiendo los flujos de producción existentes sin ninguna alteración.
+    - BaserowLite opera en paralelo en `:8097` para validación funcional integral (ergonomía de UI, pruebas de fórmulas, concurrencia y estabilidad de memoria a largo plazo).
+    - Creación del documento rector `docs/parallelValidationPlan.md` y actualización del `readMe.md`.

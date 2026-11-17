@@ -21,6 +21,7 @@ BaserowLite implementa el modelo estructurado **Workspace ➔ Base ➔ Tabla ➔
 
 ## 🗺️ Índice de Navegación y Documentación Técnica
 
+- 🔄 [Plan de Convivencia en Paralelo y Validación Continua (docs/parallelValidationPlan.md)](file:///Users/snadales/Dev/01_Homelab/07_BaserowLite/docs/parallelValidationPlan.md)
 - 🔐 [Usuarios, Google OAuth, Logs y Trazabilidad (docs/authAndObservability.md)](file:///Users/snadales/Dev/01_Homelab/07_BaserowLite/docs/authAndObservability.md)
 - 🔍 [Análisis de Paridad y Factibilidad de Migración (docs/migrationCheck.md)](file:///Users/snadales/Dev/01_Homelab/07_BaserowLite/docs/migrationCheck.md)
 - 🛡️ [Informe de Auditoría y Blindaje de Arquitectura (docs/auditReport.md)](file:///Users/snadales/Dev/01_Homelab/07_BaserowLite/docs/auditReport.md)
@@ -53,6 +54,16 @@ cp .env.example .env
 docker compose up -d --build
 ```
 La aplicación estará disponible inmediatamente en `http://localhost:3000`.
+
+---
+
+## 🔄 Convivencia en Paralelo (Cero Impacto a Producción)
+
+BaserowLite opera bajo una estricta política de **convivencia en paralelo**:
+- **Baserow Clásico (Producción):** Permanece 100% activo en el puerto `:8090` (`https://baserow.yarken.cl`) atendiendo todos los flujos vigentes de Navarino Compras, n8n y Postulaciones.
+- **BaserowLite (Validación):** Se ejecuta de forma aislada en el puerto `:8097` (`http://192.168.60.25:8097`) con su propio PostgreSQL en `:5435` y almacenamiento local independiente.
+- **Sin Migración Forzada:** No se ejecutan cortes, ni migración destructiva, ni redirecciones de DNS. Ambos sistemas coexisten pacíficamente para validar a fondo la estabilidad, el rendimiento y la experiencia de usuario antes de cualquier decisión futura.
+- Guía detallada: [Plan de Convivencia en Paralelo (docs/parallelValidationPlan.md)](file:///Users/snadales/Dev/01_Homelab/07_BaserowLite/docs/parallelValidationPlan.md).
 
 ---
 
