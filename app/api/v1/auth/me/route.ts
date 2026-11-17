@@ -1,18 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { authenticateRequest } from '@/lib/auth/auth-guard';
 
 export async function GET(request: NextRequest) {
-  // 1. Detectar si viene por Cloudflare Access
-  const cfEmail = request.headers.get('cf-access-authenticated-user-email');
-  const email = cfEmail || 'snadales@gmail.com';
-  const name = email === 'snadales@gmail.com' ? 'Sebastián Nadales' : email.split('@')[0];
+  const auth = await authenticateRequest(request);
+
+  if (!auth.authenticated || !auth.user) {
+    return NextResponse.json(
+      { error: 'UNAUTHORIZED', message: auth.error || 'Sesión no válida o no autenticada' },
+      { status: 401 }
+    );
+  }
+
+  const { id, email, name, role, isApiToken } = auth.user;
 
   return NextResponse.json({
-    id: 'usr_superadmin',
+    id,
     email,
-    name,
-    role: 'superadmin',
-    avatarInitials: 'SN',
-    isZeroTrust: Boolean(cfEmail),
-    permissions: ['all'],
+    name: name || email.split('@')[0],
+    role,
+    avatarInitials: (name || email).slice(0, 2).toUpperCase(),
+    isZeroTrust: Boolean(request.headers.get('cf-access-authenticated-user-email')),
+    isApiToken,
+    permissions: role === 'superadmin' ? ['all'] : ['read', 'write'],
   });
 }

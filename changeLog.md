@@ -2,6 +2,43 @@
 
 ---
 
+## 🗓️ [2026-11-17] - Fase 0: Hardening Docker, shm_size, dependencias BI y seguridad Auth/RBAC
+
+### 🎯 Intención
+Preparar la infraestructura y cimientos técnicos de BaserowLite para el motor unificado de BI & Analytics (`EPIC-BI-01` / Issue #15): aprovisionar `shm_size: 512mb` en PostgreSQL 16 para evitar OOM en cálculos analíticos pesados (`PERCENTILE_CONT`, joins paralelos), segmentar redes Docker, instalar librerías analíticas core (`echarts`, `zustand`, `@tanstack/react-query`, `mysql2`, `lru-cache`), blindar autenticación con guardia RBAC y control de concurrencia optimista en filas.
+
+### 📍 Estado Actual
+- `docker-compose.yml`: `postgres` (`baserow_lite_db`) configurado con `shm_size: 512mb`, flags de PostgreSQL afinados (`shared_buffers=256MB`, `work_mem=8MB`, `maintenance_work_mem=64MB`, `effective_cache_size=768MB`, `max_connections=40`, `max_parallel_workers_per_gather=2`), límites de memoria (1024M app / 1024M db) y redes heterogéneas (`baserow_internal`, `odoo20-network`, `voz-network`, `pimcore_pim`).
+- Dependencias core instaladas: `echarts@6.1.0`, `zustand@5.1.0`, `@tanstack/react-query@5.108.0`, `mysql2@3.24.6`, `lru-cache@11.5.3`.
+- Seguridad y RBAC: Guard `lib/auth/auth-guard.ts` implementado (`authenticateRequest` y `requireAuth`), eliminando fallback permisivo en `/api/v1/auth/me`. Soporta cabecera Cloudflare Access y tokens API hash SHA-256.
+- Concurrencia Optimista: Endpoint `PATCH /api/database/rows/table/[tableId]/[rowId]` ahora verifica `version` / `expected_version` antes de aplicar cambios, retornando HTTP 409 `CONFLICT_OPTIMISTIC_LOCK` ante colisiones.
+- Pruebas automatizadas: Suite de 5 archivos con 44 tests pasando (100% éxito) y compilación `next build` limpia (16 páginas).
+
+### 🏁 Estado Deseado
+- Infraestructura Docker y PostgreSQL lista para procesar cálculos estadísticos y consultas multi-BD sin riesgos de crash de memoria ni degradación de seguridad.
+- Cimientos listos para la Fase 1 (`EPIC-BI-01` Issue #2: Esquema Drizzle `bi_*`, Vistas `bi_views` y Pools de Conexión Multi-BD).
+
+### ⚠️ Problemas Encontrados y Soluciones
+- *Problema:* Riesgo crítico de error `could not resize shared memory segment` en PostgreSQL 16 al ejecutar agregaciones analíticas con `PERCENTILE_CONT(0.50)` y `PERCENTILE_CONT(0.90)` o joins paralelos sobre datasets de Odoo o Baserow.
+  *Solución:* Se agregó `shm_size: 512mb` en el servicio `postgres` de `docker-compose.yml`.
+- *Problema:* El test de `auth-guard` fallaba en entorno local sin PostgreSQL al intentar conectar a `127.0.0.1:5432`.
+  *Solución:* Se envolvieron las consultas de verificación en bloque try/catch y se deshabilitó el bypass de desarrollo durante `NODE_ENV === 'test'`.
+
+### 🔄 Iteraciones e Historial de Ejecución
+1. **Iteración 17**: Creación del issue `#15` en `snadales/BaserowLite` para la Fase 0 de `EPIC-BI-01`.
+2. **Iteración 18**: Actualización de `docker-compose.yml` con `shm_size: 512mb`, parámetros de tuning PostgreSQL, límites de recursos y configuración de redes externas hacia Odoo, Voz y Pimcore.
+3. **Iteración 19**: Instalación de dependencias analíticas (`echarts`, `zustand`, `@tanstack/react-query`, `mysql2`, `lru-cache`, `@types/echarts`).
+4. **Iteración 20**: Implementación del middleware de autenticación `lib/auth/auth-guard.ts` y actualización de `/api/v1/auth/me`.
+5. **Iteración 21**: Implementación de bloqueo de concurrencia optimista (`version` check y `CONFLICT_OPTIMISTIC_LOCK`) en `PATCH /api/database/rows/table/[tableId]/[rowId]`.
+6. **Iteración 22**: Creación de tests unitarios en `lib/auth/__tests__/auth-guard.test.ts`, ejecución de suite completa vitest (44/44 pasando) y build de producción Next.js.
+
+### 📊 Evidencia Empírica de Verificación
+- `npm test`: 44/44 tests pasando en 5 archivos de prueba.
+- `next build`: 16/16 páginas estáticas y dinámicas compiladas exitosamente.
+- `docker-compose.yml`: Valida sintácticamente y contiene `shm_size: 512mb` y redes `odoo20-network`, `voz-network`, `pimcore_pim`.
+
+---
+
 ## 🗓️ [2026-11-17] - Paridad Total (Webhooks, Snapshots) y Conector Especializado para n8n
 
 ### 🎯 Intención

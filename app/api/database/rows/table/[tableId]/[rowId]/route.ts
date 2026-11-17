@@ -89,9 +89,25 @@ export async function PATCH(
 
     const updatedData = { ...existing.data };
     for (const [k, v] of Object.entries(body)) {
-      if (k === 'id' || k === 'order') continue;
+      if (k === 'id' || k === 'order' || k === 'version' || k === 'expected_version') continue;
       const targetId = userFieldNames ? (nameToIdMap[k] || k) : k;
       updatedData[targetId] = v;
+    }
+
+    // Control de concurrencia optimista
+    const expectedVersion = body.version !== undefined 
+      ? Number(body.version) 
+      : (body.expected_version !== undefined ? Number(body.expected_version) : undefined);
+
+    if (expectedVersion !== undefined && existing.version !== expectedVersion) {
+      return NextResponse.json(
+        { 
+          error: 'CONFLICT_OPTIMISTIC_LOCK', 
+          message: `El registro fue modificado concurrentemente (versión actual: ${existing.version}, esperada: ${expectedVersion})`,
+          currentVersion: existing.version 
+        }, 
+        { status: 409 }
+      );
     }
 
     const [updated] = await db
@@ -101,8 +117,15 @@ export async function PATCH(
         version: existing.version + 1,
         updatedAt: new Date(),
       })
-      .where(eq(schema.records.id, rowId as any))
+      .where(and(eq(schema.records.id, rowId as any), eq(schema.records.version, existing.version)))
       .returning();
+
+    if (!updated) {
+      return NextResponse.json(
+        { error: 'CONFLICT_CONCURRENT_UPDATE', message: 'Conflicto de concurrencia detectado en PostgreSQL' },
+        { status: 409 }
+      );
+    }
 
     const responseResult: Record<string, any> = {
       id: updated.id,
