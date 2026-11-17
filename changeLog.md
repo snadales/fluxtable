@@ -2,6 +2,50 @@
 
 ---
 
+## 🗓️ [2026-11-17] - Fase 4: Drag & Drop en Kanban, Calendario Multiescala, Formulario con Help Text, Galería y Timeline (Issue #27)
+
+### 🎯 Intención
+Completar la suite de vistas especializadas de FluxTable ([Issue #27](https://github.com/snadales/BaserowLite/issues/27)): implementar arrastrar y soltar (Drag & Drop) nativo y reactivo en las tarjetas de Kanban, añadir selector multiescala (Día, Semana, Mes, Año) en el Calendario, rediseñar la vista Formulario con textos de ayuda (`help_text`), placeholders y marcas obligatorias, e incorporar las vistas de Galería y Línea de Tiempo (Gantt).
+
+### 📍 Estado Actual
+- **Kanban con Drag & Drop Nativo (`app/page.tsx`)**:
+  - Habilitado arrastrar y soltar mediante eventos nativos HTML5 (`draggable`, `onDragStart`, `onDragOver`, `onDrop`).
+  - Al soltar una tarjeta en una columna destino, se actualiza el estado en memoria de forma optimista y se dispara el guardado en segundo plano vía `PATCH /api/database/rows/table/{tableId}/{rowId}`.
+- **Calendario Multiescala (`components/calendar/calendar-view.tsx`)**:
+  - Selector de escala en cabecera: `Día`, `Semana`, `Mes` y `Año`.
+  - Vista Día: detalle de eventos y arribos por fecha específica con badges de estado y montos.
+  - Vista Semana: cuadrícula de 7 columnas (Lun - Dom) para seguimiento operativo semanal.
+  - Vista Mes: cuadrícula tradicional de 35-42 casillas con navegación rápida y selector "Hoy".
+  - Vista Año: panel de los 12 meses con barras de densidad y métricas de actividad anual.
+- **Formulario Schema-Driven con Textos de Ayuda**:
+  - Renderizado dinámico de campos según esquema de la tabla activa.
+  - Texto de ayuda explicativo (`help_text`) debajo de cada input para orientar al operador.
+  - Placeholders contextuales y asterisco rojo (`*`) para campos primarios/obligatorios.
+- **Vista Galería (`activeView === 'gallery'`)**:
+  - Mosaico visual adaptable (1 a 4 columnas) con portadas estilizadas en gradiente, indicadores de estado, calificación de naviera y montos FOB.
+- **Vista Línea de Tiempo / Timeline Gantt (`activeView === 'timeline'`)**:
+  - Cronograma horizontal con barras de avance porcentual y fechas límite de arribo por lote.
+
+### 🏁 Estado Deseado
+- Todas las vistas del selector accesibles y 100% operativas para los usuarios, facilitando tanto el ingreso de datos como su análisis visual y temporal.
+
+### ⚠️ Problemas Encontrados y Soluciones
+- *Problema:* Las tarjetas en Kanban eran estáticas y carecían de eventos de arrastre.
+  *Solución:* Se implementó transferencia de datos por `dataTransfer.setData('text/plain', r.id)` y captura de evento de caída `onDrop` por columna.
+
+### 🔄 Iteraciones e Historial de Ejecución
+1. **Iteración 93**: Reescritura de `components/calendar/calendar-view.tsx` con arquitectura multiescala (Día, Semana, Mes, Año).
+2. **Iteración 94**: Integración de Drag & Drop nativo en columnas y tarjetas Kanban en `app/page.tsx`.
+3. **Iteración 95**: Implementación de formulario dinámico con `help_text` y validaciones en `app/page.tsx`.
+4. **Iteración 96**: Creación de las vistas Galería y Timeline Gantt en `app/page.tsx`.
+5. **Iteración 97**: Verificación de compilación Next.js (24/24 páginas) y suite de pruebas Vitest (59/59 pasando).
+
+### 📊 Evidencia Empírica de Verificación
+- Next.js build: 24 páginas generadas con 0 errores TypeScript/linter.
+- Vitest: 59 pruebas pasando en 9 archivos.
+
+---
+
 ## 🗓️ [2026-11-17] - Fase 3: Menú de Acciones por Columna, Altura de Fila, Formato Condicional y Resúmenes (Issue #26)
 
 ### 🎯 Intención

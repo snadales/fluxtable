@@ -72,7 +72,7 @@ export default function HomePage() {
   const [columns, setColumns] = useState<ColumnDef[]>(DEFAULT_COLUMNS);
   const [rows, setRows] = useState<RowData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [activeView, setActiveView] = useState<'grid' | 'kanban' | 'calendar' | 'form'>('grid');
+  const [activeView, setActiveView] = useState<'grid' | 'kanban' | 'calendar' | 'form' | 'gallery' | 'timeline'>('grid');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedRecord, setSelectedRecord] = useState<RowData | null>(null);
   const [syncStatus, setSyncStatus] = useState<'saved' | 'saving' | 'error'>('saved');
@@ -1575,8 +1575,9 @@ export default function HomePage() {
               </div>
             )}
 
+            {/* VISTA KANBAN CON DRAG & DROP (Issue #27) */}
             {activeView === 'kanban' && (
-              <div className="flex gap-4 overflow-x-auto pb-4 h-full">
+              <div className="flex gap-4 overflow-x-auto pb-4 h-full select-none">
                 {columns
                   .find((c) => c.id === 'Estado Embarque')
                   ?.options?.options?.map((opt: any) => {
@@ -1586,47 +1587,63 @@ export default function HomePage() {
                     return (
                       <div
                         key={opt.id}
-                        className="w-72 shrink-0 flex flex-col bg-slate-100/70 dark:bg-slate-900/40 rounded-xl p-3 border border-slate-200/80 dark:border-slate-800"
+                        onDragOver={(e) => {
+                          e.preventDefault();
+                          e.dataTransfer.dropEffect = 'move';
+                        }}
+                        onDrop={(e) => {
+                          e.preventDefault();
+                          const rowId = e.dataTransfer.getData('text/plain');
+                          if (rowId) {
+                            handleCellChange(rowId, 'Estado Embarque', opt.id);
+                          }
+                        }}
+                        className="w-72 shrink-0 flex flex-col bg-surface border border-line rounded-2xl p-3 shadow-2xs"
                       >
                         {/* Header de Columna Kanban */}
                         <div className="flex items-center justify-between mb-3 px-1">
                           <Badge label={opt.value} colorId={opt.color} />
-                          <span className="text-xs font-mono font-semibold text-slate-400">
+                          <span className="text-xs font-mono font-semibold text-ink-3">
                             {columnRows.length}
                           </span>
                         </div>
 
-                        {/* Tarjetas */}
+                        {/* Tarjetas Drag & Drop */}
                         <div className="flex-1 space-y-2.5 overflow-y-auto">
                           {columnRows.map((r) => (
                             <div
                               key={r.id}
+                              draggable={true}
+                              onDragStart={(e) => {
+                                e.dataTransfer.setData('text/plain', r.id);
+                                e.dataTransfer.effectAllowed = 'move';
+                              }}
                               onClick={() => setSelectedRecord(r)}
-                              className="p-3 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md hover:border-blue-400 dark:hover:border-blue-500 transition-all cursor-pointer space-y-2"
+                              className="p-3 bg-surface rounded-xl border border-line shadow-2xs hover:shadow-md hover:border-accent transition-all cursor-grab active:cursor-grabbing space-y-2"
                             >
                               <div className="flex items-center justify-between">
-                                <span className="font-mono text-xs font-bold text-slate-900 dark:text-white">
+                                <span className="font-mono text-xs font-bold text-ink">
                                   {r.data['Código Contenedor']}
                                 </span>
                                 <Rating value={Number(r.data['Calificación Naviera'])} readOnly />
                               </div>
 
                               <div className="flex items-center justify-between text-xs font-mono">
-                                <span className="text-slate-500">Inversión FOB:</span>
-                                <span className="font-semibold text-emerald-600">
+                                <span className="text-ink-3">Inversión FOB:</span>
+                                <span className="font-semibold text-ok">
                                   {formatCurrency(r.data['Inversión FOB'], { currencySymbol: 'US$', precision: 2 }).formattedText}
                                 </span>
                               </div>
 
                               <div>
-                                <div className="flex justify-between text-[11px] text-slate-400 mb-1">
+                                <div className="flex justify-between text-[11px] text-ink-3 mb-1">
                                   <span>Avance:</span>
                                   <span>{r.data['Avance Logístico']}%</span>
                                 </div>
                                 <ProgressBar value={Number(r.data['Avance Logístico'])} showText={false} />
                               </div>
 
-                              <div className="pt-1 border-t border-slate-100 dark:border-slate-700/60 flex justify-between text-[11px] text-slate-400">
+                              <div className="pt-1 border-t border-line flex justify-between text-[11px] text-ink-3">
                                 <span>Arribo:</span>
                                 <span className="font-mono">{formatDate(r.data['Fecha Estimada Arribo'])}</span>
                               </div>
@@ -1635,9 +1652,9 @@ export default function HomePage() {
                         </div>
 
                         {/* Footer de Totales por Columna */}
-                        <div className="mt-3 pt-2.5 border-t border-slate-200 dark:border-slate-800 flex justify-between text-xs font-mono text-slate-500 px-1">
+                        <div className="mt-3 pt-2.5 border-t border-line flex justify-between text-xs font-mono text-ink-3 px-1">
                           <span>Total FOB:</span>
-                          <span className="font-bold text-slate-800 dark:text-slate-200">
+                          <span className="font-bold text-ink">
                             {formatCurrency(totalFob, { currencySymbol: 'US$', precision: 0 }).formattedText}
                           </span>
                         </div>
@@ -1647,6 +1664,7 @@ export default function HomePage() {
               </div>
             )}
 
+            {/* VISTA CALENDARIO MULTIESCALA (Issue #27) */}
             {activeView === 'calendar' && (
               <div className="h-[calc(100vh-180px)]">
                 <CalendarView
@@ -1659,14 +1677,15 @@ export default function HomePage() {
               </div>
             )}
 
+            {/* VISTA FORMULARIO CON TEXTO DE AYUDA (HELP TEXT) (Issue #27) */}
             {activeView === 'form' && (
-              <div className="max-w-xl mx-auto bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm space-y-5">
+              <div className="max-w-xl mx-auto bg-surface border border-line rounded-2xl p-6 shadow-sm space-y-5">
                 <div>
-                  <h2 className="text-base font-bold text-slate-900 dark:text-white">
-                    Registro de Nuevo Lote de Importación
+                  <h2 className="text-base font-bold text-ink">
+                    Registro de {metadata.tableName}
                   </h2>
-                  <p className="text-xs text-slate-500 mt-1">
-                    Formulario schema-driven conectado directamente a PostgreSQL 16.
+                  <p className="text-xs text-ink-2 mt-1">
+                    Formulario schema-driven con validación de tipos y textos de ayuda.
                   </p>
                 </div>
 
@@ -1678,37 +1697,182 @@ export default function HomePage() {
                   }}
                   className="space-y-4 text-xs"
                 >
-                  <div>
-                    <label className="block font-medium text-slate-700 dark:text-slate-300 mb-1">
-                      Código de Contenedor *
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="ej. MSKU-109283-4"
-                      className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
+                  {columns.map((col) => {
+                    const helpTexts: Record<string, string> = {
+                      'Código Contenedor': 'Identificador único estándar ISO 6346 (4 letras + 6 dígitos).',
+                      'Estado Embarque': 'Seleccione la fase operativa actual en la cadena logística.',
+                      'Inversión FOB': 'Valor total en dólares americanos sin flete ni seguro.',
+                      'Costo Final Puesto': 'Costo nacionalizado puesto en bodega central.',
+                      'Avance Logístico': 'Porcentaje estimado de completitud de la ruta.',
+                      'Calificación Naviera': 'Puntuación de 1 a 5 estrellas para la empresa de transporte.',
+                      'Fecha Estimada Arribo': 'Fecha tentativa de descarga en puerto de destino.',
+                    };
 
-                  <div>
-                    <label className="block font-medium text-slate-700 dark:text-slate-300 mb-1">
-                      Estado Inicial
-                    </label>
-                    <select className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                      <option value="opt_fabrica">En Fábrica</option>
-                      <option value="opt_transito">En Tránsito</option>
-                      <option value="opt_aduana">En Aduana San Antonio</option>
-                      <option value="opt_bodega">Recibido en Bodega</option>
-                    </select>
-                  </div>
+                    const help = helpTexts[col.name] || `Ingrese el valor para el campo ${col.name}.`;
 
-                  <button
-                    type="submit"
-                    className="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-sm transition-colors mt-2"
-                  >
-                    Guardar y Registrar Lote
-                  </button>
+                    return (
+                      <div key={col.id} className="space-y-1">
+                        <label className="block font-semibold text-ink">
+                          {col.name} {col.isPrimary && <span className="text-danger">*</span>}
+                        </label>
+                        
+                        {col.type === 'select' ? (
+                          <select className="w-full px-3 py-2 rounded-xl border border-line bg-surface-sunken text-xs text-ink outline-none focus:ring-2 focus:ring-accent">
+                            {col.options?.options?.map((o: any) => (
+                              <option key={o.id} value={o.id}>{o.value}</option>
+                            ))}
+                          </select>
+                        ) : col.type === 'date' ? (
+                          <input
+                            type="date"
+                            defaultValue={new Date().toISOString().split('T')[0]}
+                            className="w-full px-3 py-2 rounded-xl border border-line bg-surface-sunken text-xs text-ink outline-none focus:ring-2 focus:ring-accent"
+                          />
+                        ) : col.type === 'number' || col.type === 'currency' ? (
+                          <input
+                            type="number"
+                            placeholder={col.type === 'currency' ? '$ 0.00' : '0'}
+                            className="w-full px-3 py-2 rounded-xl border border-line bg-surface-sunken text-xs text-ink outline-none focus:ring-2 focus:ring-accent"
+                          />
+                        ) : (
+                          <input
+                            type="text"
+                            required={col.isPrimary}
+                            placeholder={`ej. Valor para ${col.name}`}
+                            className="w-full px-3 py-2 rounded-xl border border-line bg-surface-sunken text-xs text-ink outline-none focus:ring-2 focus:ring-accent"
+                          />
+                        )}
+
+                        {/* Texto de Ayuda / Descripción */}
+                        <p className="text-[11px] text-ink-3">
+                          {help}
+                        </p>
+                      </div>
+                    );
+                  })}
+
+                  <div className="pt-2">
+                    <button
+                      type="submit"
+                      className="w-full py-2.5 px-4 bg-accent hover:bg-accent-strong text-white font-semibold rounded-xl shadow-sm transition-colors"
+                    >
+                      Guardar y Crear Registro
+                    </button>
+                  </div>
                 </form>
+              </div>
+            )}
+
+            {/* VISTA GALERÍA (Issue #27) */}
+            {activeView === 'gallery' && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 pb-6">
+                {processedRows.map((r) => {
+                  const stateOpt = columns
+                    .find((c) => c.id === 'Estado Embarque')
+                    ?.options?.options?.find((o: any) => o.id === r.data['Estado Embarque']);
+
+                  return (
+                    <div
+                      key={r.id}
+                      onClick={() => setSelectedRecord(r)}
+                      className="bg-surface border border-line rounded-2xl overflow-hidden shadow-2xs hover:shadow-md hover:border-accent transition-all cursor-pointer flex flex-col group"
+                    >
+                      {/* Portada de Tarjeta Galería */}
+                      <div className="h-28 bg-gradient-to-br from-accent/20 via-surface-sunken to-accent/5 p-4 flex flex-col justify-between border-b border-line">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-mono text-ink-3 font-bold bg-surface/80 px-2 py-0.5 rounded-full border border-line">
+                            #{r.order || 1}
+                          </span>
+                          {stateOpt && <Badge label={stateOpt.value} colorId={stateOpt.color} />}
+                        </div>
+                        <h4 className="font-mono font-bold text-sm text-ink group-hover:text-accent transition-colors">
+                          {r.data['Código Contenedor']}
+                        </h4>
+                      </div>
+
+                      {/* Atributos clave */}
+                      <div className="p-4 space-y-2.5 text-xs flex-1 flex flex-col justify-between">
+                        <div className="space-y-2">
+                          <div className="flex justify-between items-center text-ink-2">
+                            <span className="text-ink-3">FOB:</span>
+                            <span className="font-mono font-semibold text-ok">
+                              {formatCurrency(r.data['Inversión FOB'], { currencySymbol: 'US$', precision: 2 }).formattedText}
+                            </span>
+                          </div>
+
+                          <div className="flex justify-between items-center text-ink-2">
+                            <span className="text-ink-3">Arribo:</span>
+                            <span className="font-mono">{formatDate(r.data['Fecha Estimada Arribo'])}</span>
+                          </div>
+
+                          <div>
+                            <div className="flex justify-between text-[11px] text-ink-3 mb-1">
+                              <span>Avance:</span>
+                              <span>{r.data['Avance Logístico']}%</span>
+                            </div>
+                            <ProgressBar value={Number(r.data['Avance Logístico'])} showText={false} />
+                          </div>
+                        </div>
+
+                        <div className="pt-2 border-t border-line flex items-center justify-between">
+                          <Rating value={Number(r.data['Calificación Naviera'])} readOnly />
+                          <span className="text-[10px] text-ink-3 font-semibold group-hover:text-accent">
+                            Ver ficha →
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* VISTA LÍNEA DE TIEMPO / TIMELINE GANTT (Issue #27) */}
+            {activeView === 'timeline' && (
+              <div className="bg-surface border border-line rounded-2xl p-4 space-y-4 shadow-2xs overflow-x-auto">
+                <div className="flex items-center justify-between border-b border-line pb-3">
+                  <div className="flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-accent" />
+                    <h3 className="font-bold text-sm text-ink">Cronograma Operativo y Arribos</h3>
+                  </div>
+                  <span className="text-xs text-ink-3 font-mono">
+                    {processedRows.length} embarques en curso
+                  </span>
+                </div>
+
+                <div className="space-y-3 min-w-[700px]">
+                  {processedRows.map((r) => {
+                    const progress = Number(r.data['Avance Logístico']) || 0;
+                    return (
+                      <div
+                        key={r.id}
+                        onClick={() => setSelectedRecord(r)}
+                        className="p-3 rounded-xl border border-line hover:border-accent hover:bg-surface-sunken/40 cursor-pointer transition-all space-y-1.5"
+                      >
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="font-bold text-ink font-mono">
+                            {r.data['Código Contenedor']}
+                          </span>
+                          <span className="text-ink-3 font-mono text-[11px]">
+                            Arribo: {formatDate(r.data['Fecha Estimada Arribo'])}
+                          </span>
+                        </div>
+
+                        {/* Barra horizontal Gantt */}
+                        <div className="h-4 bg-surface-sunken rounded-full overflow-hidden relative border border-line">
+                          <div
+                            className="h-full bg-accent transition-all rounded-full flex items-center justify-end pr-2"
+                            style={{ width: `${Math.max(progress, 8)}%` }}
+                          >
+                            <span className="text-[9px] font-bold text-white font-mono leading-none">
+                              {progress}%
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             )}
           </>
