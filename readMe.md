@@ -20,22 +20,34 @@ FluxTable implementa el modelo estructurado **Workspace ➔ Base ➔ Tabla ➔ C
 - **Motor de Fórmulas Ligeras (`formula-lite`):** Evaluador seguro con analizador sintáctico AST propio en TypeScript (sin `eval()`) con soporte para códigos de error (`#DIV/0!`, `#REF!`, `#VALUE!`).
 - **Seguridad e Integridad:** Concurrencia optimista basada en versiones (`version`), auditoría forense (`audit_logs`), papelera con restauración y API REST dinámica asegurada con tokens Bearer y Cloudflare Zero Trust.
 - **Webhooks y Snapshots:** Disparador asíncrono de eventos HTTP a n8n (`rows.created`, `rows.updated`, `rows.deleted`) y sistema de snapshots atómicos en JSONB para respaldo y rollback instantáneo con 1 clic.
-- **Conector Nativo para n8n (`n8n-nodes-baserow-lite`):** Nodo comunitario empaquetado con soporte para operaciones masivas de 500 filas (`batchCreate`, `batchUpdate`, `batchDelete`), gestión dinámica de campos y trigger webhook.
+- **Conector Nativo para n8n (`n8n-nodes-fluxtable`):** Nodo comunitario empaquetado con soporte para operaciones masivas de 1000 filas (`batchCreate`, `batchUpdate`, `batchDelete`), gestión dinámica de campos y trigger webhook.
 
 ---
 
-## 🗺️ Índice de Navegación y Documentación Técnica
+## 📚 Suite Oficial de Documentación y Manuales Maestros
 
-- 🛡️ [Informe de Pruebas de Desempeño, Concurrencia y Seguridad (docs/informe_pruebas_desempeno_seguridad.md)](file:///Users/snadales/Dev/01_Homelab/07_BaserowLite/docs/informe_pruebas_desempeno_seguridad.md)
-- 📊 [Plan de Decomiso de Metabase y Validación en Paralelo (docs/plan_decomiso_metabase.md)](file:///Users/snadales/Dev/01_Homelab/07_BaserowLite/docs/plan_decomiso_metabase.md)
-- 🔄 [Plan de Convivencia en Paralelo y Validación Continua (docs/parallelValidationPlan.md)](file:///Users/snadales/Dev/01_Homelab/07_BaserowLite/docs/parallelValidationPlan.md)
+FluxTable cuenta con una suite completa de manuales técnicos, operativos y de usuario:
+
+| Manual / Documento | Enlace | Audiencia y Contenido |
+| :--- | :--- | :--- |
+| **🏛️ Manual de Arquitectura** | [docs/manual_arquitectura.md](file:///Users/snadales/Dev/01_Homelab/07_BaserowLite/docs/manual_arquitectura.md) | Visión sistémica, microservicios, stack Next.js 14 + Drizzle + Postgres + DuckDB, aislamiento multi-tenant y diagramas Mermaid. |
+| **📖 Manual de Usuario Final** | [docs/manual_usuario.md](file:///Users/snadales/Dev/01_Homelab/07_BaserowLite/docs/manual_usuario.md) | Guía paso a paso para usuarios y analistas: Workspaces, Tablas, Campos, Vistas (Grid, Kanban, Form, Calendario) y Dashboards BI. |
+| **🛠️ Manual Técnico y de Desarrollo** | [docs/manual_tecnico.md](file:///Users/snadales/Dev/01_Homelab/07_BaserowLite/docs/manual_tecnico.md) | Guía para desarrolladores: estructura del código, API Routes, motor de fórmulas AST, query builder y testing con Jest/Vitest. |
+| **🗄️ Manual de Base de Datos** | [docs/manual_base_de_datos.md](file:///Users/snadales/Dev/01_Homelab/07_BaserowLite/docs/manual_base_de_datos.md) | Diccionario de datos, Diagrama Entidad-Relación (ERD), índices de alto rendimiento, afinamiento Postgres y backups. |
+| **🔌 Manual de Integración y APIs** | [docs/manual_integracion.md](file:///Users/snadales/Dev/01_Homelab/07_BaserowLite/docs/manual_integracion.md) | Especificación de API REST, batching masivo, webhooks salientes, nodo custom de n8n (`n8n-nodes-fluxtable`) y pools externos (Odoo/Voz/Pimcore). |
+| **🚢 Manual de Operaciones y Despliegue** | [docs/manual_operaciones_despliegue.md](file:///Users/snadales/Dev/01_Homelab/07_BaserowLite/docs/manual_operaciones_despliegue.md) | Despliegue Docker en ZBook (`192.168.60.25:8097`), Cloudflare Tunnel Zero Trust (`tables.yarken.cl`), secretos 1Password y Runbook de incidentes. |
+| **🛡️ Manual de Seguridad y Pentest** | [docs/manual_seguridad.md](file:///Users/snadales/Dev/01_Homelab/07_BaserowLite/docs/manual_seguridad.md) | Blindaje defensivo anti-DDL/DML (HTTP 403), prevención de inyecciones SQL ($1, $2), certificación de pentest 8/8 y RBAC. |
+| **📊 Manual Especializado de BI & Analytics** | [docs/manual_bi_analytics.md](file:///Users/snadales/Dev/01_Homelab/07_BaserowLite/docs/manual_bi_analytics.md) | Reemplazo de Metabase, inteligencia temporal MoM/YoY, tipos de visualizaciones Recharts, carpetas, dashboards y alertas por umbrales. |
+| **🧪 Informe de Pruebas y Pentest** | [docs/informe_pruebas_desempeno_seguridad.md](file:///Users/snadales/Dev/01_Homelab/07_BaserowLite/docs/informe_pruebas_desempeno_seguridad.md) | Resultados empíricos de concurrencia (518 req/s), saturación, prueba ácida (500 queries) y telemetría de memoria RAM. |
+| **📋 Plan de Decomiso de Metabase** | [docs/plan_decomiso_metabase.md](file:///Users/snadales/Dev/01_Homelab/07_BaserowLite/docs/plan_decomiso_metabase.md) | Plan de coexistencia paralela de 7 días, benchmarks de CPU/RAM (94% ahorro) y transición definitiva. |
+
+---
+
+## 🗺️ Índice de Referencias Adicionales
+
+- 📜 [Historial de Cambios (changeLog.md)](file:///Users/snadales/Dev/01_Homelab/07_BaserowLite/changeLog.md)
 - 🔐 [Usuarios, Google OAuth, Logs y Trazabilidad (docs/authAndObservability.md)](file:///Users/snadales/Dev/01_Homelab/07_BaserowLite/docs/authAndObservability.md)
 - 🔍 [Análisis de Paridad y Factibilidad de Migración (docs/migrationCheck.md)](file:///Users/snadales/Dev/01_Homelab/07_BaserowLite/docs/migrationCheck.md)
-- 🛡️ [Informe de Auditoría y Blindaje de Arquitectura (docs/auditReport.md)](file:///Users/snadales/Dev/01_Homelab/07_BaserowLite/docs/auditReport.md)
-- 💎 [Análisis Avanzado (Airtable vs Baserow vs Notion) y Manual (docs/advancedAnalysis.md)](file:///Users/snadales/Dev/01_Homelab/07_BaserowLite/docs/advancedAnalysis.md)
-- 📜 [Historial de Cambios (changeLog.md)](file:///Users/snadales/Dev/01_Homelab/07_BaserowLite/changeLog.md)
-- 🏗️ [Arquitectura del Sistema y Despliegue (docs/architecture.md)](file:///Users/snadales/Dev/01_Homelab/07_BaserowLite/docs/architecture.md)
-- 🗄️ [Modelo de Datos y Esquema Drizzle (docs/dataModel.md)](file:///Users/snadales/Dev/01_Homelab/07_BaserowLite/docs/dataModel.md)
 - 🎨 [Motor de Vistas, Colores y Formatos (docs/viewEngine.md)](file:///Users/snadales/Dev/01_Homelab/07_BaserowLite/docs/viewEngine.md)
 - 🧮 [Motor de Fórmulas Ligeras AST (docs/formulaEngine.md)](file:///Users/snadales/Dev/01_Homelab/07_BaserowLite/docs/formulaEngine.md)
 - 🌐 [Especificación de la API REST y OpenAPI (docs/apiSpec.md)](file:///Users/snadales/Dev/01_Homelab/07_BaserowLite/docs/apiSpec.md)

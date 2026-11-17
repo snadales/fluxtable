@@ -7,24 +7,24 @@ import {
   NodeConnectionTypes,
 } from 'n8n-workflow';
 
-export class BaserowLite implements INodeType {
+export class FluxTable implements INodeType {
   description: INodeTypeDescription = {
-    displayName: 'BaserowLite',
-    name: 'baserowLite',
-    icon: 'file:baserow.svg',
+    displayName: 'FluxTable',
+    name: 'fluxTable',
+    icon: 'file:fluxtable.svg',
     group: ['transform'],
     version: 1,
     subtitle: '={{$parameter["operation"] + ": " + $parameter["resource"]}}',
-    description: 'Conector de alto rendimiento para BaserowLite con batching masivo, gestión de esquemas, snapshots y rows',
+    description: 'Conector de alto rendimiento para FluxTable con batching masivo, gestión de esquemas, snapshots y rows',
     defaults: {
-      name: 'BaserowLite',
+      name: 'FluxTable',
     },
     usableAsTool: true,
     inputs: [NodeConnectionTypes.Main],
     outputs: [NodeConnectionTypes.Main],
     credentials: [
       {
-        name: 'baserowLiteApi',
+        name: 'fluxTableApi',
         required: true,
       },
     ],
@@ -293,7 +293,7 @@ export class BaserowLite implements INodeType {
   async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
     const items = this.getInputData();
     const returnData: INodeExecutionData[] = [];
-    const credentials = await this.getCredentials('baserowLiteApi');
+    const credentials = await this.getCredentials('fluxTableApi');
     const host = ((credentials.host as string) || 'http://192.168.60.25:8097').replace(/\/$/, '');
     const token = (credentials.databaseToken as string) || '';
 

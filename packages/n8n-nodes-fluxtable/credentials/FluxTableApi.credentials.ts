@@ -3,18 +3,18 @@ import {
   INodeProperties,
 } from 'n8n-workflow';
 
-export class BaserowLiteApi implements ICredentialType {
-  name = 'baserowLiteApi';
-  displayName = 'BaserowLite API';
+export class FluxTableApi implements ICredentialType {
+  name = 'fluxTableApi';
+  displayName = 'FluxTable API';
   documentationUrl = 'https://wiki.yarken.cl';
   properties: INodeProperties[] = [
     {
       displayName: 'Host URL',
       name: 'host',
       type: 'string',
-      default: 'http://192.168.60.25:8097',
+      default: 'https://tables.yarken.cl',
       placeholder: 'https://tables.yarken.cl',
-      description: 'URL base del servidor BaserowLite en el homelab',
+      description: 'URL base del servidor FluxTable en el homelab Yarken',
       required: true,
     },
     {

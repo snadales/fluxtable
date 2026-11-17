@@ -2,6 +2,54 @@
 
 ---
 
+## 🗓️ [2026-11-17] - Refactorización, Limpieza del Repositorio y Suite Completa de Manuales Maestros
+
+### 🎯 Intención
+Ejecutar una depuración y limpieza integral del repositorio `FluxTable` (Issue #23), eliminando artefactos residuales y de construcción en caché (`tsconfig.tsbuildinfo`), actualizando el paquete de integración n8n a `n8n-nodes-fluxtable` con la identidad de marca Cobalto, y redactar la suite exhaustiva de 7 manuales técnicos y operativos requeridos para el ciclo de vida de una nueva aplicación en producción.
+
+### 📍 Estado Actual
+- **Limpieza de Repositorio**:
+  - `tsconfig.tsbuildinfo` removido del árbol de seguimiento git y añadido a `.gitignore` junto con reglas para `dist/`, `build/`, `*.log` y cachés de paquetes.
+  - `.env.example` reescrito con plantilla completa de producción para FluxTable y configuración de fuentes analíticas (`ODOO_DB_*`, `VOZ_DB_*`, `PIMCORE_DB_*`, `BI_ALERT_WEBHOOK_URL`).
+  - `packages/n8n-nodes-baserow-lite` refactorizado y renombrado limpiamente a `packages/n8n-nodes-fluxtable`, con credenciales `FluxTableApi`, nodo de acciones `FluxTable`, trigger `FluxTableTrigger` y el logotipo SVG oficial Lechuza-Y. Compilado con 0 errores TypeScript.
+- **Suite Oficial de Manuales Maestros (`docs/`)**:
+  - `docs/manual_arquitectura.md`: Visión sistémica, microservicios, stack Next.js 14 + Drizzle + Postgres + DuckDB, aislamiento multi-tenant y diagramas Mermaid.
+  - `docs/manual_usuario.md`: Guía paso a paso para el usuario final (Workspaces, Tablas, Campos, Vistas Grid/Kanban/Form/Calendario y Dashboards BI).
+  - `docs/manual_tecnico.md`: Guía de arquitectura de código, App Router, endpoints REST, motor de fórmulas AST, query builder y tests Jest/Vitest.
+  - `docs/manual_base_de_datos.md`: Diccionario de datos, Diagrama Entidad-Relación (ERD) completo, índices de alto rendimiento, afinamiento Postgres y backups.
+  - `docs/manual_integracion.md`: Especificación de API REST, batching masivo, webhooks salientes, nodo custom de n8n y pools externos de solo lectura (Odoo/Voz/Pimcore).
+  - `docs/manual_operaciones_despliegue.md`: Despliegue Docker en ZBook (`192.168.60.25:8097`), Cloudflare Tunnel Zero Trust (`tables.yarken.cl`), secretos 1Password y Runbook de incidentes.
+  - `docs/manual_seguridad.md`: Blindaje defensivo anti-DDL/DML (HTTP 403), prevención de inyecciones SQL ($1, $2), certificación de pentest 8/8 y RBAC.
+  - `docs/manual_bi_analytics.md`: Reemplazo de Metabase, inteligencia temporal MoM/YoY, tipos de visualizaciones Recharts, carpetas, dashboards y alertas por umbrales.
+- **Documentación Central**: `readMe.md` actualizado con tabla de manuales y enlaces directos.
+
+### 🏁 Estado Deseado
+- Repositorio impecable, altamente documentado, con manuales estructurados para ingeniería, operaciones y usuarios finales, listo para auditorías y despliegues estables.
+
+### ⚠️ Problemas Encontrados y Soluciones
+- *Problema:* El archivo binario de TypeScript `tsconfig.tsbuildinfo` (167 KB) estaba comiteado en el repositorio git, ensuciando los diffs y versionado.
+  *Solución:* Se desvinculó de git con `git rm --cached`, se eliminó en local y se actualizó `.gitignore` para bloquearlo de forma permanente.
+- *Problema:* El conector n8n mantenía referencias obsoletas al nombre anterior en sus rutas internas de TypeScript y tipos de retorno (`noData: true` no válido en versiones recientes de `n8n-workflow`).
+  *Solución:* Se refactorizó la firma del webhook devolviendo `workflowData: [[]]` y se recompiló con éxito `npm run build`.
+
+### 🔄 Iteraciones e Historial de Ejecución
+1. **Iteración 68**: Apertura del Issue `#23` en `snadales/BaserowLite` con plantilla de atribución estricta.
+2. **Iteración 69**: Saneamiento de `.gitignore` y purga de `tsconfig.tsbuildinfo`.
+3. **Iteración 70**: Refactorización de `packages/n8n-nodes-fluxtable` con compilación TypeScript aprobada.
+4. **Iteración 71**: Redacción de `docs/manual_arquitectura.md` y `docs/manual_usuario.md`.
+5. **Iteración 72**: Redacción de `docs/manual_tecnico.md` y `docs/manual_base_de_datos.md`.
+6. **Iteración 73**: Redacción de `docs/manual_integracion.md`, `docs/manual_operaciones_despliegue.md` y `docs/manual_seguridad.md`.
+7. **Iteración 74**: Redacción de `docs/manual_bi_analytics.md` y actualización del índice maestro en `readMe.md`.
+8. **Iteración 75**: Verificación integral: 58/58 tests pasando, compilación Next.js 22/22 rutas exitosas.
+
+### 📊 Evidencia Empírica de Verificación
+- Tests: 58/58 unit tests en Jest/Vitest pasando sin errores.
+- Build Next.js: `Compiled successfully in 1781ms` con 22 rutas generadas.
+- Build n8n: `packages/n8n-nodes-fluxtable` compilado con `tsc` sin errores.
+- Documentos: 8 manuales técnicos y operativos redactados con formato Markdown y diagramas Mermaid.
+
+---
+
 ## 🗓️ [2026-11-17] - Rebranding a FluxTable y Adopción Transversal del Brandbook Yarken Cobalto
 
 ### 🎯 Intención

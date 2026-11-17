@@ -1,7 +1,7 @@
 {
-  "name": "n8n-nodes-baserow-lite",
+  "name": "n8n-nodes-fluxtable",
   "version": "1.0.0",
-  "description": "Conector especializado de n8n para BaserowLite con soporte de operaciones batch, gestión de esquemas, snapshots y webhooks instantáneos",
+  "description": "Conector especializado de n8n para FluxTable (Sistema Yarken) con soporte de operaciones batch, gestión de esquemas, snapshots, webhooks y analítica",
   "license": "MIT",
   "homepage": "https://wiki.yarken.cl",
   "keywords": [
@@ -21,11 +21,11 @@
   "n8n": {
     "n8nNodesApiVersion": 1,
     "nodes": [
-      "dist/nodes/BaserowLite/BaserowLite.node.js",
-      "dist/nodes/BaserowLite/BaserowLiteTrigger.node.js"
+      "dist/nodes/FluxTable/FluxTable.node.js",
+      "dist/nodes/FluxTable/FluxTableTrigger.node.js"
     ],
     "credentials": [
-      "dist/credentials/BaserowLiteApi.credentials.js"
+      "dist/credentials/FluxTableApi.credentials.js"
     ]
   },
   "devDependencies": {
