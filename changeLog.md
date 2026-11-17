@@ -72,3 +72,8 @@ Inicializar el repositorio independiente `07_BaserowLite` y elaborar el diseño 
     - **Formato Condicional Inteligente**: Resaltado visual en `DataGrid` según reglas de negocio (verde para `Recibido en Bodega`, advertencias para avance bajo y valores destacados) con botón toggle `Colores`.
     - **Modal de Suscripción en Calendario**: Diálogo con botón de copia rápida y enlace directo `webcal://` optimizado para iPhone (iOS) y Mac.
     - Compilación de producción Next.js 15 exitosa (10/10 páginas estáticas y dinámicas) y 39 pruebas automáticas vitest en verde.
+17. **Iteración 17**: Personalización de Metadatos (Logos, Iconos, Colores, Nombres, Descripciones, Categorías y Tags) + Menú de Usuario y Gestión de Tokens API:
+    - Columnas añadidas a PostgreSQL 16: `description`, `category`, `tags` en tabla `bases`, y `description`, `icon`, `color`, `tags` en tabla `tables`.
+    - Endpoints REST implementados: `GET|PATCH /api/database/tables/[tableId]`, `GET /api/v1/auth/me` (detección Zero Trust) y `GET|POST /api/v1/tokens`.
+    - Modales interactivos implementados: `BaseSettingsModal` (personalización completa de logos, iconos, paleta de colores, categorías del homelab y tags) y `ApiTokensModal` (generación de tokens para scripts).
+    - Header y barra de pestañas enriquecidos con chip de base interactivo, avatar de usuario `SN` con menú de sesión y pestañas temáticas con etiquetas.

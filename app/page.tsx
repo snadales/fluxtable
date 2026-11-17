@@ -6,11 +6,15 @@ import { CalendarView } from '@/components/calendar/calendar-view';
 import { FilterPopover, FilterCondition } from '@/components/grid/filter-popover';
 import { SortPopover, SortCondition } from '@/components/grid/sort-popover';
 import { FieldsPopover } from '@/components/grid/fields-popover';
+import { BaseSettingsModal, BaseMetadata } from '@/components/modals/base-settings-modal';
+import { ApiTokensModal } from '@/components/modals/api-tokens-modal';
 import { 
   Database, Table as TableIcon, LayoutGrid, Kanban as KanbanIcon, 
   Calendar as CalendarIcon, FileText, Search, Download, Plus, Filter, ArrowUpDown, X, 
   ExternalLink, Clock, ShieldCheck, Trash2, RotateCcw, RefreshCw,
-  CheckCircle2, AlertCircle, Sparkles, PlusCircle, Eye, Rss, Copy, Check
+  CheckCircle2, AlertCircle, Sparkles, PlusCircle, Eye, Rss, Copy, Check,
+  Ship, Package, ShoppingCart, Briefcase, BarChart2, Globe, Tag, Settings,
+  Key, User, LogOut, ChevronDown, Folder, Palette
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { ProgressBar } from '@/components/ui/progress-bar';
@@ -73,6 +77,98 @@ export default function HomePage() {
   const [showIcalModal, setShowIcalModal] = useState(false);
   const [conditionalFormatting, setConditionalFormatting] = useState(true);
   const [copiedIcal, setCopiedIcal] = useState(false);
+
+  // Metadatos de Base y Tabla (Nombres, Descripciones, Categorías, Iconos, Colores, Tags)
+  const [metadata, setMetadata] = useState<BaseMetadata>({
+    baseName: 'Operaciones & Compras',
+    baseDescription: 'Control operativo de compras internacionales y arribos marítimos',
+    baseCategory: 'Operaciones & Compras',
+    baseIcon: 'ship',
+    baseColor: 'blue',
+    baseTags: ['logistica', 'compras', 'navarino'],
+    tableName: 'Lotes de Importación',
+    tableDescription: 'Contenedores marítimos, avance logístico, costos FOB y fechas de arribo',
+    tableIcon: 'package',
+    tableColor: 'blue',
+    tableTags: ['embarques', '2026', 'puerto'],
+  });
+
+  // Usuario y Sesión
+  const [user, setUser] = useState<{
+    name: string;
+    email: string;
+    role: string;
+    avatarInitials: string;
+    isZeroTrust: boolean;
+  }>({
+    name: 'Sebastián Nadales',
+    email: 'snadales@gmail.com',
+    role: 'superadmin',
+    avatarInitials: 'SN',
+    isZeroTrust: true,
+  });
+
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showBaseSettingsModal, setShowBaseSettingsModal] = useState(false);
+  const [showApiTokensModal, setShowApiTokensModal] = useState(false);
+
+  // Cargar metadatos de tabla y usuario al iniciar
+  const loadMetadata = useCallback(async () => {
+    try {
+      const [tableRes, userRes] = await Promise.all([
+        fetch('/api/database/tables/865'),
+        fetch('/api/v1/auth/me'),
+      ]);
+
+      if (tableRes.ok) {
+        const json = await tableRes.json();
+        setMetadata((prev) => ({
+          ...prev,
+          baseName: json.base?.name || prev.baseName,
+          baseDescription: json.base?.description || prev.baseDescription,
+          baseCategory: json.base?.category || prev.baseCategory,
+          baseIcon: json.base?.icon || prev.baseIcon,
+          baseColor: json.base?.color || prev.baseColor,
+          baseTags: json.base?.tags || prev.baseTags,
+          tableName: json.name || prev.tableName,
+          tableDescription: json.description || prev.tableDescription,
+          tableIcon: json.icon || prev.tableIcon,
+          tableColor: json.color || prev.tableColor,
+          tableTags: json.tags || prev.tableTags,
+        }));
+      }
+
+      if (userRes.ok) {
+        const uJson = await userRes.json();
+        setUser({
+          name: uJson.name,
+          email: uJson.email,
+          role: uJson.role,
+          avatarInitials: uJson.avatarInitials || 'SN',
+          isZeroTrust: uJson.isZeroTrust,
+        });
+      }
+    } catch (e) {
+      console.error('Error cargando metadatos iniciales:', e);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadMetadata();
+  }, [loadMetadata]);
+
+  // Guardar metadatos modificados
+  const handleSaveMetadata = async (newMeta: BaseMetadata) => {
+    const res = await fetch('/api/database/tables/865', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newMeta),
+    });
+
+    if (res.ok) {
+      setMetadata(newMeta);
+    }
+  };
 
   // Columnas visibles según selección del usuario
   const visibleColumns = useMemo(() => {
@@ -337,13 +433,39 @@ export default function HomePage() {
     return result;
   }, [rows, searchQuery, filters, sorts]);
 
+  const renderIcon = (iconName: string, className: string = 'w-3.5 h-3.5') => {
+    switch (iconName) {
+      case 'ship': return <Ship className={className} />;
+      case 'package': return <Package className={className} />;
+      case 'cart': return <ShoppingCart className={className} />;
+      case 'briefcase': return <Briefcase className={className} />;
+      case 'chart': return <BarChart2 className={className} />;
+      case 'globe': return <Globe className={className} />;
+      case 'database': return <Database className={className} />;
+      default: return <TableIcon className={className} />;
+    }
+  };
+
+  const getThemeColor = (colorName: string) => {
+    switch (colorName) {
+      case 'emerald': return { bg: 'bg-emerald-600', text: 'text-emerald-600', border: 'border-emerald-600', badge: 'bg-emerald-50 text-emerald-700 border-emerald-200' };
+      case 'purple': return { bg: 'bg-purple-600', text: 'text-purple-600', border: 'border-purple-600', badge: 'bg-purple-50 text-purple-700 border-purple-200' };
+      case 'amber': return { bg: 'bg-amber-600', text: 'text-amber-600', border: 'border-amber-600', badge: 'bg-amber-50 text-amber-700 border-amber-200' };
+      case 'rose': return { bg: 'bg-rose-600', text: 'text-rose-600', border: 'border-rose-600', badge: 'bg-rose-50 text-rose-700 border-rose-200' };
+      case 'cyan': return { bg: 'bg-cyan-600', text: 'text-cyan-600', border: 'border-cyan-600', badge: 'bg-cyan-50 text-cyan-700 border-cyan-200' };
+      case 'indigo': return { bg: 'bg-indigo-600', text: 'text-indigo-600', border: 'border-indigo-600', badge: 'bg-indigo-50 text-indigo-700 border-indigo-200' };
+      default: return { bg: 'bg-blue-600', text: 'text-blue-600', border: 'border-blue-600', badge: 'bg-blue-50 text-blue-700 border-blue-200' };
+    }
+  };
+
   return (
     <div className="flex flex-col h-screen overflow-hidden bg-slate-50 dark:bg-slate-950">
       {/* Top Bar / App Navigation */}
       <header className="h-12 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center justify-between px-4 shrink-0 shadow-sm">
         <div className="flex items-center gap-3">
+          {/* Logo y versión */}
           <div className="flex items-center gap-2 font-bold text-sm tracking-tight text-slate-800 dark:text-white">
-            <div className="w-6 h-6 rounded bg-blue-600 flex items-center justify-center text-white text-xs font-black shadow-sm">
+            <div className={`w-6 h-6 rounded ${getThemeColor(metadata.baseColor).bg} flex items-center justify-center text-white text-xs font-black shadow-sm`}>
               BL
             </div>
             <span>BaserowLite</span>
@@ -354,11 +476,33 @@ export default function HomePage() {
 
           <div className="h-4 w-px bg-slate-200 dark:bg-slate-700 mx-1" />
 
-          {/* Workspace & Base Selector */}
-          <div className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-300">
-            <span className="font-medium text-slate-400">Yarken Principal</span>
-            <span>/</span>
-            <span className="font-semibold text-slate-800 dark:text-white">Operaciones & Compras</span>
+          {/* Base & Categoría con Icono, Color y Tags */}
+          <div
+            onClick={() => setShowBaseSettingsModal(true)}
+            className="flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors group"
+            title="Clic para editar metadatos, categoría, color e icono de la base"
+          >
+            <div className={`p-1 rounded ${getThemeColor(metadata.baseColor).badge} flex items-center justify-center`}>
+              {renderIcon(metadata.baseIcon, 'w-3.5 h-3.5')}
+            </div>
+            <div className="flex flex-col text-left">
+              <div className="flex items-center gap-1.5">
+                <span className="font-semibold text-xs text-slate-800 dark:text-white group-hover:text-blue-600 transition-colors">
+                  {metadata.baseName}
+                </span>
+                <span className="text-[10px] text-slate-400 font-medium hidden sm:inline">
+                  • {metadata.baseCategory}
+                </span>
+                <Settings className="w-3 h-3 text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+              </div>
+              <div className="flex items-center gap-1">
+                {metadata.baseTags.slice(0, 2).map((t) => (
+                  <span key={t} className="text-[9px] font-mono text-slate-400">
+                    #{t}
+                  </span>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
 
@@ -396,23 +540,115 @@ export default function HomePage() {
             <span>Papelera</span>
           </button>
 
-          <div className="flex items-center gap-1 text-[11px] font-mono text-emerald-700 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-1 rounded-full border border-emerald-200 dark:border-emerald-800">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            <span>Postgres 16 Online</span>
+          {/* Menú de Usuario y Sesión */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setShowUserMenu(!showUserMenu)}
+              className="flex items-center gap-2 p-1 pl-2 rounded-full border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 transition-colors"
+            >
+              <div className="flex items-center gap-1.5 text-xs text-left hidden sm:flex">
+                <span className="font-semibold text-slate-800 dark:text-white text-[11px]">
+                  {user.name.split(' ')[0]}
+                </span>
+                <span className="text-[9px] font-mono uppercase bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 px-1 py-0.2 rounded font-bold">
+                  {user.role}
+                </span>
+              </div>
+              <div className="w-7 h-7 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center shadow-sm">
+                {user.avatarInitials}
+              </div>
+            </button>
+
+            {/* Dropdown de Sesión de Usuario */}
+            {showUserMenu && (
+              <div className="absolute right-0 top-10 w-64 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl z-50 p-2 text-xs space-y-1">
+                <div className="px-3 py-2 border-b border-slate-100 dark:border-slate-800">
+                  <div className="font-bold text-slate-900 dark:text-white">{user.name}</div>
+                  <div className="text-[11px] font-mono text-slate-400 truncate">{user.email}</div>
+                  {user.isZeroTrust && (
+                    <div className="flex items-center gap-1 mt-1 text-[10px] text-emerald-600 font-medium">
+                      <ShieldCheck className="w-3 h-3 text-emerald-500" />
+                      <span>Zero Trust · Cloudflare Access</span>
+                    </div>
+                  )}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowUserMenu(false);
+                    setShowBaseSettingsModal(true);
+                  }}
+                  className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-left"
+                >
+                  <Palette className="w-3.5 h-3.5 text-blue-600" />
+                  <span>Configurar Base & Tablas</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowUserMenu(false);
+                    setShowApiTokensModal(true);
+                  }}
+                  className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-left"
+                >
+                  <Key className="w-3.5 h-3.5 text-amber-500" />
+                  <span>Tokens de API de Base</span>
+                </button>
+
+                <a
+                  href="/api/admin/diagnostics"
+                  target="_blank"
+                  className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-left"
+                >
+                  <BarChart2 className="w-3.5 h-3.5 text-purple-600" />
+                  <span>Diagnóstico del Servidor</span>
+                </a>
+
+                <div className="pt-1 border-t border-slate-100 dark:border-slate-800">
+                  <a
+                    href="/login"
+                    className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors text-left"
+                  >
+                    <LogOut className="w-3.5 h-3.5" />
+                    <span>Cerrar Sesión</span>
+                  </a>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </header>
 
       {/* Notion-style Tabs Bar */}
-      <div className="h-10 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center px-4 gap-1 shrink-0 overflow-x-auto">
-        <button
-          type="button"
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white border-b-2 border-blue-600 shadow-sm"
-        >
-          <TableIcon className="w-3.5 h-3.5 text-blue-600" />
-          <span>Lotes de Importación</span>
-          <span className="text-[10px] text-slate-400 font-mono ml-1">({rows.length})</span>
-        </button>
+      <div className="h-10 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center px-4 gap-2 shrink-0 overflow-x-auto">
+        {/* Pestaña de la Tabla Activa con su icono, color y tags */}
+        <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-lg border-b-2 border-blue-600 shadow-2xs">
+          <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-900 dark:text-white">
+            {renderIcon(metadata.tableIcon, 'w-3.5 h-3.5 text-blue-600')}
+            <span>{metadata.tableName}</span>
+            <span className="text-[10px] text-slate-400 font-mono">({rows.length})</span>
+          </div>
+
+          <div className="flex items-center gap-1 pl-1">
+            {metadata.tableTags.map((t) => (
+              <span key={t} className="text-[9px] font-mono px-1 py-0.2 rounded bg-slate-200 dark:bg-slate-700 text-slate-500">
+                #{t}
+              </span>
+            ))}
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setShowBaseSettingsModal(true)}
+            className="p-0.5 text-slate-400 hover:text-slate-700 ml-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700"
+            title="Editar tabla, icono o tags"
+          >
+            <Settings className="w-3 h-3" />
+          </button>
+        </div>
       </div>
 
       {/* Views & Controls Header */}
@@ -1015,6 +1251,20 @@ export default function HomePage() {
           </div>
         </div>
       )}
+
+      {/* Modal de Configuración de Base y Tabla */}
+      <BaseSettingsModal
+        initialData={metadata}
+        isOpen={showBaseSettingsModal}
+        onClose={() => setShowBaseSettingsModal(false)}
+        onSave={handleSaveMetadata}
+      />
+
+      {/* Modal de Tokens de API de Base de Datos */}
+      <ApiTokensModal
+        isOpen={showApiTokensModal}
+        onClose={() => setShowApiTokensModal(false)}
+      />
     </div>
   );
 }
