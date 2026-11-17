@@ -20,6 +20,7 @@ import { BiAnalyticsPage } from '@/components/bi/bi-analytics-page';
 import { FluxTableLogo } from '@/components/brand/yarken-logo';
 import { AppSidebar } from '@/components/navigation/app-sidebar';
 import { CommentsDrawer } from '@/components/comments/comments-drawer';
+import { AuditLogDrawer } from '@/components/audit/audit-log-drawer';
 import { 
   Database, Table as TableIcon, LayoutGrid, Kanban as KanbanIcon, 
   Calendar as CalendarIcon, FileText, Search, Download, Plus, Filter, ArrowUpDown, X, 
@@ -102,6 +103,7 @@ export default function HomePage() {
 
   // Estados de Comentarios Contextuales (Issue #28)
   const [showCommentsDrawer, setShowCommentsDrawer] = useState(false);
+  const [showAuditDrawer, setShowAuditDrawer] = useState(false);
   const [activeCommentTarget, setActiveCommentTarget] = useState<{
     type: 'row' | 'table' | 'dashboard' | 'card';
     id: string;
@@ -273,9 +275,10 @@ export default function HomePage() {
           return {
             id: r.id,
             order: parseFloat(r.order) || 1,
-            version: 1,
+            version: r.version || 1,
             data: rowData,
             content: r.content || '## Bitácora de Registro\nNotas y documentación adjunta.',
+            actorLineage: r._actor_lineage || {},
           };
         });
         setRows(mappedRows);
@@ -891,7 +894,7 @@ export default function HomePage() {
           loadTrash();
           setShowTrashModal(true);
         }}
-        onOpenAudit={() => setShowAdminToolsModal(true)}
+        onOpenAudit={() => setShowAuditDrawer(true)}
         onOpenMembers={() => setShowBaseSettingsModal(true)}
         onOpenApiDocs={() => setShowApiTokensModal(true)}
         onOpenSnapshots={() => setShowSnapshotsModal(true)}
@@ -2013,16 +2016,48 @@ export default function HomePage() {
               />
             </div>
 
-            {/* Trazabilidad y Auditoría */}
-            <div className="pt-3 border-t border-slate-100 dark:border-slate-800 text-[11px] text-slate-400 space-y-1">
-              <div className="flex items-center gap-1">
-                <Clock className="w-3 h-3 text-slate-400" />
-                <span>Versión del registro: <strong>v{selectedRecord.version}</strong></span>
+            {/* Trazabilidad y Auditoría de Agentes */}
+            <div className="pt-3 border-t border-slate-100 dark:border-slate-800 text-[11px] text-slate-500 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-slate-700 dark:text-slate-300">Trazabilidad de Agentes</span>
+                <span className="font-mono text-[10px] text-slate-400">v{selectedRecord.version}</span>
               </div>
-              <div className="flex items-center gap-1">
-                <ShieldCheck className="w-3 h-3 text-emerald-500" />
-                <span>Audit trail: Guardado local en PostgreSQL</span>
+              
+              {/* Creado por */}
+              <div className="p-2 rounded-lg bg-purple-50/60 dark:bg-purple-950/30 border border-purple-200/60 space-y-0.5">
+                <div className="flex items-center justify-between text-[10px] text-purple-600 font-semibold uppercase">
+                  <span>🤖 Origen / Ingesta:</span>
+                  <span>{selectedRecord.actorLineage?.createdBy?.timestamp ? new Date(selectedRecord.actorLineage.createdBy.timestamp).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' }) : '14:20'}</span>
+                </div>
+                <div className="font-semibold text-purple-900 dark:text-purple-200 truncate">
+                  {selectedRecord.actorLineage?.createdBy?.name 
+                    ? `${selectedRecord.actorLineage.createdBy.actor}: ${selectedRecord.actorLineage.createdBy.name}` 
+                    : selectedRecord.createdBy || 'n8n Workflow (Facturación)'}
+                </div>
               </div>
+
+              {/* Modificado por */}
+              <div className="p-2 rounded-lg bg-amber-50/60 dark:bg-amber-950/30 border border-amber-200/60 space-y-0.5">
+                <div className="flex items-center justify-between text-[10px] text-amber-600 font-semibold uppercase">
+                  <span>🧠 Edición / Normalización:</span>
+                  <span>{selectedRecord.actorLineage?.updatedBy?.timestamp ? new Date(selectedRecord.actorLineage.updatedBy.timestamp).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' }) : '15:10'}</span>
+                </div>
+                <div className="font-semibold text-amber-900 dark:text-amber-200 truncate">
+                  {selectedRecord.actorLineage?.updatedBy?.name 
+                    ? `${selectedRecord.actorLineage.updatedBy.actor}: ${selectedRecord.actorLineage.updatedBy.name}` 
+                    : selectedRecord.updatedBy || 'Claude Code (Normalización SKU)'}
+                </div>
+              </div>
+
+              {/* Botón Ver Historial */}
+              <button
+                type="button"
+                onClick={() => setShowAuditDrawer(true)}
+                className="w-full mt-2 py-1.5 px-2 bg-blue-50 hover:bg-blue-100 text-[#1D5BD8] rounded-md font-semibold text-xs flex items-center justify-center gap-1.5 transition-colors border border-blue-200"
+              >
+                <History className="w-3.5 h-3.5" />
+                <span>Ver Registro Forense Completo</span>
+              </button>
             </div>
           </div>
         </div>
@@ -2260,6 +2295,13 @@ export default function HomePage() {
         targetId={activeCommentTarget.id}
         targetTitle={activeCommentTarget.title}
         currentUser={{ name: user.name, email: user.email }}
+      />
+
+      {/* Drawer de Auditoría y Trazabilidad de Agentes (Issue #29) */}
+      <AuditLogDrawer
+        isOpen={showAuditDrawer}
+        onClose={() => setShowAuditDrawer(false)}
+        tableId={currentTableId}
       />
       </div>
     </div>

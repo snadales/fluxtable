@@ -3,6 +3,7 @@ import { db, schema } from '@/db';
 import { eq, and, isNull } from 'drizzle-orm';
 import { resolveTableId } from '@/lib/table-resolver';
 import { triggerTableWebhooks } from '@/lib/webhook-dispatcher';
+import { resolveActor, logAuditAction, buildActorLineage } from '@/lib/audit/audit-helper';
 
 export async function GET(
   req: NextRequest,
@@ -43,6 +44,7 @@ export async function GET(
       const rowResult: Record<string, any> = {
         id: rec.id,
         order: `${rec.order}.00000000000000000000`,
+        _actor_lineage: rec.actorLineage || {},
       };
 
       for (const [key, val] of Object.entries(rec.data)) {
@@ -102,6 +104,10 @@ export async function POST(
       rowData[targetId] = val;
     }
 
+    // Resolver actor y trazabilidad
+    const actor = await resolveActor(req);
+    const actorLineage = buildActorLineage({}, 'create', actor);
+
     // Insertar registro
     const [created] = await db
       .insert(schema.records)
@@ -109,13 +115,31 @@ export async function POST(
         tableId: tableId as any,
         version: 1,
         data: rowData,
+        createdBy: `${actor.agentClient}:${actor.actorName}`,
+        updatedBy: `${actor.agentClient}:${actor.actorName}`,
+        actorLineage,
       })
       .returning();
+
+    // Registrar en auditoría
+    logAuditAction({
+      workspaceId: tableId as any,
+      tableId: tableId as any,
+      recordId: created.id,
+      action: 'create',
+      actor,
+      changedFields: Object.fromEntries(
+        Object.entries(rowData).map(([k, v]) => [k, { old: null, new: v }])
+      ),
+      ipAddress: req.headers.get('x-forwarded-for') || '127.0.0.1',
+      userAgent: req.headers.get('user-agent') || undefined,
+    });
 
     // Respuesta en formato Baserow
     const responseResult: Record<string, any> = {
       id: created.id,
       order: `${created.order}.00000000000000000000`,
+      _actor_lineage: actorLineage,
     };
 
     for (const [k, v] of Object.entries(created.data)) {

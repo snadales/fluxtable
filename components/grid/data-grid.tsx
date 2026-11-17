@@ -26,6 +26,13 @@ export interface RowData {
   version: number;
   data: Record<string, any>;
   content?: string;
+  createdBy?: string;
+  updatedBy?: string;
+  actorLineage?: {
+    createdBy?: { actor: string; name: string; timestamp: string };
+    updatedBy?: { actor: string; name: string; timestamp: string };
+    readBy?: Array<{ actor: string; name: string; timestamp: string }>;
+  };
 }
 
 export type RowHeight = 'compact' | 'medium' | 'tall';

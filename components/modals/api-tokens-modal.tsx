@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Key, Plus, Trash2, Copy, Check, X, ShieldCheck } from 'lucide-react';
+import { Key, Plus, Trash2, Copy, Check, X, ShieldCheck, Bot, Terminal, User } from 'lucide-react';
 
 interface ApiTokensModalProps {
   isOpen: boolean;
@@ -12,6 +12,7 @@ export const ApiTokensModal: React.FC<ApiTokensModalProps> = ({ isOpen, onClose 
   const [tokens, setTokens] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [newTokenName, setNewTokenName] = useState('');
+  const [agentClient, setAgentClient] = useState<'n8n' | 'antigravity' | 'claude' | 'external_script' | 'human'>('n8n');
   const [generatedToken, setGeneratedToken] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
@@ -45,7 +46,10 @@ export const ApiTokensModal: React.FC<ApiTokensModalProps> = ({ isOpen, onClose 
       const res = await fetch('/api/v1/tokens', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: newTokenName.trim() }),
+        body: JSON.stringify({ 
+          name: newTokenName.trim(),
+          agentClient,
+        }),
       });
 
       if (res.ok) {
@@ -56,6 +60,45 @@ export const ApiTokensModal: React.FC<ApiTokensModalProps> = ({ isOpen, onClose 
       }
     } catch (e) {
       console.error('Error creando token:', e);
+    }
+  };
+
+  const getAgentBadge = (client: string) => {
+    switch (client) {
+      case 'n8n':
+        return (
+          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-purple-50 text-purple-700 border border-purple-200">
+            <Bot className="w-3 h-3 text-purple-600" />
+            n8n
+          </span>
+        );
+      case 'antigravity':
+        return (
+          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-blue-50 text-[#1D5BD8] border border-blue-200">
+            <Terminal className="w-3 h-3 text-[#1D5BD8]" />
+            Antigravity
+          </span>
+        );
+      case 'claude':
+        return (
+          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+            <Bot className="w-3 h-3 text-amber-600" />
+            Claude
+          </span>
+        );
+      case 'human':
+        return (
+          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+            <User className="w-3 h-3 text-emerald-600" />
+            Humano
+          </span>
+        );
+      default:
+        return (
+          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-gray-50 text-gray-700 border border-gray-200">
+            Script
+          </span>
+        );
     }
   };
 
@@ -118,25 +161,38 @@ export const ApiTokensModal: React.FC<ApiTokensModalProps> = ({ isOpen, onClose 
           )}
 
           {/* Formulario de Creación */}
-          <form onSubmit={handleCreateToken} className="space-y-2">
+          <form onSubmit={handleCreateToken} className="space-y-3 bg-slate-50 dark:bg-slate-800/40 p-3 rounded-xl border border-slate-200 dark:border-slate-800">
             <label className="block font-medium text-slate-700 dark:text-slate-300">
-              Crear Nuevo Token de Acceso
+              Crear Nuevo Token de Acceso con Atribución de Agente
             </label>
-            <div className="flex items-center gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <input
                 type="text"
                 required
                 value={newTokenName}
                 onChange={(e) => setNewTokenName(e.target.value)}
-                placeholder="ej. navarino-compras-rw o odoo-sync"
-                className="flex-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-white text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="ej. n8n Facturación o Claude SKU"
+                className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
+              <select
+                value={agentClient}
+                onChange={(e) => setAgentClient(e.target.value as any)}
+                className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="n8n">🤖 Agente n8n (Workflow Automatizado)</option>
+                <option value="antigravity">🌌 Antigravity (Google DeepMind)</option>
+                <option value="claude">🧠 Claude Code (Anthropic)</option>
+                <option value="human">👤 Usuario Humano (Manual / Script)</option>
+                <option value="external_script">⚙️ Script Externo / Microservicio</option>
+              </select>
+            </div>
+            <div className="flex justify-end">
               <button
                 type="submit"
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl flex items-center gap-1.5 shadow-sm transition-colors shrink-0"
+                className="px-4 py-2 bg-[#1D5BD8] hover:bg-blue-700 text-white font-semibold rounded-xl flex items-center gap-1.5 shadow-sm transition-colors text-xs"
               >
                 <Plus className="w-3.5 h-3.5" />
-                <span>Generar</span>
+                <span>Generar Token con Atribución</span>
               </button>
             </div>
           </form>
@@ -159,15 +215,17 @@ export const ApiTokensModal: React.FC<ApiTokensModalProps> = ({ isOpen, onClose 
                   key={t.id}
                   className="p-3 border border-slate-200 dark:border-slate-800 rounded-xl flex items-center justify-between bg-slate-50/60 dark:bg-slate-800/40"
                 >
-                  <div>
+                  <div className="space-y-1">
                     <div className="font-semibold text-slate-800 dark:text-white flex items-center gap-2">
                       <span>{t.name}</span>
+                      {getAgentBadge(t.agentClient)}
                       <span className="text-[10px] font-mono px-1.5 py-0.2 bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded">
                         {t.prefix}...
                       </span>
                     </div>
-                    <div className="text-[10px] text-slate-400 mt-0.5">
+                    <div className="text-[10px] text-slate-400">
                       Creado: {new Date(t.createdAt).toLocaleDateString('es-CL')}
+                      {t.lastUsedAt && ` · Último uso: ${new Date(t.lastUsedAt).toLocaleDateString('es-CL')}`}
                     </div>
                   </div>
                   <div className="text-[11px] font-mono text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">

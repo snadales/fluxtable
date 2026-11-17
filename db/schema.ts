@@ -131,6 +131,11 @@ export const records = pgTable('records', {
   content: text('content'), // Notas Markdown enriquecidas tipo Notion
   createdBy: text('created_by'),
   updatedBy: text('updated_by'),
+  actorLineage: jsonb('actor_lineage').$type<{
+    createdBy?: { actor: string; name: string; timestamp: string };
+    updatedBy?: { actor: string; name: string; timestamp: string };
+    readBy?: Array<{ actor: string; name: string; timestamp: string }>;
+  }>().default({}),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
   deletedAt: timestamp('deleted_at', { withTimezone: true }),
@@ -219,6 +224,7 @@ export const apiTokens = pgTable('api_tokens', {
   name: text('name').notNull(),
   tokenHash: text('token_hash').notNull().unique(),
   prefix: text('prefix').notNull(),
+  agentClient: text('agent_client').default('external_script').notNull(),
   permissions: jsonb('permissions').$type<Record<string, any>>().notNull(),
   lastUsedAt: timestamp('last_used_at', { withTimezone: true }),
   expiresAt: timestamp('expires_at', { withTimezone: true }),

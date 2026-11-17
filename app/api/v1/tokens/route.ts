@@ -15,6 +15,8 @@ export async function GET() {
         id: t.id,
         name: t.name,
         prefix: t.prefix,
+        agentClient: t.agentClient || 'external_script',
+        permissions: t.permissions,
         createdAt: t.createdAt,
         lastUsedAt: t.lastUsedAt,
       })),
@@ -28,7 +30,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { name } = body;
+    const { name, agentClient = 'external_script', permissions = { tables: 'all', mode: 'read_write' } } = body;
 
     if (!name || typeof name !== 'string') {
       return NextResponse.json({ error: 'El nombre del token es requerido' }, { status: 400 });
@@ -50,7 +52,8 @@ export async function POST(request: NextRequest) {
       name,
       prefix,
       tokenHash,
-      permissions: { tables: 'all', mode: 'read_write' },
+      agentClient: ['n8n', 'antigravity', 'claude', 'external_script', 'human'].includes(agentClient) ? agentClient : 'external_script',
+      permissions,
     }).returning();
 
     return NextResponse.json({
@@ -58,6 +61,7 @@ export async function POST(request: NextRequest) {
       token: rawToken, // Se devuelve en texto plano solo una vez al crear
       id: newToken.id,
       name: newToken.name,
+      agentClient: newToken.agentClient,
     }, { status: 201 });
   } catch (error: any) {
     console.error('Error creando token:', error);
