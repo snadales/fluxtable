@@ -18,6 +18,7 @@ import { TableWebhooksModal } from '@/components/modals/table-webhooks-modal';
 import { TableSnapshotsModal } from '@/components/modals/table-snapshots-modal';
 import { BiAnalyticsPage } from '@/components/bi/bi-analytics-page';
 import { FluxTableLogo } from '@/components/brand/yarken-logo';
+import { AppSidebar } from '@/components/navigation/app-sidebar';
 import { 
   Database, Table as TableIcon, LayoutGrid, Kanban as KanbanIcon, 
   Calendar as CalendarIcon, FileText, Search, Download, Plus, Filter, ArrowUpDown, X, 
@@ -127,6 +128,7 @@ export default function HomePage() {
 
   // Navegación de Workspaces y Modales Globales
   const [viewMode, setViewMode] = useState<'workspaces' | 'database' | 'analytics'>('workspaces');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [workspaces, setWorkspaces] = useState<WorkspaceGroup[]>([]);
   const [activeWorkspaceId, setActiveWorkspaceId] = useState<string | null>(null);
   const [showWorkspaceUserMenu, setShowWorkspaceUserMenu] = useState(false);
@@ -136,6 +138,7 @@ export default function HomePage() {
   const [showSnapshotsModal, setShowSnapshotsModal] = useState(false);
 
   // Tablas dinámicas y tabla activa
+  const [currentBaseId, setCurrentBaseId] = useState<string>('282');
   const [currentTableId, setCurrentTableId] = useState<string>('865');
   const [tablesList, setTablesList] = useState<Array<{
     id: string;
@@ -284,6 +287,7 @@ export default function HomePage() {
 
   // Abrir base de datos desde el dashboard de workspaces
   const handleOpenDatabase = async (baseId: string) => {
+    setCurrentBaseId(baseId);
     try {
       const res = await fetch(`/api/database/tables?base_id=${baseId}`);
       if (res.ok) {
@@ -838,20 +842,57 @@ export default function HomePage() {
   }
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden bg-slate-50 dark:bg-slate-950">
-      {/* Top Bar / App Navigation */}
-      <header className="h-12 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center justify-between px-4 shrink-0 shadow-sm">
+    <div className="flex h-screen overflow-hidden bg-slate-50 dark:bg-slate-950">
+      {/* 1. Barra Lateral Jerárquica en Árbol (Issue #25) */}
+      <AppSidebar
+        isOpen={isSidebarOpen}
+        onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
+        workspaces={workspaces}
+        currentWorkspaceId={activeWorkspaceId || workspaces[0]?.id}
+        currentBaseId={currentBaseId}
+        currentTableId={currentTableId}
+        tablesList={tablesList}
+        rowCount={rows.length}
+        onSelectWorkspace={(wsId) => {
+          setActiveWorkspaceId(wsId);
+          setViewMode('workspaces');
+        }}
+        onSelectBase={(baseId) => {
+          handleOpenDatabase(baseId);
+        }}
+        onSelectTable={(tableId) => {
+          handleSwitchTable(tableId);
+        }}
+        onOpenWorkspaces={() => setViewMode('workspaces')}
+        onOpenAnalytics={() => setViewMode('analytics')}
+        onOpenTrash={() => {
+          loadTrash();
+          setShowTrashModal(true);
+        }}
+        onOpenAudit={() => setShowAdminToolsModal(true)}
+        onOpenMembers={() => setShowBaseSettingsModal(true)}
+        onOpenApiDocs={() => setShowApiTokensModal(true)}
+        onOpenSnapshots={() => setShowSnapshotsModal(true)}
+        onRenameBase={() => setShowBaseSettingsModal(true)}
+        onCreateTable={() => setShowNewTableModal(true)}
+        onCreateBase={() => setShowNewTableModal(true)}
+      />
+
+      {/* 2. Área Principal de Contenido */}
+      <div className="flex-1 flex flex-col h-full overflow-hidden min-w-0">
+        {/* Top Bar / App Navigation */}
+        <header className="h-12 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center justify-between px-4 shrink-0 shadow-sm">
         <div className="flex items-center gap-3">
           {/* Logo y marca Yarken */}
           <div
             onClick={() => setViewMode('workspaces')}
-            className="cursor-pointer hover:opacity-85 transition-opacity"
+            className="cursor-pointer hover:opacity-90 transition-opacity flex items-center"
             title="Volver a Workspaces Dashboard"
           >
-            <FluxTableLogo size={24} showWordmark={true} />
+            <FluxTableLogo size={26} showWordmark={true} />
           </div>
 
-          <div className="h-4 w-px bg-line mx-1" />
+          <div className="h-4 w-px bg-line mx-2" />
 
           {/* Breadcrumb: Workspaces / Negocios / Base */}
           <div className="flex items-center gap-1.5 text-xs">
@@ -1770,6 +1811,7 @@ export default function HomePage() {
           loadData();
         }}
       />
+      </div>
     </div>
   );
 }

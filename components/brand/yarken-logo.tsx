@@ -18,18 +18,20 @@ export function YarkenSymbol({
 }) {
   if (variant === 'tile') {
     return (
-      <div
-        className={`flex items-center justify-center rounded-[22%] bg-accent shadow-sm ${className}`}
+      <svg
+        viewBox="0 0 200 200"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        className={`shrink-0 drop-shadow-2xs ${className}`}
         style={{ width: size, height: size }}
       >
-        <svg
-          viewBox="0 0 200 200"
-          fill="none"
+        <rect width="200" height="200" rx="44" fill="#1D5BD8" />
+        <g
+          transform="translate(30, 26) scale(0.7)"
           stroke="#FFFFFF"
-          strokeWidth="16"
+          strokeWidth="14"
           strokeLinecap="round"
           strokeLinejoin="round"
-          style={{ width: size * 0.75, height: size * 0.75, transform: 'translate(1px, 0px)' }}
         >
           <path d="M52 40 Q54.71 48.59 58.65 56.36" />
           <path d="M76.51 81.39 Q86.59 91.80 100 100" />
@@ -38,8 +40,8 @@ export function YarkenSymbol({
           <path d="M100 100 V166" />
           <circle cx="66" cy="70" r="15" />
           <circle cx="134" cy="70" r="15" />
-        </svg>
-      </div>
+        </g>
+      </svg>
     );
   }
 
@@ -53,7 +55,7 @@ export function YarkenSymbol({
       strokeWidth="14"
       strokeLinecap="round"
       strokeLinejoin="round"
-      className={className}
+      className={`shrink-0 ${className}`}
       style={{ width: size, height: size }}
     >
       <path d="M52 40 Q54.71 48.59 58.65 56.36" />
@@ -68,20 +70,20 @@ export function YarkenSymbol({
 }
 
 export function FluxTableLogo({
-  size = 28,
+  size = 26,
   showWordmark = true,
   className = '',
 }: YarkenLogoProps) {
   return (
-    <div className={`flex items-center gap-2.5 ${className}`}>
+    <div className={`inline-flex items-center gap-2.5 select-none ${className}`}>
       <YarkenSymbol size={size} variant="tile" />
       {showWordmark && (
-        <div className="flex items-center gap-2">
-          <span className="font-bold text-lg tracking-tight text-ink">
+        <div className="flex items-center gap-2 leading-none">
+          <span className="font-bold text-[17px] tracking-tight text-ink leading-none">
             FluxTable
           </span>
-          <div className="h-4 w-[1px] bg-line" />
-          <span className="text-[10px] font-bold tracking-[0.08em] uppercase text-ink-3">
+          <span className="h-3.5 w-px bg-line inline-block" />
+          <span className="text-[10px] font-bold tracking-[0.08em] uppercase text-ink-3 leading-none">
             SISTEMA YARKEN
           </span>
         </div>

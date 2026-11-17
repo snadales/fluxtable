@@ -2,6 +2,50 @@
 
 ---
 
+## 🗓️ [2026-11-17] - Fase 2: UI/UX, Logotipo y Navegación en Árbol (Issue #25)
+
+### 🎯 Intención
+Corregir los defectos visuales detectados en el logotipo institucional, incorporar el menú lateral izquierdo jerárquico en árbol (Workspaces > Bases > Tablas y Vistas) y activar los menús contextuales de 3 puntos y ajustes de bases de datos y espacios de trabajo ([Issue #25](https://github.com/snadales/BaserowLite/issues/25)), reproduciendo fielmente la experiencia visual observada en la auditoría visual y capturas de Baserow.
+
+### 📍 Estado Actual
+- **Geometría y Alineación de Logotipo (`components/brand/yarken-logo.tsx`)**:
+  - Homogeneizada la geometría SVG de `YarkenSymbol` con la de `favicon.svg` (`viewBox="0 0 200 200"`, `rx="44"`, escala de lechuza `transform="translate(30, 26) scale(0.7)"`, trazo `strokeWidth="14"`).
+  - Corregida la alineación vertical del baseline tipográfico y separador vertical en `FluxTableLogo` (`leading-none`, `size=26`, divisor `h-3.5`).
+- **Barra Lateral Jerárquica en Árbol (`components/navigation/app-sidebar.tsx`)**:
+  - Implementada barra lateral plegable (colapsable a 48px o expandida a 256px) integrada en la vista de tabla (`app/page.tsx`).
+  - Cabecera con selector dropdown de espacios de trabajo y botón de colapso rápido.
+  - Buscador rápido con atajo de teclado (`⌘K`).
+  - Accesos directos del sistema: Recents, Notificaciones, Miembros (con contador reactivo), Invitar a otros, Registro de auditoría y Papelera.
+  - Árbol reactivo de bases de datos con nodos desplegables para tablas hijas, resaltado de la tabla activa y botón `+ Nueva mesa`.
+  - Menú contextual de 3 puntos por base de datos con 7 acciones estándar: Gestionar miembros, Ver documentos API, Renombrar, Duplicar, Instantáneas, Ver basura y Borrar.
+  - Barra inferior con minilogotipo, botones Deshacer/Rehacer y contador de filas.
+- **Menús y Modales Contextuales en Workspaces Dashboard (`components/workspaces/workspaces-dashboard.tsx`)**:
+  - Menú de 3 puntos en cabeceras de workspace con 8 opciones (Exportar, Importar, Renombrar, Ajustes, Miembros, Papelera, Salir, Eliminar).
+  - Modal funcional de `Ajustes` con panel de AI Providers destacando el proxy local LiteLLM en Bastión ZBook (`local-fast`, GPU RTX A3000) y configuración de zona horaria `America/Santiago`.
+  - Modal interactivo de `Renombrar` con persistencia en estado reactivo.
+
+### 🏁 Estado Deseado
+- Navegación fluida y jerárquica con acceso instantáneo a cualquier base, tabla o dashboard sin perder el contexto visual, cumpliendo con el Brandbook Cobalto de Yarken.
+
+### ⚠️ Problemas Encontrados y Soluciones
+- *Problema:* El isotipo de la lechuza en `FluxTableLogo` quedaba descentrado y rozaba los bordes del recuadro contenedor.
+  *Solución:* Se adoptó la matriz de transformación y trazado exacto de `favicon.svg`, asegurando padding visual perfecto y grosor de línea uniforme.
+- *Problema:* La vista de tabla carecía de barra lateral, obligando al usuario a volver siempre al dashboard principal de Workspaces para cambiar de base o tabla.
+  *Solución:* Se diseñó e integró `AppSidebar` con árbol jerárquico expandible y cambio reactivo de base y tabla.
+
+### 🔄 Iteraciones e Historial de Ejecución
+1. **Iteración 84**: Ajuste de geometría SVG y alineación del logotipo en `components/brand/yarken-logo.tsx`.
+2. **Iteración 85**: Integración de menús contextuales de 3 puntos y modales de Ajustes/Renombrar en `workspaces-dashboard.tsx`.
+3. **Iteración 86**: Creación del componente `components/navigation/app-sidebar.tsx` con navegación en árbol y accesos de sistema.
+4. **Iteración 87**: Integración de `AppSidebar` en `app/page.tsx`, soporte para colapso y vinculación de eventos con modales.
+5. **Iteración 88**: Verificación de compilación Next.js (24/24 páginas) y suite de pruebas Vitest (59/59 pasando).
+
+### 📊 Evidencia Empírica de Verificación
+- Next.js build: 24 páginas compiladas sin errores de TypeScript ni linter.
+- Vitest: 59 pruebas pasando en 9 archivos.
+
+---
+
 ## 🗓️ [2026-11-17] - Fase 1: Ciberseguridad Defensiva Integral y Hardening Anti-Vibe-Coding
 
 ### 🎯 Intención
