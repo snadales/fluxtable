@@ -28,7 +28,8 @@ import {
   Copy,
   Camera,
   Lock,
-  X
+  X,
+  ArrowUpRight
 } from 'lucide-react';
 import { FluxTableLogo, YarkenSymbol } from '@/components/brand/yarken-logo';
 import { WorkspaceGroup, BaseItem } from '@/components/workspaces/workspaces-dashboard';
@@ -46,6 +47,7 @@ interface AppSidebarProps {
   onSelectBase: (baseId: string) => void;
   onSelectTable: (tableId: string) => void;
   onSelectDashboard?: (dashboardCodeOrId: string) => void;
+  onOpenCatalog?: (base: BaseItem, defaultTab?: 'indicators' | 'charts' | 'tables' | 'dashboards') => void;
   onOpenWorkspaces: () => void;
   onOpenAnalytics: () => void;
   onOpenTrash: () => void;
@@ -73,6 +75,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
   onSelectBase,
   onSelectTable,
   onSelectDashboard,
+  onOpenCatalog,
   onOpenWorkspaces,
   onOpenAnalytics,
   onOpenTrash,
@@ -500,43 +503,158 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
                     )}
                   </div>
 
-                  {/* Hijos de la Base: Tablas si está expandida */}
+                  {/* Hijos de la Base: Subcarpetas Estándar Metabase §1b */}
                   {isExpanded && (
-                    <div className="pl-6 space-y-0.5 border-l border-line/60 ml-3">
-                      {isCurrentBase && tablesList.length > 0 ? (
-                        tablesList.map((t) => {
-                          const tableIdentifier = t.legacyId ? String(t.legacyId) : t.id;
-                          const isTableActive = currentTableId === tableIdentifier || currentTableId === t.id;
-                          return (
-                            <button
-                              key={t.id}
-                              type="button"
-                              onClick={() => onSelectTable(tableIdentifier)}
-                              className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs transition-colors text-left ${
-                                isTableActive
-                                  ? 'bg-surface-sunken font-bold text-accent'
-                                  : 'text-ink-2 hover:text-ink hover:bg-surface-sunken/60 font-medium'
-                              }`}
-                            >
-                              <div className="flex items-center gap-2 truncate">
-                                <TableIcon className="w-3 h-3 text-ink-3 shrink-0" />
-                                <span className="truncate">{t.name}</span>
-                              </div>
-                            </button>
-                          );
-                        })
-                      ) : (
-                        <div className="px-2 py-1 text-[11px] text-ink-3 italic">
-                          Sin tablas cargadas
+                    <div className="pl-5 space-y-1.5 border-l border-line/60 ml-3 py-1">
+                      {/* Subcarpeta 01 Indicadores (K...) */}
+                      {b.subfolders?.indicators && b.subfolders.indicators.length > 0 && (
+                        <div className="space-y-0.5">
+                          <button
+                            type="button"
+                            onClick={() => onOpenCatalog ? onOpenCatalog(b, 'indicators') : null}
+                            className="w-full flex items-center justify-between px-2 py-1 rounded-md text-[11px] text-ink-2 hover:text-accent hover:bg-surface-sunken transition-colors font-semibold"
+                            title="Explorar Indicadores (K)"
+                          >
+                            <span className="flex items-center gap-1.5 truncate">
+                              <Folder className="w-3 h-3 text-blue-600 shrink-0" />
+                              <span className="truncate">01 Indicadores</span>
+                            </span>
+                            <span className="px-1.5 py-0.2 rounded text-[9px] font-mono bg-blue-50 text-blue-700 border border-blue-200">
+                              {b.subfolders.indicators.length}
+                            </span>
+                          </button>
+                          <div className="pl-3 space-y-0.5">
+                            {b.subfolders.indicators.map((k: any) => (
+                              <button
+                                key={k.id}
+                                type="button"
+                                onClick={() => onOpenCatalog ? onOpenCatalog(b, 'indicators') : null}
+                                className="w-full flex items-center justify-between px-2 py-0.5 rounded text-[10px] text-ink-3 hover:text-ink hover:bg-surface-sunken/60 truncate"
+                              >
+                                <span className="font-mono text-blue-700 font-bold">{k.code}</span>
+                                <span className="truncate max-w-[100px] text-left">{k.name}</span>
+                                <span className="font-mono font-semibold text-ink">{k.displayValue}</span>
+                              </button>
+                            ))}
+                          </div>
                         </div>
                       )}
 
-                      {/* Botón "+ Nueva mesa" (Print 4) */}
+                      {/* Subcarpeta 02 Gráficos (G...) */}
+                      {b.subfolders?.charts && b.subfolders.charts.length > 0 && (
+                        <div className="space-y-0.5">
+                          <button
+                            type="button"
+                            onClick={() => onOpenCatalog ? onOpenCatalog(b, 'charts') : null}
+                            className="w-full flex items-center justify-between px-2 py-1 rounded-md text-[11px] text-ink-2 hover:text-accent hover:bg-surface-sunken transition-colors font-semibold"
+                            title="Explorar Gráficos (G)"
+                          >
+                            <span className="flex items-center gap-1.5 truncate">
+                              <Folder className="w-3 h-3 text-emerald-600 shrink-0" />
+                              <span className="truncate">02 Gráficos</span>
+                            </span>
+                            <span className="px-1.5 py-0.2 rounded text-[9px] font-mono bg-emerald-50 text-emerald-700 border border-emerald-200">
+                              {b.subfolders.charts.length}
+                            </span>
+                          </button>
+                          <div className="pl-3 space-y-0.5">
+                            {b.subfolders.charts.map((g: any) => (
+                              <button
+                                key={g.id}
+                                type="button"
+                                onClick={() => onOpenCatalog ? onOpenCatalog(b, 'charts') : null}
+                                className="w-full flex items-center justify-between px-2 py-0.5 rounded text-[10px] text-ink-3 hover:text-ink hover:bg-surface-sunken/60 truncate"
+                              >
+                                <span className="font-mono text-emerald-700 font-bold">{g.code}</span>
+                                <span className="truncate max-w-[120px] text-left">{g.name}</span>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Subcarpeta 03 Tablas (T...) */}
+                      <div className="space-y-0.5">
+                        <button
+                          type="button"
+                          onClick={() => onOpenCatalog ? onOpenCatalog(b, 'tables') : null}
+                          className="w-full flex items-center justify-between px-2 py-1 rounded-md text-[11px] text-ink-2 hover:text-accent hover:bg-surface-sunken transition-colors font-semibold"
+                          title="Explorar Tablas (T)"
+                        >
+                          <span className="flex items-center gap-1.5 truncate">
+                            <Folder className="w-3 h-3 text-amber-600 shrink-0" />
+                            <span className="truncate">03 Tablas</span>
+                          </span>
+                          <span className="px-1.5 py-0.2 rounded text-[9px] font-mono bg-amber-50 text-amber-700 border border-amber-200">
+                            {b.subfolders?.tables?.length || (isCurrentBase ? tablesList.length : 0)}
+                          </span>
+                        </button>
+                        <div className="pl-3 space-y-0.5">
+                          {(b.subfolders?.tables || (isCurrentBase ? tablesList : [])).map((t: any) => {
+                            const tableIdentifier = t.legacyId ? String(t.legacyId) : t.id;
+                            const isTableActive = currentTableId === tableIdentifier || currentTableId === t.id;
+                            const displayCode = t.legacyId ? `T0${t.legacyId}`.slice(-4) : 'Txxx';
+                            return (
+                              <button
+                                key={t.id}
+                                type="button"
+                                onClick={() => onSelectTable(tableIdentifier)}
+                                className={`w-full flex items-center justify-between px-2 py-1 rounded text-[11px] transition-colors text-left ${
+                                  isTableActive
+                                    ? 'bg-surface-sunken font-bold text-accent'
+                                    : 'text-ink-2 hover:text-ink hover:bg-surface-sunken/60 font-medium'
+                                }`}
+                              >
+                                <div className="flex items-center gap-1.5 truncate">
+                                  <span className="font-mono text-[9px] text-blue-700 font-bold shrink-0">{displayCode}</span>
+                                  <span className="truncate">{t.name}</span>
+                                </div>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* Subcarpeta 05 Dashboards (D...) */}
+                      {b.subfolders?.dashboards && b.subfolders.dashboards.length > 0 && (
+                        <div className="space-y-0.5">
+                          <button
+                            type="button"
+                            onClick={() => onOpenCatalog ? onOpenCatalog(b, 'dashboards') : null}
+                            className="w-full flex items-center justify-between px-2 py-1 rounded-md text-[11px] text-ink-2 hover:text-accent hover:bg-surface-sunken transition-colors font-semibold"
+                            title="Explorar Dashboards (D)"
+                          >
+                            <span className="flex items-center gap-1.5 truncate">
+                              <BarChart3 className="w-3 h-3 text-rose-600 shrink-0" />
+                              <span className="truncate">05 Dashboards</span>
+                            </span>
+                            <span className="px-1.5 py-0.2 rounded text-[9px] font-mono bg-rose-50 text-rose-700 border border-rose-200">
+                              {b.subfolders.dashboards.length}
+                            </span>
+                          </button>
+                          <div className="pl-3 space-y-0.5">
+                            {b.subfolders.dashboards.map((d: any) => (
+                              <button
+                                key={d.id}
+                                type="button"
+                                onClick={() => onSelectDashboard ? onSelectDashboard(d.id || d.code) : onOpenAnalytics()}
+                                className="w-full flex items-center justify-between px-2 py-0.5 rounded text-[11px] text-rose-700 hover:bg-rose-50/60 font-semibold truncate transition-colors"
+                              >
+                                <span className="font-mono text-[9px] shrink-0">{d.code}</span>
+                                <span className="truncate max-w-[110px] text-left">{d.name}</span>
+                                <ArrowUpRight className="w-2.5 h-2.5 shrink-0" />
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Botón "+ Nueva mesa" */}
                       {isCurrentBase && (
                         <button
                           type="button"
                           onClick={onCreateTable}
-                          className="w-full flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs text-ink-3 hover:text-accent hover:bg-surface-sunken transition-colors text-left font-medium"
+                          className="w-full flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs text-ink-3 hover:text-accent hover:bg-surface-sunken transition-colors text-left font-medium mt-1"
                         >
                           <Plus className="w-3 h-3" />
                           <span>Nueva mesa</span>

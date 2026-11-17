@@ -2,6 +2,61 @@
 
 ---
 
+## 🗓️ [2026-11-17] - Fase 9: Framework Metabase Yarken - Subcarpetas Canónicas de Negocio (01 Indicadores, 02 Gráficos, 03 Tablas, 05 Dashboards) y Gestor de KPIs (Issue #32)
+
+### 🎯 Intención
+Implementar la arquitectura y taxonomía canónica del Framework Metabase Yarken (`metabase-estandar` §1b / `mb_marco.py`) dentro de FluxTable ([Issue #32](https://github.com/snadales/BaserowLite/issues/32)), organizando los espacios de trabajo y módulos de negocio en subcarpetas estandarizadas:
+- `01 Indicadores`: Tarjetas y métricas KPI individuales (`Kxxx`) con valor actual, variación porcentual MoM y enlace de trazabilidad.
+- `02 Gráficos`: Visualizaciones analíticas (`Gxxx`) con tipo de gráfico (barras, líneas, dona, scatter).
+- `03 Tablas`: Tablas de datos de origen (`Txxx`) con acceso directo a edición e importación.
+- `05 Dashboards`: Paneles ejecutivos consolidados (`Dxxx` / `Rxxx`) que compilan las tarjetas del módulo.
+
+Eliminar además las bases fantasma residuales en la vista de Workspaces y habilitar un catálogo interactivo de navegación por activos analíticos y operacionales.
+
+### 📍 Estado Actual
+- **Catálogo de Negocio y Subcarpetas Metabase (Backend & Frontend)**:
+  - `app/api/business/catalog/route.ts`: Endpoint que proyecta jerárquicamente cada Espacio de Trabajo en sus módulos y subcarpetas canónicas (`indicators`, `charts`, `tables`, `dashboards`), vinculando KPIs y Gráficos a través de la tabla de origen `sourceTable.tableId`.
+  - `app/api/database/workspaces/route.ts`: Integra directamente en cada objeto `base` el árbol de `subfolders`, omitiendo bases sin tablas reales o residuales.
+  - `components/assets/asset-catalog-view.tsx`: Vista completa estilo Metabase Yarken con pestañas para `📁 01 Indicadores`, `📁 02 Gráficos`, `📁 03 Tablas` y `📊 05 Dashboards`.
+    - Tarjetas KPI `[Kxxx]` con métrica numérica en tipografía JetBrains Mono, badge de variación MoM (`+18.4%`), y accesos directos tanto a la tabla origen `[Txxx ↗]` como al dashboard `[Dxxx ↗]`.
+    - Pestaña de Gráficos `[Gxxx]` con descripción de tipo de visualización y trazabilidad.
+    - Pestaña de Tablas `[Txxx]` para abrir el editor de datos directamente.
+    - Pestaña de Dashboards `[Dxxx]` para abrir el panel ejecutivo compilado.
+  - `components/workspaces/workspaces-dashboard.tsx`: Cada tarjeta de base en la cuadrícula de Workspaces ahora presenta accesos rápidos interactivos tipo píldora a sus subcarpetas (`📁 01 Indicadores (N)`, `📁 02 Gráficos (N)`, `📁 03 Tablas (N)`, `📊 05 Dashboards (N)`), permitiendo explorar activos directamente.
+  - `components/navigation/app-sidebar.tsx`: Árbol lateral jerárquico que, al desplegar cualquier base/módulo, expone sus subcarpetas con contadores y enlaces directos a sus elementos constituyentes.
+  - `app/page.tsx`: Integración del nuevo modo de visualización `viewMode = 'catalog'`, orquestando la transición entre Workspaces, Tablas, Dashboards y Catálogo de Negocio.
+- **Limpieza de Bases Fantasma en Base de Datos**:
+  - Purgadas de la tabla `bases` en PostgreSQL de ZBook las entradas residuales de prueba (`D001 · Balance de ventas y publicidad`, `D002 · Publicidad especial`, `Panel LinkedIn`) que no contenían tablas adjuntas y contaminaban el grid de Workspaces.
+
+### 🏁 Estado Deseado
+- Una plataforma donde cada concepto de negocio (ej. `LinkedIn`, `Operaciones & Automatizaciones`, `Seguridad & Homelab`, `Navarino · Compras`) reproduce fielmente la organización de Metabase Yarken, permitiendo gestionar los KPIs (`Kxxx`) y gráficos (`Gxxx`) como activos independientes agrupados en subcarpetas, vinculados de forma transparente a sus tablas operacionales (`Txxx`) y dashboards ejecutivos (`Dxxx`).
+
+### ⚠️ Problemas Encontrados y Soluciones
+- *Problema:* En la cuadrícula de Workspaces aparecían bases con nombres de dashboards (`D001...`, `D002...`) sin tablas asociadas generadas en iteraciones previas de sembrado.
+  *Solución:* Se depuraron de la base de datos de ZBook vía script SQL dirigido (`DELETE FROM bases WHERE name LIKE 'D00%' OR name = 'Panel LinkedIn'`).
+- *Problema:* `ArrowUpRight` no estaba importado en `components/navigation/app-sidebar.tsx` provocando fallo en `next build`.
+  *Solución:* Se agregó `ArrowUpRight` a las importaciones de `lucide-react` y se verificó compilación exitosa (27/27 páginas).
+
+### 🔄 Iteraciones e Historial de Ejecución
+1. **Iteración 121**: Apertura de GitHub Issue #32 para estructurar el Framework Metabase Yarken en FluxTable.
+2. **Iteración 122**: Depuración de bases fantasma en PostgreSQL de ZBook.
+3. **Iteración 123**: Creación del endpoint analítico `app/api/business/catalog/route.ts`.
+4. **Iteración 124**: Construcción del componente de interfaz `components/assets/asset-catalog-view.tsx`.
+5. **Iteración 125**: Enriquecimiento de `workspaces-dashboard.tsx` y `app-sidebar.tsx` con píldoras y árbol de subcarpetas `01 Indicadores`, `02 Gráficos`, `03 Tablas`, `05 Dashboards`.
+6. **Iteración 126**: Conexión de estados y callbacks en `app/page.tsx` para navegación instantánea entre catálogo, tablas y dashboards.
+7. **Iteración 127**: Ejecución de suite de pruebas (64/64 aprobadas) y compilación de Next.js (27/27 páginas estáticas y dinámicas).
+8. **Iteración 128**: Sincronización rsync y despliegue del contenedor Docker `baserow-lite-app` en ZBook (`tables.yarken.cl`).
+
+### 📊 Evidencia Empírica de Verificación
+- Pruebas Unitarias: 11 suites y 64 pruebas ejecutadas y aprobadas (`vitest run`).
+- Next.js Build: 27 páginas y endpoints compilados satisfactoriamente con 0 errores de tipo.
+- API Telemetría: `http://localhost:8097/api/business/catalog` retorna estructura jerárquica con 4 subcarpetas activas por módulo:
+  - `Operaciones · Flujos n8n`: 3 indicadores (`K007`, `K008`, `K009`), 1 gráfico (`G005`), 2 tablas (`T026`, `T027`), 1 dashboard (`D003`).
+  - `Seguridad · 1Password`: 3 indicadores (`K004`, `K005`, `K006`), 3 gráficos (`G002`, `G003`, `G004`), 2 tablas (`T031`, `T032`), 2 dashboards (`D002`, etc.).
+  - `Navarino · Compras`: 3 indicadores (`K001`, `K002`, `K003`), 2 gráficos (`G001`, `G002`), 1 tabla (`T865`), 1 dashboard (`D001`).
+
+---
+
 ## 🗓️ [2026-11-17] - Fase 8: Unificación Conceptual por Negocio y Trazabilidad de Métricas (Issue #31)
 
 ### 🎯 Intención

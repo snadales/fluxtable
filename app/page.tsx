@@ -20,6 +20,7 @@ import { BiAnalyticsPage } from '@/components/bi/bi-analytics-page';
 import { useDashboardStore } from '@/lib/bi/state/dashboard-store';
 import { FluxTableLogo } from '@/components/brand/yarken-logo';
 import { AppSidebar } from '@/components/navigation/app-sidebar';
+import { AssetCatalogView } from '@/components/assets/asset-catalog-view';
 import { CommentsDrawer } from '@/components/comments/comments-drawer';
 import { AuditLogDrawer } from '@/components/audit/audit-log-drawer';
 import { 
@@ -152,7 +153,11 @@ export default function HomePage() {
   const [showNewFieldModal, setShowNewFieldModal] = useState(false);
 
   // Navegación de Workspaces y Modales Globales
-  const [viewMode, setViewMode] = useState<'workspaces' | 'database' | 'analytics'>('workspaces');
+  const [viewMode, setViewMode] = useState<'workspaces' | 'database' | 'analytics' | 'catalog'>('workspaces');
+  const [catalogContext, setCatalogContext] = useState<{
+    base: any;
+    defaultTab?: 'indicators' | 'charts' | 'tables' | 'dashboards';
+  } | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [workspaces, setWorkspaces] = useState<WorkspaceGroup[]>([]);
   const [activeWorkspaceId, setActiveWorkspaceId] = useState<string | null>(null);
@@ -725,6 +730,10 @@ export default function HomePage() {
             useDashboardStore.getState().selectDashboard(dashId);
             setViewMode('analytics');
           }}
+          onOpenCatalog={(base, defaultTab) => {
+            setCatalogContext({ base, defaultTab });
+            setViewMode('catalog');
+          }}
           onCreateWorkspace={handleCreateWorkspace}
           onCreateDatabase={handleCreateDatabaseInWorkspace}
           onOpenTrash={() => {
@@ -876,6 +885,84 @@ export default function HomePage() {
     );
   }
 
+  // Si estamos en modo Catálogo Metabase Yarken (01 Indicadores K, 02 Gráficos G, 03 Tablas T, 05 Dashboards D)
+  if (viewMode === 'catalog' && catalogContext) {
+    const activeWs = workspaces.find((w) => w.id === activeWorkspaceId) || workspaces[0];
+    const baseSubfolders = catalogContext.base?.subfolders || {
+      indicators: [],
+      charts: [],
+      tables: [],
+      dashboards: [],
+    };
+
+    return (
+      <div className="flex h-screen overflow-hidden bg-slate-50 dark:bg-slate-950">
+        <AppSidebar
+          isOpen={isSidebarOpen}
+          onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
+          workspaces={workspaces}
+          currentWorkspaceId={activeWorkspaceId || workspaces[0]?.id}
+          currentBaseId={currentBaseId}
+          currentTableId={currentTableId}
+          tablesList={tablesList}
+          rowCount={rows.length}
+          onSelectWorkspace={(wsId) => {
+            setActiveWorkspaceId(wsId);
+            setViewMode('workspaces');
+          }}
+          onSelectBase={(baseId) => {
+            handleOpenDatabase(baseId);
+          }}
+          onSelectTable={(tableId) => {
+            handleSwitchTable(tableId);
+            setViewMode('database');
+          }}
+          onSelectDashboard={(dashId) => {
+            useDashboardStore.getState().selectDashboard(dashId);
+            setViewMode('analytics');
+          }}
+          onOpenCatalog={(base, defaultTab) => {
+            setCatalogContext({ base, defaultTab });
+            setViewMode('catalog');
+          }}
+          onOpenWorkspaces={() => setViewMode('workspaces')}
+          onOpenAnalytics={() => setViewMode('analytics')}
+          onOpenTrash={() => {
+            loadTrash();
+            setShowTrashModal(true);
+          }}
+          onOpenAudit={() => setShowAuditDrawer(true)}
+          onOpenMembers={() => setShowBaseSettingsModal(true)}
+          onOpenApiDocs={() => setShowApiTokensModal(true)}
+          onOpenSnapshots={() => setShowSnapshotsModal(true)}
+          onRenameBase={() => setShowBaseSettingsModal(true)}
+          onCreateTable={() => setShowNewTableModal(true)}
+          onCreateBase={() => setShowNewTableModal(true)}
+        />
+        <div className="flex-1 flex flex-col h-screen overflow-hidden">
+          <AssetCatalogView
+            moduleName={catalogContext.base?.name || 'Módulo de Negocio'}
+            workspaceName={activeWs?.name || 'Negocios'}
+            activeTab={catalogContext.defaultTab || 'indicators'}
+            indicators={baseSubfolders.indicators || []}
+            charts={baseSubfolders.charts || []}
+            tables={baseSubfolders.tables || []}
+            dashboards={baseSubfolders.dashboards || []}
+            onOpenTable={async (tblIdentifier) => {
+              await handleSwitchTable(tblIdentifier);
+              setViewMode('database');
+            }}
+            onOpenDashboard={(dashId) => {
+              useDashboardStore.getState().selectDashboard(dashId);
+              setViewMode('analytics');
+            }}
+            onBackToWorkspace={() => setViewMode('workspaces')}
+          />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex h-screen overflow-hidden bg-slate-50 dark:bg-slate-950">
       {/* 1. Barra Lateral Jerárquica en Árbol (Issue #25) */}
@@ -901,6 +988,10 @@ export default function HomePage() {
         onSelectDashboard={(dashId) => {
           useDashboardStore.getState().selectDashboard(dashId);
           setViewMode('analytics');
+        }}
+        onOpenCatalog={(base, defaultTab) => {
+          setCatalogContext({ base, defaultTab });
+          setViewMode('catalog');
         }}
         onOpenWorkspaces={() => setViewMode('workspaces')}
         onOpenAnalytics={() => setViewMode('analytics')}

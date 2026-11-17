@@ -20,7 +20,13 @@ export interface BaseItem {
   tablesCount?: number;
   type?: 'database' | 'dashboard';
   viewedAt?: string;
-  tables?: Array<{ id: string; name: string; icon?: string }>;
+  tables?: Array<{ id: string; name: string; icon?: string; legacyId?: number | null }>;
+  subfolders?: {
+    indicators?: any[];
+    charts?: any[];
+    tables?: any[];
+    dashboards?: any[];
+  };
 }
 
 export interface WorkspaceGroup {
@@ -31,6 +37,7 @@ export interface WorkspaceGroup {
   membersCount: number;
   itemsCount: number;
   bases: BaseItem[];
+  dashboards?: Array<{ id: string; code: string; name: string; description?: string; icon?: string }>;
 }
 
 interface WorkspacesDashboardProps {
@@ -39,6 +46,7 @@ interface WorkspacesDashboardProps {
   onSelectWorkspace: (id: string | null) => void;
   onOpenDatabase: (baseId: string) => void;
   onOpenDashboard?: (dashboardCodeOrId: string) => void;
+  onOpenCatalog?: (base: BaseItem, defaultTab?: 'indicators' | 'charts' | 'tables' | 'dashboards') => void;
   onCreateWorkspace: () => void;
   onCreateDatabase: (workspaceId: string) => void;
   onOpenTrash: () => void;
@@ -59,6 +67,7 @@ export const WorkspacesDashboard: React.FC<WorkspacesDashboardProps> = ({
   onSelectWorkspace,
   onOpenDatabase,
   onOpenDashboard,
+  onOpenCatalog,
   onCreateWorkspace,
   onCreateDatabase,
   onOpenTrash,
@@ -558,9 +567,16 @@ export const WorkspacesDashboard: React.FC<WorkspacesDashboardProps> = ({
                           return (
                             <div
                               key={b.id}
-                              onClick={() => handleItemClick(b)}
-                              className="group p-4 rounded-xl border border-line bg-surface hover:border-accent hover:shadow-md cursor-pointer transition-all flex items-start justify-between gap-3 relative"
+                              onClick={() => {
+                                if (onOpenCatalog && b.subfolders) {
+                                  onOpenCatalog(b, 'indicators');
+                                } else {
+                                  handleItemClick(b);
+                                }
+                              }}
+                              className="group p-4 rounded-xl border border-line bg-surface hover:border-accent hover:shadow-md cursor-pointer transition-all flex flex-col justify-between gap-3 relative"
                             >
+                              <div className="flex items-start justify-between gap-3 w-full">
                               <div className="flex items-start gap-3 truncate">
                                 <div
                                   className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-2xs ${
@@ -685,6 +701,71 @@ export const WorkspacesDashboard: React.FC<WorkspacesDashboardProps> = ({
                                 )}
                               </div>
                             </div>
+
+                            {/* Píldoras de Subcarpetas Estándar Metabase §1b (01 Indicadores, 02 Gráficos, 03 Tablas, 05 Dashboards) */}
+                            {b.subfolders && (
+                              <div className="flex flex-wrap items-center gap-1.5 pt-3 border-t border-line/60 w-full mt-2">
+                                {b.subfolders.indicators && b.subfolders.indicators.length > 0 && (
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      if (onOpenCatalog) onOpenCatalog(b, 'indicators');
+                                    }}
+                                    className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono font-medium bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 transition-colors"
+                                    title="Ver Indicadores (K)"
+                                  >
+                                    <span>📁 01 Indicadores</span>
+                                    <span className="font-bold">({b.subfolders.indicators.length})</span>
+                                  </button>
+                                )}
+
+                                {b.subfolders.charts && b.subfolders.charts.length > 0 && (
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      if (onOpenCatalog) onOpenCatalog(b, 'charts');
+                                    }}
+                                    className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono font-medium bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 transition-colors"
+                                    title="Ver Gráficos (G)"
+                                  >
+                                    <span>📁 02 Gráficos</span>
+                                    <span className="font-bold">({b.subfolders.charts.length})</span>
+                                  </button>
+                                )}
+
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (onOpenCatalog) onOpenCatalog(b, 'tables');
+                                    else handleItemClick(b);
+                                  }}
+                                  className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono font-medium bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200 transition-colors"
+                                  title="Ver Tablas (T)"
+                                >
+                                  <span>📁 03 Tablas</span>
+                                  <span className="font-bold">({b.subfolders.tables?.length || b.tablesCount || 0})</span>
+                                </button>
+
+                                {b.subfolders.dashboards && b.subfolders.dashboards.length > 0 && (
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      if (onOpenCatalog) onOpenCatalog(b, 'dashboards');
+                                    }}
+                                    className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono font-medium bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200 transition-colors"
+                                    title="Ver Dashboards (D)"
+                                  >
+                                    <span>📊 05 Dashboards</span>
+                                    <span className="font-bold">({b.subfolders.dashboards.length})</span>
+                                  </button>
+                                )}
+                              </div>
+                            )}
+                          </div>
                           );
                         })}
                       </div>

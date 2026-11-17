@@ -23,6 +23,10 @@ export async function GET(request: NextRequest) {
         id: schema.tables.id,
         baseId: schema.tables.baseId,
         name: schema.tables.name,
+        legacyId: schema.tables.legacyId,
+        description: schema.tables.description,
+        icon: schema.tables.icon,
+        color: schema.tables.color,
       })
       .from(schema.tables)
       .where(isNull(schema.tables.deletedAt));
@@ -52,6 +56,18 @@ export async function GET(request: NextRequest) {
       })
       .from(schema.biDashboards);
 
+    // Obtener todas las tarjetas para mapear Indicadores (K) y Gráficos (G)
+    const allCards = await db
+      .select({
+        id: schema.biCards.id,
+        code: schema.biCards.code,
+        name: schema.biCards.name,
+        chartType: schema.biCards.chartType,
+        dashboardId: schema.biCards.dashboardId,
+        visualConfigJson: schema.biCards.visualConfigJson,
+      })
+      .from(schema.biCards);
+
     // Si no hay workspaces creados aún, devolver fallback
     if (allWorkspaces.length === 0) {
       return NextResponse.json([]);
@@ -59,46 +75,92 @@ export async function GET(request: NextRequest) {
 
     const result = allWorkspaces.map((w) => {
       const wMembers = allMembers.filter((m) => m.workspaceId === w.id);
+      const wDashboards = allDashboards.filter((d) => d.workspaceId === w.id);
+
       const wBases = allBases
-        .filter((b) => b.workspaceId === w.id)
+        .filter((b) => b.workspaceId === w.id && !b.name.startsWith('D00') && !b.name.includes('Panel LinkedIn'))
         .map((b) => {
           const bTables = allTables.filter((t) => t.baseId === b.id);
-          const isDashboard = b.icon === 'chart' || b.name.toLowerCase().includes('panel') || b.name.startsWith('D00');
+          const tableIds = new Set(bTables.map((t) => t.id));
+          const tableLegacies = new Set(bTables.map((t) => t.legacyId).filter(Boolean));
+
+          // Mapear tarjetas vinculadas a esta base
+          const bCards = allCards.filter((c) => {
+            const v = (c.visualConfigJson as any) || {};
+            const sTable = v.sourceTable;
+            const targetTableId = sTable?.tableId;
+            return targetTableId && (tableIds.has(targetTableId) || tableLegacies.has(Number(targetTableId)));
+          });
+
+          const indicators = bCards
+            .filter((c) => c.chartType === 'kpi')
+            .map((k) => ({
+              id: k.id,
+              code: k.code,
+              name: k.name,
+              displayValue: (k.visualConfigJson as any)?.displayValue,
+              growth: (k.visualConfigJson as any)?.growth,
+              subtitle: (k.visualConfigJson as any)?.subtitle,
+              sourceTable: (k.visualConfigJson as any)?.sourceTable,
+              dashboardId: k.dashboardId,
+            }));
+
+          const charts = bCards
+            .filter((c) => c.chartType !== 'kpi')
+            .map((g) => ({
+              id: g.id,
+              code: g.code,
+              name: g.name,
+              chartType: g.chartType,
+              sourceTable: (g.visualConfigJson as any)?.sourceTable,
+              dashboardId: g.dashboardId,
+            }));
+
+          const relatedDashboards = wDashboards.filter(
+            (d) =>
+              indicators.some((k) => k.dashboardId === d.id) ||
+              charts.some((g) => g.dashboardId === d.id) ||
+              d.name.toLowerCase().includes(b.name.toLowerCase().split('·')[0].trim())
+          );
+
           return {
             id: b.id,
             name: b.name,
             description: b.description || '',
             category: b.category || 'Operaciones',
-            icon: b.icon || (isDashboard ? 'chart' : 'database'),
+            icon: b.icon || 'database',
             color: b.color || 'blue',
             tags: b.tags || [],
             tablesCount: bTables.length,
-            type: isDashboard ? 'dashboard' : 'database',
+            type: 'database' as const,
             viewedAt: 'Reciente',
+            tables: bTables.map((t) => ({
+              id: t.id,
+              legacyId: t.legacyId,
+              name: t.name,
+              icon: t.icon || 'table',
+            })),
+            subfolders: {
+              indicators,
+              charts,
+              tables: bTables.map((t) => ({
+                id: t.id,
+                legacyId: t.legacyId,
+                name: t.name,
+                description: t.description || '',
+                icon: t.icon || 'table',
+                color: t.color || 'blue',
+              })),
+              dashboards: relatedDashboards.map((d) => ({
+                id: d.id,
+                code: d.code,
+                name: d.name,
+                description: d.description || '',
+                icon: d.icon || 'layout-dashboard',
+              })),
+            },
           };
         });
-
-      // Incorporar Dashboards de BI pertenecientes al Workspace (Unificación por Negocio)
-      const wDashboards = allDashboards
-        .filter((d) => d.workspaceId === w.id)
-        .map((d) => ({
-          id: d.id,
-          code: d.code,
-          name: d.name,
-          description: d.description || '',
-          category: 'Dashboards & KPIs',
-          icon: 'chart',
-          color: 'rose',
-          tags: ['dashboard', 'bi', d.code.toLowerCase()],
-          tablesCount: 0,
-          type: 'dashboard' as const,
-          viewedAt: 'Reciente',
-        }));
-
-      // Evitar duplicar elementos si ya existía una base con el mismo nombre
-      const baseNames = new Set(wBases.map((b) => b.name.toLowerCase()));
-      const filteredDashboards = wDashboards.filter((d) => !baseNames.has(d.name.toLowerCase()));
-      const allItems = [...wBases, ...filteredDashboards];
 
       return {
         id: w.id,
@@ -111,8 +173,15 @@ export async function GET(request: NextRequest) {
           role: m.role || 'admin',
         })),
         membersCount: Math.max(wMembers.length, 1),
-        itemsCount: allItems.length,
-        bases: allItems,
+        itemsCount: wBases.length,
+        bases: wBases,
+        dashboards: wDashboards.map((d) => ({
+          id: d.id,
+          code: d.code,
+          name: d.name,
+          description: d.description || '',
+          icon: d.icon || 'layout-dashboard',
+        })),
       };
     });
 
