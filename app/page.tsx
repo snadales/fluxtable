@@ -2,9 +2,10 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { DataGrid, ColumnDef, RowData } from '@/components/grid/data-grid';
+import { CalendarView } from '@/components/calendar/calendar-view';
 import { 
   Database, Table as TableIcon, LayoutGrid, Kanban as KanbanIcon, 
-  FileText, Search, Download, Plus, Filter, ArrowUpDown, X, 
+  Calendar as CalendarIcon, FileText, Search, Download, Plus, Filter, ArrowUpDown, X, 
   ExternalLink, Clock, ShieldCheck, Trash2, RotateCcw, RefreshCw,
   CheckCircle2, AlertCircle, Sparkles, PlusCircle, Eye
 } from 'lucide-react';
@@ -52,7 +53,7 @@ export default function HomePage() {
   const [columns, setColumns] = useState<ColumnDef[]>(DEFAULT_COLUMNS);
   const [rows, setRows] = useState<RowData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [activeView, setActiveView] = useState<'grid' | 'kanban' | 'form'>('grid');
+  const [activeView, setActiveView] = useState<'grid' | 'kanban' | 'calendar' | 'form'>('grid');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedRecord, setSelectedRecord] = useState<RowData | null>(null);
   const [syncStatus, setSyncStatus] = useState<'saved' | 'saving' | 'error'>('saved');
@@ -361,6 +362,18 @@ export default function HomePage() {
           </button>
           <button
             type="button"
+            onClick={() => setActiveView('calendar')}
+            className={`flex items-center gap-1.5 px-3 py-1 rounded-md font-medium transition-all ${
+              activeView === 'calendar'
+                ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+            }`}
+          >
+            <CalendarIcon className="w-3.5 h-3.5" />
+            <span>Calendario</span>
+          </button>
+          <button
+            type="button"
             onClick={() => setActiveView('form')}
             className={`flex items-center gap-1.5 px-3 py-1 rounded-md font-medium transition-all ${
               activeView === 'form'
@@ -497,6 +510,18 @@ export default function HomePage() {
                       </div>
                     );
                   })}
+              </div>
+            )}
+
+            {activeView === 'calendar' && (
+              <div className="h-[calc(100vh-180px)]">
+                <CalendarView
+                  rows={filteredRows}
+                  dateFieldId="Fecha Estimada Arribo"
+                  titleFieldId="Código Contenedor"
+                  onSelectRecord={(row) => setSelectedRecord(row)}
+                  onAddRecord={() => handleAddRow()}
+                />
               </div>
             )}
 

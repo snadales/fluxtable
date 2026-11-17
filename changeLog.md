@@ -59,3 +59,8 @@ Inicializar el repositorio independiente `07_BaserowLite` y elaborar el diseño 
     - Validación de acceso exitosa desde iPhone bajo el dominio `https://tables.yarken.cl`.
     - Preservación íntegra de la suite completa de vistas interactivas conectadas a PostgreSQL 16: Tabla (Grid con edición en vivo), Kanban (agrupación por estados y subtotales) y Formulario (alta schema-driven).
     - Suite de 39 pruebas automáticas en vitest verificadas y compilación TypeScript limpia.
+15. **Iteración 15**: Implementación de Vista de Calendario (`components/calendar/calendar-view.tsx`):
+    - Creación de la vista `CalendarView` con cuadrícula mensual completa (Lunes a Domingo) vinculada dinámicamente al campo `Fecha Estimada Arribo`.
+    - Controles de navegación mensual (Mes anterior, Mes siguiente y botón rápido 'Hoy').
+    - Representación visual de contenedores programados con píldoras tipadas, colores según estado de embarque e integración con el Drawer lateral de notas.
+    - Soporte interactivo para agregar nuevos lotes y apertura de detalle sin recargar página.
