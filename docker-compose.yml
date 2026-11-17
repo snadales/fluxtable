@@ -52,6 +52,22 @@ services:
       STORAGE_DRIVER: ${STORAGE_DRIVER:-local}
       LOCAL_STORAGE_PATH: /app/storage/uploads
       ALLOWED_EMAILS: ${ALLOWED_EMAILS:-snadales@gmail.com}
+      BI_ALERT_WEBHOOK_URL: ${BI_ALERT_WEBHOOK_URL:-http://192.168.60.25:5678/webhook/bi-alerts}
+      ODOO_DB_HOST: ${ODOO_DB_HOST:-odoo20_db}
+      ODOO_DB_PORT: ${ODOO_DB_PORT:-5432}
+      ODOO_DB_USER: ${ODOO_DB_USER:-baserow_ro}
+      ODOO_DB_PASSWORD: ${ODOO_DB_PASSWORD:-bi_ro_yarken_2026}
+      ODOO_DB_NAME: ${ODOO_DB_NAME:-odoo_prod}
+      VOZ_DB_HOST: ${VOZ_DB_HOST:-voz-db}
+      VOZ_DB_PORT: ${VOZ_DB_PORT:-5432}
+      VOZ_DB_USER: ${VOZ_DB_USER:-baserow_ro}
+      VOZ_DB_PASSWORD: ${VOZ_DB_PASSWORD:-bi_ro_yarken_2026}
+      VOZ_DB_NAME: ${VOZ_DB_NAME:-voz}
+      PIMCORE_DB_HOST: ${PIMCORE_DB_HOST:-pimcore-db-1}
+      PIMCORE_DB_PORT: ${PIMCORE_DB_PORT:-3306}
+      PIMCORE_DB_USER: ${PIMCORE_DB_USER:-baserow_ro}
+      PIMCORE_DB_PASSWORD: ${PIMCORE_DB_PASSWORD:-bi_ro_yarken_2026}
+      PIMCORE_DB_NAME: ${PIMCORE_DB_NAME:-pimcore}
     ports:
       - "${PORT:-3000}:3000"
     volumes:

@@ -2,6 +2,48 @@
 
 ---
 
+## 🗓️ [2026-11-17] - Fase 5: Validación en Paralelo, Paridad Analítica y Plan de Decomiso de Metabase
+
+### 🎯 Intención
+Ejecutar la validación en paralelo y auditoría de paridad del motor de BI & Analytics de BaserowLite (`EPIC-BI-01` / Issue #20) frente a Metabase (`:3100`), auditar discrepancia numérica en consultas analíticas complejas y percentiles, medir la reducción de huella de memoria RAM y CPU, desarrollar el script de auditoría automática `scripts/bi_parity_checker.py`, y redactar el plan maestro de transición y apagado definitivo de Metabase (`docs/plan_decomiso_metabase.md`).
+
+### 📍 Estado Actual
+- `scripts/bi_parity_checker.py`: Script de auditoría de paridad y benchmarks en ZBook. Valida consultas sobre `local_baserow` (percentiles p50/p90), `odoo_ro` (compras agrupadas) y `voz_ro` (borradores y telemetría de voz), reportando 0.00% de discrepancia numérica frente a los motores subyacentes.
+- `docs/plan_decomiso_metabase.md`: Documento maestro de transición que establece el periodo de coexistencia en paralelo de 7 días (2026-11-17 al 2026-11-24), el catálogo de mapeo de las 24 vistas/dashboards de Metabase a BaserowLite BI, el procedimiento seguro de respaldo `pg_dump` de `metabase-db`, el apagado de contenedores y la reasignación de rutas en Cloudflare Tunnel.
+- `docker-compose.yml` & `lib/bi/connectors/pool-manager.ts`: Configuración definitiva de variables de entorno seguras para los pools multi-base de datos (`ODOO_DB_HOST: odoo20_db`, `VOZ_DB_HOST: voz-db`, `PIMCORE_DB_HOST: pimcore-db-1`) utilizando el rol de sólo lectura unificado `baserow_ro`.
+- Recursos y Rendimiento en ZBook:
+  - BaserowLite Stack: **82.16 MiB RAM** (`app` 52.5 MiB + `db` 29.7 MiB).
+  - Metabase Stack: **1,181 MiB RAM** (`app` 1,054 MiB + `db` 127.2 MiB).
+  - Ahorro de memoria verificado: **~1,099 MiB (-93% / 14.3x menos consumo)**.
+  - Latencia de consulta uncached: 4-25 ms; latencia en caché LRU: 1 ms.
+
+### 🏁 Estado Deseado
+- Periodo de observación en paralelo durante 7 días asegurando estabilidad continua.
+- Al término de los 7 días, apagado definitivo de Metabase liberando 1.18 GB de RAM en ZBook.
+
+### ⚠️ Problemas Encontrados y Soluciones
+- *Problema:* Nombre de host de Odoo PostgreSQL en Docker no resolvía por defecto a `odoo20-db-1` en `pool-manager.ts`.
+  *Solución:* Se corrigió el alias canónico en Docker Compose a `odoo20_db` y se creó el rol de sólo lectura `baserow_ro` en `odoo_prod`, `voz` y `pimcore` con contraseña segura y límite estricto de conexiones concurrentes.
+
+### 🔄 Iteraciones e Historial de Ejecución
+1. **Iteración 47**: Cierre con evidencia empírica de la Fase 4 (Issue #19) en `snadales/BaserowLite`.
+2. **Iteración 48**: Apertura formal del issue `#20` para la Fase 5 con atribución obligatoria (`gh-issue`).
+3. **Iteración 49**: Configuración de credenciales de sólo lectura `baserow_ro` en `odoo20_db`, `voz-db` y `pimcore-db-1`.
+4. **Iteración 50**: Actualización de `docker-compose.yml` y defaults en `pool-manager.ts`.
+5. **Iteración 51**: Desarrollo del script `scripts/bi_parity_checker.py`.
+6. **Iteración 52**: Redacción del documento maestro `docs/plan_decomiso_metabase.md`.
+7. **Iteración 53**: Despliegue en ZBook, compilación exitosa del contenedor y ejecución de la auditoría de paridad.
+
+### 📊 Evidencia Empírica de Verificación
+- `bi_parity_checker.py`:
+  - `local_baserow`: Percentiles p50 y p90 exactos, latencia SQL 4ms, caché hit 1ms.
+  - `odoo_ro`: 13 facturas procesadas con suma exacta de $1,624,440 CLP agrupadas por comprador en 25ms.
+  - `voz_ro`: 850 borradores clasificados por estado en 20ms.
+  - Discrepancia numérica: 0.00%.
+- Docker Stats en ZBook: BaserowLite 82 MiB vs Metabase 1,181 MiB.
+
+---
+
 ## 🗓️ [2026-11-17] - Fase 4: Automatizaciones, Umbrales de Semáforo y Alertas hacia n8n/Telegram
 
 ### 🎯 Intención
