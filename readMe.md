@@ -21,6 +21,7 @@ BaserowLite implementa el modelo estructurado **Workspace ➔ Base ➔ Tabla ➔
 
 ## 🗺️ Índice de Navegación y Documentación Técnica
 
+- 💎 [Análisis Avanzado (Airtable vs Baserow vs Notion) y Manual (docs/advancedAnalysis.md)](file:///Users/snadales/Dev/01_Homelab/07_BaserowLite/docs/advancedAnalysis.md)
 - 📜 [Historial de Cambios (changeLog.md)](file:///Users/snadales/Dev/01_Homelab/07_BaserowLite/changeLog.md)
 - 🏗️ [Arquitectura del Sistema y Despliegue (docs/architecture.md)](file:///Users/snadales/Dev/01_Homelab/07_BaserowLite/docs/architecture.md)
 - 🗄️ [Modelo de Datos y Esquema Drizzle (docs/dataModel.md)](file:///Users/snadales/Dev/01_Homelab/07_BaserowLite/docs/dataModel.md)
