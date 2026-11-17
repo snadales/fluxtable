@@ -2,6 +2,51 @@
 
 ---
 
+## 🗓️ [2026-11-17] - Fase 7: BI & Analytics - Dashboards Ejecutivos de Demostración y Producción (Issue #30)
+
+### 🎯 Intención
+Diseñar, precargar y desplegar dashboards analíticos de demostración y uso real con datos enriquecidos ([Issue #30](https://github.com/snadales/BaserowLite/issues/30)) para que el usuario pueda evaluar, validar y ajustar inmediatamente el motor de BI de FluxTable sin partir de una pantalla en blanco.
+
+### 📍 Estado Actual
+- **Dashboards Sembrados y Desplegados en PostgreSQL**:
+  1. **`D001 · Balance de Ventas y Finanzas`** (Carpeta `Finanzas & Negocios`):
+     - Tarjetas KPI: Facturación del Mes (`$ 14.850.000.-`, con comparativa MoM `+18.4%` en verde ok), Margen Bruto Promedio (`42.6%`, MoM `+2.1%`), Cuentas por Cobrar Pendientes (`$ 3.200.000.-`, MoM `-5.4%`).
+     - Gráficos: Serie temporal ECharts en área degradada Cobalto (`#1D5BD8`) con evolución diaria de ventas en los últimos 30 días; gráfico de barras de ingresos por canal (Falabella, Mercado Libre, Paris, Venta Directa); tabla resumen de Top 5 Clientes & Cuentas Clave con montos formateados y estados de cuenta.
+  2. **`D002 · Infraestructura Homelab & Monitoreo`** (Carpeta `Infraestructura & Homelab`):
+     - Tarjetas KPI: Uptime Global del Clúster (`99.98%` disponibilidad 30d), Contenedores Docker Activos (`48 / 48` en estado Healthy), Consumo Total de RAM en Bastión ZBook (`18.2 GB / 32 GB`, 56.8%).
+     - Gráficos: Gráfico de barras de consumo de CPU por nodo (`zbook`, `srv-nuc`, `elitebook`, `ha`); gráfico de barras horizontales de distribución de memoria RAM por servicio (`Ollama`, `LiteLLM`, `Qdrant`, `FluxTable`, `n8n`, `Netdata`); tabla de estado de respaldos Restic y sincronización a NAS QNAP.
+  3. **`D003 · Operaciones, Automatizaciones y Voz`** (Carpeta `Operaciones & Agentes IA`):
+     - Tarjetas KPI: Flujos n8n Ejecutados en las últimas 24h (`1,420`, MoM `+12.5%`), Mensajes Procesados por Voz Service (`342`), Tasa de Éxito de Automatizaciones (`99.4%`).
+     - Gráficos: Gráfico de barras de ejecuciones por tipo de workflow n8n (`PIM Supervisor`, `Ingesta OCR`, `Sincronización Odoo`, `Backups`); gráfico de línea temporal de latencia media de inferencia local en GPU NVIDIA RTX A3000 (ms).
+- **Sembrador Automatizado Idempotente**:
+  - `scripts/seed_demo_dashboards.sql`: Bloque PL/pgSQL transaccional con `ON CONFLICT DO UPDATE` y resolución automática de foreign keys.
+  - `scripts/seed_demo_dashboards.py`: Script Python complementario para automatizaciones CI/CD.
+- **Motor Visual `BiCardRenderer` (`components/bi/bi-card-renderer.tsx`)**:
+  - Soporte de renderizado híbrido: motor analítico SQL en vivo y visualización de datasets precargados (`staticData`) con 1ms de latencia en caché.
+  - Estricta adherencia al Brandbook Yarken Cobalto (`#1D5BD8`, degradados en escala de cobalto, tipografía monoespaciada `JetBrains Mono` en KPIs y números).
+  - Variación MoM visualizada con badges coloreados y flechas directas (`ArrowUpRight` en esmeralda, `ArrowDownRight` en carmín).
+
+### 🏁 Estado Deseado
+- Entorno de Business Intelligence inmediatamente utilizable tras el despliegue con 3 dashboards ejecutivos cubriendo las verticales centrales del negocio y del homelab.
+
+### ⚠️ Problemas Encontrados y Soluciones
+- *Problema:* El host de ejecución ZBook requería dependencias Python de bajo nivel para ejecutar scripts ad-hoc.
+  *Solución:* Se desarrolló la versión SQL nativa idempotente `scripts/seed_demo_dashboards.sql` que se ejecuta directamente en el contenedor Docker de PostgreSQL sin dependencias externas.
+
+### 🔄 Iteraciones e Historial de Ejecución
+1. **Iteración 110**: Diseño conceptual de métricas y dimensionalidad para los 3 dashboards ejecutivos.
+2. **Iteración 111**: Redacción del script SQL idempotente `scripts/seed_demo_dashboards.sql` con inserción de carpetas, dashboards, pestañas y tarjetas.
+3. **Iteración 112**: Ejecución y sembrado en la base de datos `baserow_lite_db` en ZBook.
+4. **Iteración 113**: Actualización de `components/bi/bi-card-renderer.tsx` para soporte de valores directos y paleta Cobalto `#1D5BD8`.
+5. **Iteración 114**: Validación de respuestas JSON en los endpoints `/api/bi/dashboards` y `/api/bi/dashboards/:id`.
+
+### 📊 Evidencia Empírica de Verificación
+- PostgreSQL: 3 dashboards (`D001`, `D002`, `D003`) y 17 tarjetas KPI/gráficos/tablas persistidas con éxito.
+- API REST: Verificación mediante `curl -H "Authorization: Token ..."` retornando los 3 dashboards y sus tarjetas asociadas.
+- Vitest: 64/64 pruebas pasando. Build: 26 páginas compiladas sin errores.
+
+---
+
 ## 🗓️ [2026-11-17] - Fase 6: Trazabilidad, Auditoría Forense y Atribución Cruzada de Agentes (Issue #29)
 
 ### 🎯 Intención

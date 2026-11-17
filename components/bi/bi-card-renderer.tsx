@@ -49,6 +49,16 @@ export function BiCardRenderer({ card }: BiCardRendererProps) {
       setLoading(true);
       setError(null);
 
+      // Si la tarjeta incluye datos precargados de demostración (Issue #30)
+      if (card.visualConfigJson?.staticData) {
+        setData(card.visualConfigJson.staticData.data || []);
+        setColumns(card.visualConfigJson.staticData.columns || Object.keys(card.visualConfigJson.staticData.data?.[0] || {}));
+        setDurationMs(1);
+        setIsCached(true);
+        setLoading(false);
+        return;
+      }
+
       const baseConfig = card.queryConfigJson || {};
       
       // Incorporar rango temporal si la tarjeta tiene fecha configurada
@@ -165,14 +175,14 @@ export function BiCardRenderer({ card }: BiCardRendererProps) {
           data: values,
           smooth: isLine,
           itemStyle: {
-            color: isLine ? '#2563eb' : '#3b82f6',
+            color: card.visualConfigJson?.color || (isLine ? '#1D5BD8' : '#1D5BD8'),
             borderRadius: isHorizontal ? [0, 4, 4, 0] : [4, 4, 0, 0],
           },
           areaStyle: isLine
             ? {
                 color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                  { offset: 0, color: 'rgba(37, 99, 235, 0.3)' },
-                  { offset: 1, color: 'rgba(37, 99, 235, 0.0)' },
+                  { offset: 0, color: 'rgba(29, 91, 216, 0.35)' },
+                  { offset: 1, color: 'rgba(29, 91, 216, 0.0)' },
                 ]),
               }
             : undefined,
@@ -273,32 +283,37 @@ export function BiCardRenderer({ card }: BiCardRendererProps) {
         )}
 
         {/* 1. Tarjeta KPI */}
-        {!error && card.chartType === 'kpi' && data.length > 0 && (() => {
-          const row = data[0];
+        {!error && card.chartType === 'kpi' && (data.length > 0 || card.visualConfigJson?.displayValue) && (() => {
+          const row = data[0] || {};
           const metricKeys = Object.keys(row);
-          const primaryKey = metricKeys[0];
+          const primaryKey = metricKeys[0] || 'valor';
           const val = Number(row[primaryKey]) || 0;
-          const formattedVal = val.toLocaleString();
+          
+          const prefix = card.visualConfigJson?.prefix || '';
+          const suffix = card.visualConfigJson?.suffix || '';
+          const formattedVal = card.visualConfigJson?.displayValue || `${prefix}${val.toLocaleString('es-CL')}${suffix}`;
 
           // Buscar variación porcentual si existe
           const growthKey = metricKeys.find((k) => k.endsWith('_growth_pct'));
-          const growthVal = growthKey ? Number(row[growthKey]) : null;
+          const growthVal = card.visualConfigJson?.growth !== undefined 
+            ? card.visualConfigJson.growth 
+            : (growthKey ? Number(row[growthKey]) : null);
 
           return (
             <div className="flex-1 flex flex-col justify-center items-center py-2">
               <span className="text-3xl font-extrabold text-slate-900 tracking-tight font-mono">
                 {formattedVal}
               </span>
-              <span className="text-[11px] font-medium text-slate-500 mt-1 uppercase tracking-wider">
-                {primaryKey.replace(/_/g, ' ')}
+              <span className="text-[11px] font-semibold text-slate-500 mt-1 uppercase tracking-wider">
+                {card.visualConfigJson?.subtitle || primaryKey.replace(/_/g, ' ')}
               </span>
 
               {growthVal !== null && !isNaN(growthVal) && (
                 <div className={`mt-2 flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full ${
                   growthVal > 0
-                    ? 'bg-emerald-50 text-emerald-700'
+                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                     : growthVal < 0
-                    ? 'bg-rose-50 text-rose-700'
+                    ? 'bg-rose-50 text-rose-700 border border-rose-200'
                     : 'bg-slate-100 text-slate-600'
                 }`}>
                   {growthVal > 0 && <ArrowUpRight className="w-3.5 h-3.5" />}
