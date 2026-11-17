@@ -30,6 +30,7 @@ interface DataGridProps {
   onCellChange?: (rowId: string, columnId: string, newValue: any) => void;
   onRowSelect?: (row: RowData) => void;
   onAddRow?: () => void;
+  highlightRules?: boolean;
 }
 
 export const DataGrid: React.FC<DataGridProps> = ({
@@ -38,6 +39,7 @@ export const DataGrid: React.FC<DataGridProps> = ({
   onCellChange,
   onRowSelect,
   onAddRow,
+  highlightRules = true,
 }) => {
   const [selectedCell, setSelectedCell] = useState<{ rowIdx: number; colIdx: number } | null>({
     rowIdx: 0,
@@ -283,39 +285,51 @@ export const DataGrid: React.FC<DataGridProps> = ({
 
           {/* Body */}
           <tbody className="divide-y divide-gray-100 dark:divide-gray-800/60 font-sans">
-            {rows.map((row, rowIdx) => (
-              <tr
-                key={row.id}
-                onDoubleClick={() => onRowSelect?.(row)}
-                className="hover:bg-blue-50/30 dark:hover:bg-blue-900/10 transition-colors"
-              >
-                <td className="w-12 px-2 py-2 text-center text-gray-400 font-mono text-[11px] border-r border-gray-100 dark:border-gray-800">
-                  {rowIdx + 1}
-                </td>
-                {columns.map((col, colIdx) => {
-                  const isSelected = selectedCell?.rowIdx === rowIdx && selectedCell?.colIdx === colIdx;
-                  const isEditing = editingCell?.rowIdx === rowIdx && editingCell?.colIdx === colIdx;
+            {rows.map((row, rowIdx) => {
+              // Reglas de formato condicional
+              const isDelivered = row.data['Estado Embarque'] === 'opt_bodega';
+              const isLagging = Number(row.data['Avance Logístico']) < 40 && !isDelivered;
 
-                  return (
-                    <td
-                      key={col.id}
-                      onClick={() => setSelectedCell({ rowIdx, colIdx })}
-                      onDoubleClick={() => startEdit(rowIdx, colIdx)}
-                      style={{ width: `${col.width}px`, minWidth: `${col.width}px` }}
-                      className={`px-3 py-2 border-r border-gray-100 dark:border-gray-800 transition-all ${
-                        col.isPrimary ? 'sticky left-0 bg-white dark:bg-gray-900 z-10' : ''
-                      } ${
-                        isSelected
-                          ? 'ring-2 ring-blue-500 z-20 bg-blue-50/20 dark:bg-blue-900/20'
-                          : ''
-                      }`}
-                    >
-                      {renderCellContent(row, col, isEditing)}
-                    </td>
-                  );
-                })}
-              </tr>
-            ))}
+              let rowTint = '';
+              if (highlightRules) {
+                if (isDelivered) rowTint = 'bg-emerald-50/30 dark:bg-emerald-950/20';
+                else if (isLagging) rowTint = 'bg-amber-50/30 dark:bg-amber-950/20';
+              }
+
+              return (
+                <tr
+                  key={row.id}
+                  onDoubleClick={() => onRowSelect?.(row)}
+                  className={`hover:bg-blue-50/40 dark:hover:bg-blue-900/20 transition-colors ${rowTint}`}
+                >
+                  <td className="w-12 px-2 py-2 text-center text-gray-400 font-mono text-[11px] border-r border-gray-100 dark:border-gray-800">
+                    {rowIdx + 1}
+                  </td>
+                  {columns.map((col, colIdx) => {
+                    const isSelected = selectedCell?.rowIdx === rowIdx && selectedCell?.colIdx === colIdx;
+                    const isEditing = editingCell?.rowIdx === rowIdx && editingCell?.colIdx === colIdx;
+
+                    return (
+                      <td
+                        key={col.id}
+                        onClick={() => setSelectedCell({ rowIdx, colIdx })}
+                        onDoubleClick={() => startEdit(rowIdx, colIdx)}
+                        style={{ width: `${col.width}px`, minWidth: `${col.width}px` }}
+                        className={`px-3 py-2 border-r border-gray-100 dark:border-gray-800 transition-all ${
+                          col.isPrimary ? 'sticky left-0 bg-white dark:bg-gray-900 z-10' : ''
+                        } ${
+                          isSelected
+                            ? 'ring-2 ring-blue-500 z-20 bg-blue-50/20 dark:bg-blue-900/20'
+                            : ''
+                        }`}
+                      >
+                        {renderCellContent(row, col, isEditing)}
+                      </td>
+                    );
+                  })}
+                </tr>
+              );
+            })}
           </tbody>
 
           {/* Footer Summary Row */}

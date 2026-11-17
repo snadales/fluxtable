@@ -1,13 +1,16 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { DataGrid, ColumnDef, RowData } from '@/components/grid/data-grid';
 import { CalendarView } from '@/components/calendar/calendar-view';
+import { FilterPopover, FilterCondition } from '@/components/grid/filter-popover';
+import { SortPopover, SortCondition } from '@/components/grid/sort-popover';
+import { FieldsPopover } from '@/components/grid/fields-popover';
 import { 
   Database, Table as TableIcon, LayoutGrid, Kanban as KanbanIcon, 
   Calendar as CalendarIcon, FileText, Search, Download, Plus, Filter, ArrowUpDown, X, 
   ExternalLink, Clock, ShieldCheck, Trash2, RotateCcw, RefreshCw,
-  CheckCircle2, AlertCircle, Sparkles, PlusCircle, Eye
+  CheckCircle2, AlertCircle, Sparkles, PlusCircle, Eye, Rss, Copy, Check
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { ProgressBar } from '@/components/ui/progress-bar';
@@ -59,6 +62,22 @@ export default function HomePage() {
   const [syncStatus, setSyncStatus] = useState<'saved' | 'saving' | 'error'>('saved');
   const [showTrashModal, setShowTrashModal] = useState(false);
   const [trashItems, setTrashItems] = useState<any[]>([]);
+
+  // Filtros, Ordenamientos y Visibilidad de Campos
+  const [filters, setFilters] = useState<FilterCondition[]>([]);
+  const [showFilterPopover, setShowFilterPopover] = useState(false);
+  const [sorts, setSorts] = useState<SortCondition[]>([]);
+  const [showSortPopover, setShowSortPopover] = useState(false);
+  const [hiddenFieldIds, setHiddenFieldIds] = useState<string[]>([]);
+  const [showFieldsPopover, setShowFieldsPopover] = useState(false);
+  const [showIcalModal, setShowIcalModal] = useState(false);
+  const [conditionalFormatting, setConditionalFormatting] = useState(true);
+  const [copiedIcal, setCopiedIcal] = useState(false);
+
+  // Columnas visibles según selección del usuario
+  const visibleColumns = useMemo(() => {
+    return columns.filter((c) => !hiddenFieldIds.includes(c.id));
+  }, [columns, hiddenFieldIds]);
 
   // 1. Cargar datos reales desde la API local en el arranque
   const loadData = useCallback(async () => {
@@ -246,13 +265,77 @@ export default function HomePage() {
     URL.revokeObjectURL(url);
   };
 
-  // Filtrado reactivo por texto
-  const filteredRows = rows.filter((r) => {
-    if (!searchQuery) return true;
-    return Object.values(r.data).some((val) =>
-      String(val).toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  });
+  // Procesamiento reactivo: Búsqueda + Filtros Avanzados + Ordenamientos
+  const processedRows = useMemo(() => {
+    let result = [...rows];
+
+    // 1. Búsqueda por texto libre
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter((r) =>
+        Object.values(r.data).some((val) =>
+          String(val ?? '').toLowerCase().includes(q)
+        )
+      );
+    }
+
+    // 2. Filtros avanzados
+    if (filters.length > 0) {
+      result = result.filter((row) => {
+        return filters.every((flt) => {
+          const val = row.data[flt.fieldId];
+          const strVal = String(val ?? '').toLowerCase();
+          const targetVal = flt.value.toLowerCase();
+
+          switch (flt.operator) {
+            case 'equal':
+              return strVal === targetVal;
+            case 'not_equal':
+              return strVal !== targetVal;
+            case 'contains':
+              return strVal.includes(targetVal);
+            case 'not_contains':
+              return !strVal.includes(targetVal);
+            case 'greater':
+              return Number(val) > Number(flt.value);
+            case 'less':
+              return Number(val) < Number(flt.value);
+            case 'empty':
+              return val === null || val === undefined || val === '';
+            case 'not_empty':
+              return val !== null && val !== undefined && val !== '';
+            default:
+              return true;
+          }
+        });
+      });
+    }
+
+    // 3. Ordenamientos multinivel
+    if (sorts.length > 0) {
+      result.sort((a, b) => {
+        for (const st of sorts) {
+          const valA = a.data[st.fieldId];
+          const valB = b.data[st.fieldId];
+          if (valA === valB) continue;
+          if (valA === null || valA === undefined) return 1;
+          if (valB === null || valB === undefined) return -1;
+
+          const numA = Number(valA);
+          const numB = Number(valB);
+          const isNum = !isNaN(numA) && !isNaN(numB) && typeof valA !== 'boolean';
+
+          const diff = isNum ? numA - numB : String(valA).localeCompare(String(valB));
+          if (diff !== 0) {
+            return st.direction === 'asc' ? diff : -diff;
+          }
+        }
+        return 0;
+      });
+    }
+
+    return result;
+  }, [rows, searchQuery, filters, sorts]);
 
   return (
     <div className="flex flex-col h-screen overflow-hidden bg-slate-50 dark:bg-slate-950">
@@ -386,27 +469,146 @@ export default function HomePage() {
           </button>
         </div>
 
-        {/* Action Controls */}
-        <div className="flex items-center gap-2">
+        {/* Action Controls: Campos, Filtros, Orden, Colores, iCal, Búsqueda, Exportar, + Fila */}
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Popover Ocultar/Mostrar Campos */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => {
+                setShowFieldsPopover(!showFieldsPopover);
+                setShowFilterPopover(false);
+                setShowSortPopover(false);
+              }}
+              className={`flex items-center gap-1.5 px-2.5 py-1 text-xs rounded-md border transition-colors shadow-2xs ${
+                hiddenFieldIds.length > 0
+                  ? 'bg-blue-50 border-blue-200 text-blue-700 dark:bg-blue-950/60 dark:border-blue-800 dark:text-blue-300 font-semibold'
+                  : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50'
+              }`}
+            >
+              <Eye className="w-3.5 h-3.5" />
+              <span>Campos {hiddenFieldIds.length > 0 ? `(${columns.length - hiddenFieldIds.length}/${columns.length})` : ''}</span>
+            </button>
+            {showFieldsPopover && (
+              <FieldsPopover
+                columns={columns}
+                hiddenFieldIds={hiddenFieldIds}
+                onToggleHidden={(id) =>
+                  setHiddenFieldIds((prev) =>
+                    prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+                  )
+                }
+                onShowAll={() => setHiddenFieldIds([])}
+                onHideAll={() =>
+                  setHiddenFieldIds(columns.filter((c) => !c.isPrimary).map((c) => c.id))
+                }
+                onClose={() => setShowFieldsPopover(false)}
+              />
+            )}
+          </div>
+
+          {/* Popover Filtros */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => {
+                setShowFilterPopover(!showFilterPopover);
+                setShowFieldsPopover(false);
+                setShowSortPopover(false);
+              }}
+              className={`flex items-center gap-1.5 px-2.5 py-1 text-xs rounded-md border transition-colors shadow-2xs ${
+                filters.length > 0
+                  ? 'bg-blue-50 border-blue-200 text-blue-700 dark:bg-blue-950/60 dark:border-blue-800 dark:text-blue-300 font-semibold'
+                  : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50'
+              }`}
+            >
+              <Filter className="w-3.5 h-3.5" />
+              <span>Filtro {filters.length > 0 ? `(${filters.length})` : ''}</span>
+            </button>
+            {showFilterPopover && (
+              <FilterPopover
+                columns={columns}
+                filters={filters}
+                onFiltersChange={setFilters}
+                onClose={() => setShowFilterPopover(false)}
+              />
+            )}
+          </div>
+
+          {/* Popover Ordenamiento */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => {
+                setShowSortPopover(!showSortPopover);
+                setShowFilterPopover(false);
+                setShowFieldsPopover(false);
+              }}
+              className={`flex items-center gap-1.5 px-2.5 py-1 text-xs rounded-md border transition-colors shadow-2xs ${
+                sorts.length > 0
+                  ? 'bg-blue-50 border-blue-200 text-blue-700 dark:bg-blue-950/60 dark:border-blue-800 dark:text-blue-300 font-semibold'
+                  : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50'
+              }`}
+            >
+              <ArrowUpDown className="w-3.5 h-3.5" />
+              <span>Ordenar {sorts.length > 0 ? `(${sorts.length})` : ''}</span>
+            </button>
+            {showSortPopover && (
+              <SortPopover
+                columns={columns}
+                sorts={sorts}
+                onSortsChange={setSorts}
+                onClose={() => setShowSortPopover(false)}
+              />
+            )}
+          </div>
+
+          {/* Toggle Formato Condicional */}
+          <button
+            type="button"
+            onClick={() => setConditionalFormatting(!conditionalFormatting)}
+            className={`flex items-center gap-1.5 px-2.5 py-1 text-xs rounded-md border transition-colors shadow-2xs ${
+              conditionalFormatting
+                ? 'bg-amber-50 border-amber-200 text-amber-700 dark:bg-amber-950/60 dark:border-amber-800 dark:text-amber-300 font-semibold'
+                : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 hover:bg-slate-50'
+            }`}
+            title="Activar / Desactivar formato condicional inteligente"
+          >
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>Colores</span>
+          </button>
+
+          {/* Botón Feed iCal (Activo en vista Calendario) */}
+          {activeView === 'calendar' && (
+            <button
+              type="button"
+              onClick={() => setShowIcalModal(true)}
+              className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-md transition-colors shadow-2xs"
+            >
+              <Rss className="w-3.5 h-3.5" />
+              <span>Feed iCal</span>
+            </button>
+          )}
+
           {/* Búsqueda rápida */}
           <div className="relative">
             <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
               type="text"
-              placeholder="Buscar contenedor, estado..."
+              placeholder="Buscar..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-8 pr-3 py-1 text-xs rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:outline-none focus:ring-1 focus:ring-blue-500 w-48 transition-all"
+              className="pl-8 pr-3 py-1 text-xs rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:outline-none focus:ring-1 focus:ring-blue-500 w-36 sm:w-44 transition-all"
             />
           </div>
 
           <button
             type="button"
             onClick={handleExportCSV}
-            className="flex items-center gap-1.5 px-3 py-1 text-xs font-medium text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/60 rounded-md transition-colors shadow-sm"
+            className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/60 rounded-md transition-colors shadow-2xs"
           >
             <Download className="w-3.5 h-3.5 text-slate-500" />
-            <span>Exportar CSV</span>
+            <span>CSV</span>
           </button>
 
           <button
@@ -432,8 +634,9 @@ export default function HomePage() {
             {activeView === 'grid' && (
               <div className="max-w-full">
                 <DataGrid
-                  columns={columns}
-                  rows={filteredRows}
+                  columns={visibleColumns}
+                  rows={processedRows}
+                  highlightRules={conditionalFormatting}
                   onCellChange={handleCellChange}
                   onRowSelect={(row) => setSelectedRecord(row)}
                   onAddRow={handleAddRow}
@@ -446,7 +649,7 @@ export default function HomePage() {
                 {columns
                   .find((c) => c.id === 'Estado Embarque')
                   ?.options?.options?.map((opt: any) => {
-                    const columnRows = filteredRows.filter((r) => r.data['Estado Embarque'] === opt.id);
+                    const columnRows = processedRows.filter((r) => r.data['Estado Embarque'] === opt.id);
                     const totalFob = columnRows.reduce((acc, r) => acc + (Number(r.data['Inversión FOB']) || 0), 0);
 
                     return (
@@ -516,7 +719,7 @@ export default function HomePage() {
             {activeView === 'calendar' && (
               <div className="h-[calc(100vh-180px)]">
                 <CalendarView
-                  rows={filteredRows}
+                  rows={processedRows}
                   dateFieldId="Fecha Estimada Arribo"
                   titleFieldId="Código Contenedor"
                   onSelectRecord={(row) => setSelectedRecord(row)}
@@ -732,6 +935,82 @@ export default function HomePage() {
                   </div>
                 ))
               )}
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Modal de Suscripción iCal */}
+      {showIcalModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col">
+            <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Rss className="w-4 h-4 text-emerald-500" />
+                <h3 className="font-bold text-sm text-slate-900 dark:text-white">
+                  Suscripción a Calendario iCal (.ics)
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowIcalModal(false)}
+                className="p-1 rounded-md text-slate-400 hover:text-slate-600"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="p-5 space-y-4 text-xs">
+              <p className="text-slate-600 dark:text-slate-400">
+                Suscribe tu aplicación de calendario favorita (Apple Calendar en iPhone/Mac, Google Calendar o Outlook) para sincronizar automáticamente las fechas de arribo de los contenedores.
+              </p>
+
+              <div>
+                <label className="block text-[11px] font-mono text-slate-400 mb-1">
+                  URL de Suscripción Feed (HTTPS):
+                </label>
+                <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800/80 p-2 rounded-lg border border-slate-200 dark:border-slate-700">
+                  <input
+                    type="text"
+                    readOnly
+                    value="https://tables.yarken.cl/api/v1/calendar/ical?tableId=865"
+                    className="flex-1 bg-transparent font-mono text-[11px] outline-none text-slate-800 dark:text-white"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      navigator.clipboard.writeText('https://tables.yarken.cl/api/v1/calendar/ical?tableId=865');
+                      setCopiedIcal(true);
+                      setTimeout(() => setCopiedIcal(false), 2000);
+                    }}
+                    className="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded font-medium flex items-center gap-1 transition-colors"
+                  >
+                    {copiedIcal ? (
+                      <>
+                        <Check className="w-3 h-3" />
+                        <span>Copiado!</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-3 h-3" />
+                        <span>Copiar</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              <div className="pt-2 flex flex-col gap-2">
+                <a
+                  href="webcal://tables.yarken.cl/api/v1/calendar/ical?tableId=865"
+                  className="w-full py-2.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg text-center flex items-center justify-center gap-1.5 shadow-sm transition-colors"
+                >
+                  <CalendarIcon className="w-3.5 h-3.5" />
+                  <span>Abrir en Apple Calendar / iOS</span>
+                </a>
+                <p className="text-[10px] text-slate-400 text-center">
+                  En iPhone o Mac esto abrirá Calendario directamente preguntando con qué frecuencia actualizar el feed.
+                </p>
+              </div>
             </div>
           </div>
         </div>

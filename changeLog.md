@@ -64,3 +64,11 @@ Inicializar el repositorio independiente `07_BaserowLite` y elaborar el diseño 
     - Controles de navegación mensual (Mes anterior, Mes siguiente y botón rápido 'Hoy').
     - Representación visual de contenedores programados con píldoras tipadas, colores según estado de embarque e integración con el Drawer lateral de notas.
     - Soporte interactivo para agregar nuevos lotes y apertura de detalle sin recargar página.
+16. **Iteración 16**: Implementación completa de parámetros avanzados y opciones de vista (Todos):
+    - **Feed iCal RFC 5545 (`/api/v1/calendar/ical`)**: Generación dinámica de eventos de calendario para sincronización con Apple Calendar, Google Calendar y Outlook vía `webcal://` o HTTPS.
+    - **Visibilidad de Columnas (`FieldsPopover`)**: Control interactivo para encender o apagar campos en la cuadrícula en tiempo real con recuento dinámico.
+    - **Filtros Avanzados (`FilterPopover`)**: Motor de filtrado reactivo multinivel con operadores `equal`, `not_equal`, `contains`, `not_contains`, `greater`, `less`, `empty` y `not_empty`.
+    - **Ordenamientos Multinivel (`SortPopover`)**: Clasificación encadenada de filas por múltiples columnas en orden Ascendente (A → Z) y Descendente (Z → A).
+    - **Formato Condicional Inteligente**: Resaltado visual en `DataGrid` según reglas de negocio (verde para `Recibido en Bodega`, advertencias para avance bajo y valores destacados) con botón toggle `Colores`.
+    - **Modal de Suscripción en Calendario**: Diálogo con botón de copia rápida y enlace directo `webcal://` optimizado para iPhone (iOS) y Mac.
+    - Compilación de producción Next.js 15 exitosa (10/10 páginas estáticas y dinámicas) y 39 pruebas automáticas vitest en verde.
