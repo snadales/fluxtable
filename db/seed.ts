@@ -1,3 +1,4 @@
+import { eq } from 'drizzle-orm';
 import { db, schema } from './index';
 
 export async function runSeed() {
@@ -143,7 +144,7 @@ export async function runSeed() {
   await db
     .update(schema.tables)
     .set({ primaryFieldId: createdFields[0].id })
-    .where(db.schema ? undefined : undefined); // placeholder
+    .where(eq(schema.tables.id, table.id));
 
   // 7. Crear Vistas Canónicas
   await db.insert(schema.views).values([
