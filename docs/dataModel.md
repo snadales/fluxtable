@@ -39,8 +39,31 @@ import {
 } from 'drizzle-orm/pg-core';
 
 // -----------------------------------------------------------------------------
-// 1. Espacios de Trabajo y Miembros
+// 1. Usuarios, Sesiones y Espacios de Trabajo
 // -----------------------------------------------------------------------------
+export const users = pgTable('users', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  email: text('email').notNull().unique(),
+  name: text('name'),
+  avatarUrl: text('avatar_url'),
+  passwordHash: text('password_hash'), // null si solo usa Google OAuth
+  googleId: text('google_id').unique(),
+  role: text('role', { enum: ['superadmin', 'member'] }).default('member').notNull(),
+  isActive: boolean('is_active').default(true).notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+});
+
+export const sessions = pgTable('sessions', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
+  sessionToken: text('session_token').notNull().unique(),
+  ipAddress: text('ip_address'),
+  userAgent: text('user_agent'),
+  expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+});
+
 export const workspaces = pgTable('workspaces', {
   id: uuid('id').defaultRandom().primaryKey(),
   name: text('name').notNull(),
@@ -53,7 +76,7 @@ export const workspaces = pgTable('workspaces', {
 export const workspaceMembers = pgTable('workspace_members', {
   id: uuid('id').defaultRandom().primaryKey(),
   workspaceId: uuid('workspace_id').references(() => workspaces.id, { onDelete: 'cascade' }).notNull(),
-  userId: text('user_id').notNull(), // Identificador local o email
+  userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
   role: text('role', { enum: ['owner', 'admin', 'editor', 'viewer'] }).default('editor').notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 });
@@ -126,6 +149,7 @@ export const records = pgTable('records', {
   order: integer('order').default(0).notNull(),
   version: integer('version').default(1).notNull(), // Concurrencia optimista
   data: jsonb('data').$type<Record<string, any>>().default({}).notNull(),
+  content: text('content'), // Notas Markdown completas dentro del registro (estilo Notion)
   createdBy: text('created_by'),
   updatedBy: text('updated_by'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
