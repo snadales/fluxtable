@@ -23,6 +23,7 @@ BaserowLite implementa el modelo estructurado **Workspace ➔ Base ➔ Tabla ➔
 
 ## 🗺️ Índice de Navegación y Documentación Técnica
 
+- 🛡️ [Informe de Pruebas de Desempeño, Concurrencia y Seguridad (docs/informe_pruebas_desempeno_seguridad.md)](file:///Users/snadales/Dev/01_Homelab/07_BaserowLite/docs/informe_pruebas_desempeno_seguridad.md)
 - 📊 [Plan de Decomiso de Metabase y Validación en Paralelo (docs/plan_decomiso_metabase.md)](file:///Users/snadales/Dev/01_Homelab/07_BaserowLite/docs/plan_decomiso_metabase.md)
 - 🔄 [Plan de Convivencia en Paralelo y Validación Continua (docs/parallelValidationPlan.md)](file:///Users/snadales/Dev/01_Homelab/07_BaserowLite/docs/parallelValidationPlan.md)
 - 🔐 [Usuarios, Google OAuth, Logs y Trazabilidad (docs/authAndObservability.md)](file:///Users/snadales/Dev/01_Homelab/07_BaserowLite/docs/authAndObservability.md)

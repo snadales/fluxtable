@@ -35,6 +35,15 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // 0. Blindaje Defensivo Global: Solo lectura estricta para todo tipo de fuente
+    const forbiddenMutation = /\b(INSERT|UPDATE|DELETE|DROP|ALTER|TRUNCATE|GRANT|REVOKE|EXEC|CREATE|REPLACE)\b/i;
+    if (forbiddenMutation.test(targetSql)) {
+      return NextResponse.json(
+        { error: 'FORBIDDEN_MUTATION', message: 'CONSULTA_BLOQUEADA: Solo se permiten consultas SELECT de lectura analítica' },
+        { status: 403 }
+      );
+    }
+
     // 1. Revisar Caché
     const cacheKey = biCacheManager.generateKey(sourceType, targetSql, targetParams, body.filters);
     if (useCache) {

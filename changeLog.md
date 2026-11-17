@@ -2,6 +2,45 @@
 
 ---
 
+## 🗓️ [2026-11-17] - Certificación Integral: Desempeño, Concurrencia, Pruebas Ácidas y Pentest Defensivo
+
+### 🎯 Intención
+Certificar la robustez, resistencia a la saturación, estabilidad de memoria y seguridad defensiva del motor analítico de BaserowLite (`EPIC-BI-01` / Issue #21) antes del decomiso de Metabase: ejecutar ráfagas de carga concurrente (hasta 50 workers y 200 peticiones simultáneas), realizar pruebas ácidas continuas de 500 consultas analíticas mixtas verificando ausencia de memory leaks, y auditar vectores de ataque (auth bypass, DDL/DML mutation injection y SQL injection en filtros).
+
+### 📍 Estado Actual
+- `scripts/bi_stress_security_suite.py`: Batería completa automatizada en Python ejecutada exitosamente contra el stack en producción en ZBook.
+- `docs/informe_pruebas_desempeno_seguridad.md`: Informe técnico detallado con resultados de seguridad (8/8 pruebas superadas), métricas de concurrencia ($p50$: 37-91 ms, throughput pico: 518.5 req/s) y telemetría de memoria RAM.
+- `app/api/bi/query/route.ts`: Blindaje defensivo global añadido: intercepción de mutaciones (`INSERT`, `UPDATE`, `DELETE`, `DROP`, `ALTER`, `TRUNCATE`, `GRANT`, `REVOKE`) tanto para fuentes remotas como locales, respondiendo `HTTP 403 CONSULTA_BLOQUEADA`.
+- `lib/bi/analytics/query-builder.ts`: Normalización defensiva de métricas simplificadas (`metricColumn`/`aggregation`) y nombres de columna/campo en filtros.
+- Resultados Clave:
+  - **Seguridad:** 100% aprobado (8/8 pruebas).
+  - **Carga y Saturación:** Throughput de 249 a 518.5 req/s con 0 errores (100% de éxito en 350 peticiones concurrentes).
+  - **Prueba Ácida:** 500 consultas completadas en 1.45s (345 req/s) con variación de RAM despreciable (+2.15 MiB total, sin fugas de memoria).
+
+### 🏁 Estado Deseado
+- Sistema certificado bajo estándares de alta concurrencia y seguridad para absorber todas las cargas operativas de Metabase.
+
+### ⚠️ Problemas Encontrados y Soluciones
+- *Problema:* El filtro de mutaciones sólo operaba dentro del gestor de conexiones externas `pool-manager.ts`, dejando expuesto el endpoint local a posibles comandos DDL o DML encadenados.
+  *Solución:* Se integró una capa de validación regex previa en `app/api/bi/query/route.ts` que bloquea de raíz cualquier palabra clave de mutación con `HTTP 403` para cualquier fuente.
+- *Problema:* Las consultas analíticas con filtros simplificados (`column`/`field`) provocaban un `TypeError` al evaluar `config.metrics.forEach` si no se declaraba explícitamente el array de métricas.
+  *Solución:* Se implementó un normalizador `effectiveMetrics` en `BiQueryBuilder` que sintetiza métricas por defecto de forma segura.
+
+### 🔄 Iteraciones e Historial de Ejecución
+1. **Iteración 54**: Apertura del issue `#21` en `snadales/BaserowLite` con plantilla de atribución estricta.
+2. **Iteración 55**: Desarrollo de `scripts/bi_stress_security_suite.py` con las 3 suites completas.
+3. **Iteración 56**: Blindaje preventivo de `app/api/bi/query/route.ts` contra DDL/DML.
+4. **Iteración 57**: Normalización defensiva de filtros y métricas en `lib/bi/analytics/query-builder.ts`.
+5. **Iteración 58**: Despliegue en ZBook, compilación de contenedor y ejecución exitosa de la suite (100% aprobada).
+6. **Iteración 59**: Redacción del informe maestro `docs/informe_pruebas_desempeno_seguridad.md`.
+
+### 📊 Evidencia Empírica de Verificación
+- Pentest: 8/8 pruebas pasando (Auth 401, Bloqueo DDL/DML 403, Sanitización SQLi 200).
+- Concurrencia: 518.53 req/s en pico de 50 trabajadores simultáneos con latencia $p50$ de 91.4 ms.
+- Prueba Ácida: 500/500 consultas exitosas a 345 req/s con estabilidad absoluta de memoria (102.3 MiB total).
+
+---
+
 ## 🗓️ [2026-11-17] - Fase 5: Validación en Paralelo, Paridad Analítica y Plan de Decomiso de Metabase
 
 ### 🎯 Intención

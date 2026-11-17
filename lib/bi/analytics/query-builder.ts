@@ -96,8 +96,11 @@ export class BiQueryBuilder {
     // 2. Manejo de Filtros
     if (config.filters && config.filters.length > 0) {
       for (const f of config.filters) {
-        const safeField = `"${f.field.replace(/"/g, '')}"`;
-        switch (f.operator) {
+        const rawField = f.field || (f as any).column || '';
+        if (!rawField) continue;
+        const safeField = `"${rawField.replace(/"/g, '')}"`;
+        const op = (f.operator as string) === 'equals' ? 'eq' : f.operator;
+        switch (op) {
           case 'eq':
             params.push(f.value);
             whereClauses.push(`${safeField} = $${params.length}`);
@@ -179,7 +182,26 @@ export class BiQueryBuilder {
     const baseMetricSelects: string[] = [];
     let hasTimeIntelligence = false;
 
-    config.metrics.forEach((m, idx) => {
+    // Normalización defensiva de métricas si se usa formato simplificado
+    const legacyMetric = (config as any).metricColumn;
+    const legacyAgg = (config as any).aggregation || 'sum';
+    const effectiveMetrics: MetricConfig[] = (config.metrics && config.metrics.length > 0)
+      ? config.metrics
+      : legacyMetric
+        ? [{
+            field: legacyMetric,
+            aggregation: legacyAgg,
+            alias: 'metric',
+            timeIntelligence: 'none',
+          }]
+        : [{
+            field: '*',
+            aggregation: 'count',
+            alias: 'metric',
+            timeIntelligence: 'none',
+          }];
+
+    effectiveMetrics.forEach((m, idx) => {
       const alias = m.alias || `metric_${idx + 1}`;
       const safeField = m.field ? `"${m.field.replace(/"/g, '')}"` : '*';
 
@@ -254,7 +276,7 @@ ${offsetString};
       });
     }
 
-    config.metrics.forEach((m, idx) => {
+    effectiveMetrics.forEach((m, idx) => {
       const alias = m.alias || `metric_${idx + 1}`;
       outerSelects.push(`"${alias}"`);
 
