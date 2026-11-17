@@ -10,13 +10,17 @@ import { BaseSettingsModal, BaseMetadata } from '@/components/modals/base-settin
 import { ApiTokensModal } from '@/components/modals/api-tokens-modal';
 import { NewTableModal } from '@/components/modals/new-table-modal';
 import { NewFieldModal } from '@/components/modals/new-field-modal';
+import { WorkspacesDashboard, WorkspaceGroup } from '@/components/workspaces/workspaces-dashboard';
+import { WorkspaceUserMenu } from '@/components/modals/workspace-user-menu';
+import { AdminToolsModal } from '@/components/modals/admin-tools-modal';
+import { MySettingsModal } from '@/components/modals/my-settings-modal';
 import { 
   Database, Table as TableIcon, LayoutGrid, Kanban as KanbanIcon, 
   Calendar as CalendarIcon, FileText, Search, Download, Plus, Filter, ArrowUpDown, X, 
   ExternalLink, Clock, ShieldCheck, Trash2, RotateCcw, RefreshCw,
   CheckCircle2, AlertCircle, Sparkles, PlusCircle, Eye, Rss, Copy, Check,
   Ship, Package, ShoppingCart, Briefcase, BarChart2, Globe, Tag, Settings,
-  Key, User, LogOut, ChevronDown, Folder, Palette
+  Key, User, LogOut, ChevronDown, Folder, Palette, ChevronRight, Home, ArrowLeft, LayoutDashboard
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { ProgressBar } from '@/components/ui/progress-bar';
@@ -115,6 +119,14 @@ export default function HomePage() {
   const [showApiTokensModal, setShowApiTokensModal] = useState(false);
   const [showNewTableModal, setShowNewTableModal] = useState(false);
   const [showNewFieldModal, setShowNewFieldModal] = useState(false);
+
+  // Navegación de Workspaces y Modales Globales
+  const [viewMode, setViewMode] = useState<'workspaces' | 'database'>('workspaces');
+  const [workspaces, setWorkspaces] = useState<WorkspaceGroup[]>([]);
+  const [activeWorkspaceId, setActiveWorkspaceId] = useState<string | null>(null);
+  const [showWorkspaceUserMenu, setShowWorkspaceUserMenu] = useState(false);
+  const [showAdminToolsModal, setShowAdminToolsModal] = useState(false);
+  const [showMySettingsModal, setShowMySettingsModal] = useState(false);
 
   // Tablas dinámicas y tabla activa
   const [currentTableId, setCurrentTableId] = useState<string>('865');
@@ -243,11 +255,89 @@ export default function HomePage() {
     }
   }, [currentTableId]);
 
+  // Cargar workspaces
+  const loadWorkspaces = useCallback(async () => {
+    try {
+      const res = await fetch('/api/database/workspaces');
+      if (res.ok) {
+        const data = await res.json();
+        setWorkspaces(data);
+      }
+    } catch (e) {
+      console.error('Error cargando workspaces:', e);
+    }
+  }, []);
+
   useEffect(() => {
+    loadWorkspaces();
     loadTablesList();
     loadMetadata();
     loadData();
-  }, [loadTablesList, loadMetadata, loadData]);
+  }, [loadWorkspaces, loadTablesList, loadMetadata, loadData]);
+
+  // Abrir base de datos desde el dashboard de workspaces
+  const handleOpenDatabase = async (baseId: string) => {
+    try {
+      const res = await fetch(`/api/database/tables?base_id=${baseId}`);
+      if (res.ok) {
+        const tList = await res.json();
+        if (tList.length > 0) {
+          const firstTbl = tList[0];
+          const tableIdentifier = firstTbl.legacyId ? String(firstTbl.legacyId) : firstTbl.id;
+          setCurrentTableId(tableIdentifier);
+          await handleSwitchTable(tableIdentifier);
+        } else {
+          await loadMetadata(baseId);
+          setRows([]);
+        }
+      }
+    } catch (e) {
+      console.error('Error abriendo base:', e);
+    }
+    setViewMode('database');
+  };
+
+  // Crear workspace
+  const handleCreateWorkspace = async () => {
+    const name = prompt('Nombre del nuevo Espacio de Trabajo:');
+    if (!name?.trim()) return;
+
+    try {
+      const res = await fetch('/api/database/workspaces', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: name.trim() }),
+      });
+      if (res.ok) {
+        await loadWorkspaces();
+      }
+    } catch (e) {
+      console.error('Error creando workspace:', e);
+    }
+  };
+
+  // Crear base en workspace
+  const handleCreateDatabaseInWorkspace = async (workspaceId: string) => {
+    const name = prompt('Nombre de la nueva Base de Datos:');
+    if (!name?.trim()) return;
+
+    try {
+      const res = await fetch('/api/database/tables', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: name.trim(),
+          baseId: workspaceId,
+        }),
+      });
+      if (res.ok) {
+        await loadWorkspaces();
+        await loadTablesList();
+      }
+    } catch (e) {
+      console.error('Error creando base en workspace:', e);
+    }
+  };
 
   // Cambiar entre tablas
   const handleSwitchTable = async (tableIdentifier: string) => {
@@ -585,13 +675,135 @@ export default function HomePage() {
     }
   };
 
+  // Si estamos en modo Workspaces Dashboard (Print 7)
+  if (viewMode === 'workspaces') {
+    return (
+      <div className="relative h-screen overflow-hidden">
+        <WorkspacesDashboard
+          workspaces={workspaces}
+          activeWorkspaceId={activeWorkspaceId}
+          onSelectWorkspace={setActiveWorkspaceId}
+          onOpenDatabase={handleOpenDatabase}
+          onCreateWorkspace={handleCreateWorkspace}
+          onCreateDatabase={handleCreateDatabaseInWorkspace}
+          onOpenTrash={() => {
+            loadTrash();
+            setShowTrashModal(true);
+          }}
+          user={{
+            name: user.name,
+            email: user.email,
+            role: user.role,
+          }}
+          onOpenUserMenu={() => setShowWorkspaceUserMenu(true)}
+        />
+
+        {/* Modal de Papelera */}
+        {showTrashModal && (
+          <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden flex flex-col max-h-[80vh]">
+              <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Trash2 className="w-4 h-4 text-slate-500" />
+                  <span className="font-bold text-sm text-slate-900 dark:text-white">Papelera de Reciclaje</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowTrashModal(false)}
+                  className="p-1 rounded text-slate-400 hover:text-slate-700"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="p-4 overflow-y-auto text-xs space-y-2">
+                {trashItems.length === 0 ? (
+                  <p className="text-center text-slate-400 py-6">La papelera está vacía.</p>
+                ) : (
+                  trashItems.map((item) => (
+                    <div
+                      key={item.id}
+                      className="flex items-center justify-between p-2.5 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700"
+                    >
+                      <span className="font-mono text-slate-700 dark:text-slate-300 truncate">
+                        {item.name || item.id}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleRestoreRow(item.id)}
+                        className="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-[11px] font-medium"
+                      >
+                        Restaurar
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Menu desplegable de Usuario y Workspaces (Print 1) */}
+        <WorkspaceUserMenu
+          isOpen={showWorkspaceUserMenu}
+          onClose={() => setShowWorkspaceUserMenu(false)}
+          workspaces={workspaces.map((w) => ({
+            id: w.id,
+            name: w.name,
+            slug: w.slug,
+            role: w.role,
+            membersCount: w.membersCount,
+            itemsCount: w.itemsCount,
+          }))}
+          activeWorkspaceId={activeWorkspaceId}
+          onSelectWorkspace={(id) => {
+            setActiveWorkspaceId(id);
+            setViewMode('workspaces');
+          }}
+          onOpenNewWorkspace={handleCreateWorkspace}
+          onOpenAdminTools={() => setShowAdminToolsModal(true)}
+          onOpenMySettings={() => setShowMySettingsModal(true)}
+          user={{
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            isZeroTrust: user.isZeroTrust,
+          }}
+        />
+
+        {/* Modal Admin Tools (Prints 2, 4, 5) */}
+        <AdminToolsModal
+          isOpen={showAdminToolsModal}
+          onClose={() => setShowAdminToolsModal(false)}
+        />
+
+        {/* Modal My Settings (Print 8) */}
+        <MySettingsModal
+          isOpen={showMySettingsModal}
+          onClose={() => setShowMySettingsModal(false)}
+          user={{
+            name: user.name,
+            email: user.email,
+            role: user.role,
+          }}
+          onUpdateUser={async (newName) => {
+            setUser((prev) => ({ ...prev, name: newName }));
+          }}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col h-screen overflow-hidden bg-slate-50 dark:bg-slate-950">
       {/* Top Bar / App Navigation */}
       <header className="h-12 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center justify-between px-4 shrink-0 shadow-sm">
         <div className="flex items-center gap-3">
           {/* Logo y versión */}
-          <div className="flex items-center gap-2 font-bold text-sm tracking-tight text-slate-800 dark:text-white">
+          <div
+            onClick={() => setViewMode('workspaces')}
+            className="flex items-center gap-2 font-bold text-sm tracking-tight text-slate-800 dark:text-white cursor-pointer hover:opacity-80 transition-opacity"
+            title="Volver a Workspaces Dashboard"
+          >
             <div className={`w-6 h-6 rounded ${getThemeColor(metadata.baseColor).bg} flex items-center justify-center text-white text-xs font-black shadow-sm`}>
               BL
             </div>
@@ -603,37 +815,50 @@ export default function HomePage() {
 
           <div className="h-4 w-px bg-slate-200 dark:bg-slate-700 mx-1" />
 
-          {/* Base & Categoría con Icono, Color y Tags */}
-          <div
-            onClick={() => setShowBaseSettingsModal(true)}
-            className="flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors group"
-            title="Clic para editar metadatos, categoría, color e icono de la base"
-          >
-            <div className={`p-1 rounded ${getThemeColor(metadata.baseColor).badge} flex items-center justify-center`}>
-              {renderIcon(metadata.baseIcon, 'w-3.5 h-3.5')}
-            </div>
-            <div className="flex flex-col text-left">
-              <div className="flex items-center gap-1.5">
-                <span className="font-semibold text-xs text-slate-800 dark:text-white group-hover:text-blue-600 transition-colors">
-                  {metadata.baseName}
-                </span>
-                <span className="text-[10px] text-slate-400 font-medium hidden sm:inline">
-                  • {metadata.baseCategory}
-                </span>
-                <Settings className="w-3 h-3 text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+          {/* Breadcrumb: Workspaces / Negocios / Base */}
+          <div className="flex items-center gap-1.5 text-xs">
+            <button
+              type="button"
+              onClick={() => setViewMode('workspaces')}
+              className="flex items-center gap-1 px-2 py-1 rounded-md text-slate-500 hover:text-blue-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors font-medium"
+              title="Volver al panel principal de Workspaces"
+            >
+              <Folder className="w-3.5 h-3.5" />
+              <span>Workspaces</span>
+            </button>
+            <span className="text-slate-300 dark:text-slate-700">/</span>
+            <span className="text-slate-500 font-medium hidden sm:inline">
+              {metadata.baseCategory || 'Negocios'}
+            </span>
+            <span className="text-slate-300 dark:text-slate-700 hidden sm:inline">/</span>
+
+            {/* Base & Categoría con Icono, Color y Tags */}
+            <div
+              onClick={() => setShowBaseSettingsModal(true)}
+              className="flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors group font-semibold text-slate-900 dark:text-white"
+              title="Clic para editar metadatos, categoría, color e icono de la base"
+            >
+              <div className={`p-1 rounded ${getThemeColor(metadata.baseColor).badge} flex items-center justify-center`}>
+                {renderIcon(metadata.baseIcon, 'w-3.5 h-3.5')}
               </div>
-              <div className="flex items-center gap-1">
-                {metadata.baseTags.slice(0, 2).map((t) => (
-                  <span key={t} className="text-[9px] font-mono text-slate-400">
-                    #{t}
-                  </span>
-                ))}
-              </div>
+              <span className="group-hover:text-blue-600 transition-colors">{metadata.baseName}</span>
+              <Settings className="w-3 h-3 text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity" />
             </div>
           </div>
         </div>
 
         <div className="flex items-center gap-3">
+          {/* Botón rápido Volver a Workspaces */}
+          <button
+            type="button"
+            onClick={() => setViewMode('workspaces')}
+            className="flex items-center gap-1.5 px-2.5 py-1 text-xs text-slate-600 hover:text-blue-600 bg-slate-100 dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-blue-950/40 rounded-md transition-colors font-medium"
+            title="Ir al listado de espacios de trabajo"
+          >
+            <LayoutDashboard className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Workspaces</span>
+          </button>
+
           {/* Indicador de Sincronización */}
           {syncStatus === 'saving' && (
             <div className="flex items-center gap-1.5 text-[11px] font-mono text-amber-600 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
@@ -667,12 +892,12 @@ export default function HomePage() {
             <span>Papelera</span>
           </button>
 
-          {/* Menú de Usuario y Sesión */}
+          {/* Menú de Usuario y Sesión (Print 1) */}
           <div className="relative">
             <button
               type="button"
-              onClick={() => setShowUserMenu(!showUserMenu)}
-              className="flex items-center gap-2 p-1 pl-2 rounded-full border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 transition-colors"
+              onClick={() => setShowWorkspaceUserMenu(!showWorkspaceUserMenu)}
+              className="flex items-center gap-2 p-1 pl-2 rounded-full border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 transition-colors cursor-pointer"
             >
               <div className="flex items-center gap-1.5 text-xs text-left hidden sm:flex">
                 <span className="font-semibold text-slate-800 dark:text-white text-[11px]">
@@ -686,65 +911,6 @@ export default function HomePage() {
                 {user.avatarInitials}
               </div>
             </button>
-
-            {/* Dropdown de Sesión de Usuario */}
-            {showUserMenu && (
-              <div className="absolute right-0 top-10 w-64 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl z-50 p-2 text-xs space-y-1">
-                <div className="px-3 py-2 border-b border-slate-100 dark:border-slate-800">
-                  <div className="font-bold text-slate-900 dark:text-white">{user.name}</div>
-                  <div className="text-[11px] font-mono text-slate-400 truncate">{user.email}</div>
-                  {user.isZeroTrust && (
-                    <div className="flex items-center gap-1 mt-1 text-[10px] text-emerald-600 font-medium">
-                      <ShieldCheck className="w-3 h-3 text-emerald-500" />
-                      <span>Zero Trust · Cloudflare Access</span>
-                    </div>
-                  )}
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowUserMenu(false);
-                    setShowBaseSettingsModal(true);
-                  }}
-                  className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-left"
-                >
-                  <Palette className="w-3.5 h-3.5 text-blue-600" />
-                  <span>Configurar Base & Tablas</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowUserMenu(false);
-                    setShowApiTokensModal(true);
-                  }}
-                  className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-left"
-                >
-                  <Key className="w-3.5 h-3.5 text-amber-500" />
-                  <span>Tokens de API de Base</span>
-                </button>
-
-                <a
-                  href="/api/admin/diagnostics"
-                  target="_blank"
-                  className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-left"
-                >
-                  <BarChart2 className="w-3.5 h-3.5 text-purple-600" />
-                  <span>Diagnóstico del Servidor</span>
-                </a>
-
-                <div className="pt-1 border-t border-slate-100 dark:border-slate-800">
-                  <a
-                    href="/login"
-                    className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors text-left"
-                  >
-                    <LogOut className="w-3.5 h-3.5" />
-                    <span>Cerrar Sesión</span>
-                  </a>
-                </div>
-              </div>
-            )}
           </div>
         </div>
       </header>
@@ -1465,6 +1631,54 @@ export default function HomePage() {
         isOpen={showNewFieldModal}
         onClose={() => setShowNewFieldModal(false)}
         onCreate={handleCreateField}
+      />
+
+      {/* Menu desplegable de Usuario y Workspaces (Print 1) */}
+      <WorkspaceUserMenu
+        isOpen={showWorkspaceUserMenu}
+        onClose={() => setShowWorkspaceUserMenu(false)}
+        workspaces={workspaces.map((w) => ({
+          id: w.id,
+          name: w.name,
+          slug: w.slug,
+          role: w.role,
+          membersCount: w.membersCount,
+          itemsCount: w.itemsCount,
+        }))}
+        activeWorkspaceId={activeWorkspaceId}
+        onSelectWorkspace={(id) => {
+          setActiveWorkspaceId(id);
+          setViewMode('workspaces');
+        }}
+        onOpenNewWorkspace={handleCreateWorkspace}
+        onOpenAdminTools={() => setShowAdminToolsModal(true)}
+        onOpenMySettings={() => setShowMySettingsModal(true)}
+        user={{
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          isZeroTrust: user.isZeroTrust,
+        }}
+      />
+
+      {/* Modal Admin Tools (Prints 2, 4, 5) */}
+      <AdminToolsModal
+        isOpen={showAdminToolsModal}
+        onClose={() => setShowAdminToolsModal(false)}
+      />
+
+      {/* Modal My Settings (Print 8) */}
+      <MySettingsModal
+        isOpen={showMySettingsModal}
+        onClose={() => setShowMySettingsModal(false)}
+        user={{
+          name: user.name,
+          email: user.email,
+          role: user.role,
+        }}
+        onUpdateUser={async (newName) => {
+          setUser((prev) => ({ ...prev, name: newName }));
+        }}
       />
     </div>
   );
