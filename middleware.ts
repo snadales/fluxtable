@@ -50,10 +50,12 @@ export function middleware(req: NextRequest) {
 
   if (pathname.startsWith('/api/auth')) {
     limit = 15; // Auth endpoints: 15 req/min (Anti-Brute-Force)
+  } else if (pathname.includes('/batch')) {
+    limit = 1200; // Batch operations (Migración de datos masiva y ETL)
   } else if (pathname === '/api/bi/query') {
     limit = 600; // BI queries: 600 req/min (Soporta múltiples tableros en concurrencia)
   } else if (pathname.startsWith('/api/v1/attachments/upload')) {
-    limit = 30; // Uploads: 30 req/min
+    limit = 60; // Uploads: 60 req/min
   }
 
   // Si no es ruta de API, continuar

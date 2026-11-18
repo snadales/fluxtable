@@ -64,3 +64,64 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Error interno al crear módulo' }, { status: 500 });
   }
 }
+
+export async function PATCH(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+    const body = await request.json();
+    const { name, description, category, color, icon, order } = body;
+
+    const targetId = id || body.id;
+    if (!targetId) {
+      return NextResponse.json({ error: 'ID del módulo requerido' }, { status: 400 });
+    }
+
+    const updateData: Record<string, any> = { updatedAt: new Date() };
+    if (name !== undefined) updateData.name = name.trim();
+    if (description !== undefined) updateData.description = description?.trim() || null;
+    if (category !== undefined) updateData.category = category?.trim() || 'Operaciones';
+    if (color !== undefined) updateData.color = color;
+    if (icon !== undefined) updateData.icon = icon;
+    if (order !== undefined) updateData.order = order;
+
+    const [updated] = await db
+      .update(bases)
+      .set(updateData)
+      .where(eq(bases.id, targetId))
+      .returning();
+
+    if (!updated) {
+      return NextResponse.json({ error: 'Módulo no encontrado' }, { status: 404 });
+    }
+
+    return NextResponse.json(updated);
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+
+    if (!id) {
+      return NextResponse.json({ error: 'ID del módulo requerido' }, { status: 400 });
+    }
+
+    const [deleted] = await db
+      .update(bases)
+      .set({ deletedAt: new Date() })
+      .where(eq(bases.id, id))
+      .returning();
+
+    if (!deleted) {
+      return NextResponse.json({ error: 'Módulo no encontrado' }, { status: 404 });
+    }
+
+    return NextResponse.json({ ok: true, id: deleted.id });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}

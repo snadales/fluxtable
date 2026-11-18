@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db, schema } from '@/db';
-import { eq, and, isNull, inArray } from 'drizzle-orm';
+import { eq, and, isNull, inArray, sql } from 'drizzle-orm';
 import { resolveTableId } from '@/lib/table-resolver';
 import { triggerTableWebhooks } from '@/lib/webhook-dispatcher';
 
@@ -40,6 +40,12 @@ export async function POST(req: NextRequest, context: RouteContext) {
       nameToIdMap[f.name] = f.id;
     }
 
+    const existingCount = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(schema.records)
+      .where(and(eq(schema.records.tableId, tableId as any), isNull(schema.records.deletedAt)));
+    const baseOrder = Number(existingCount[0]?.count || 0);
+
     // Preparar registros
     const recordsToInsert = items.map((item, idx) => {
       const rowData: Record<string, any> = {};
@@ -50,7 +56,7 @@ export async function POST(req: NextRequest, context: RouteContext) {
       }
       return {
         tableId: tableId as any,
-        order: idx + 1,
+        order: baseOrder + idx + 1,
         version: 1,
         data: rowData,
       };
