@@ -23,7 +23,16 @@ export async function GET(
       .leftJoin(schema.users, eq(schema.workspaceMembers.userId, schema.users.id))
       .where(eq(schema.workspaceMembers.workspaceId, workspaceId));
 
-    return NextResponse.json({ ok: true, members });
+    // Deduplicar defensivamente por userId o userEmail
+    const seenUserKeys = new Set<string>();
+    const uniqueMembers = members.filter((m) => {
+      const key = m.userId || m.userEmail || m.id;
+      if (seenUserKeys.has(key)) return false;
+      seenUserKeys.add(key);
+      return true;
+    });
+
+    return NextResponse.json({ ok: true, members: uniqueMembers });
   } catch (error: any) {
     return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
   }

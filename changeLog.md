@@ -2,6 +2,28 @@
 
 ---
 
+## 🗓️ [2026-11-18] - Fase 24: Deduplicación de Membresías y Constraint UNIQUE en workspace_members (Issue #48)
+
+### 🎯 Intención
+Corregir la duplicación de usuarios en el modal de "Gestión de Miembros" de los espacios de trabajo ([Issue #48](https://github.com/snadales/fluxtable/issues/48)):
+1. Eliminar filas duplicadas en la tabla `workspace_members` de PostgreSQL generadas por inserciones concurrentes o inicializaciones sucesivas.
+2. Añadir la restricción `UNIQUE (workspace_id, user_id)` en la base de datos PostgreSQL y en el esquema Drizzle (`db/schema.ts`).
+3. Incorporar salvaguarda de deduplicación defensiva en `app/api/database/workspaces/[id]/members/route.ts` y `app/api/database/workspaces/route.ts`.
+
+### 📍 Estado Actual
+- **Base de Datos**: Restricción `workspace_members_ws_user_unique` activa en PostgreSQL. Registro duplicado eliminado.
+- **Esquema Drizzle**: `uniqueIndex('workspace_members_ws_user_idx')` configurado en `workspaceMembers`.
+- **API y Frontend**: Lista de miembros limpia y sin duplicados (`MIEMBROS ACTUALES (1)`).
+- **Tests**: 71/71 tests unitarios pasando.
+
+### 🏁 Estado Deseado
+- Integridad referencial absoluta en membresías de workspace con prevención estructural de duplicaciones.
+
+### 🔄 Iteraciones e Historial de Ejecución
+1. **Iteración 148**: Creación de Issue #48, depuración de registros en PostgreSQL vía psql, creación de constraint UNIQUE, actualización de `db/schema.ts`, deduplicación en rutas API de miembros y workspaces, verificación de tests unitarios y despliegue a producción.
+
+---
+
 ## 🗓️ [2026-11-18] - Fase 23: Refinamiento E2E: Trazabilidad Antigravity, Data Labels en Gráficos, Z-Index Vistas y Campos de Recursos (Issue #47)
 
 ### 🎯 Intención

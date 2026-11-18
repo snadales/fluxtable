@@ -172,17 +172,26 @@ export async function GET(request: NextRequest) {
           };
         });
 
+      // Deduplicar miembros del workspace
+      const seenMemberKeys = new Set<string>();
+      const uniqueWMembers = wMembers.filter((m) => {
+        const key = m.userId || m.userEmail || m.id;
+        if (seenMemberKeys.has(key)) return false;
+        seenMemberKeys.add(key);
+        return true;
+      });
+
       return {
         id: w.id,
         name: w.name,
         slug: w.slug,
         role: 'Admin',
-        members: wMembers.map((m) => ({
+        members: uniqueWMembers.map((m) => ({
           email: m.userEmail || 'usuario@fluxtable.local',
           name: m.userName || 'Usuario',
           role: m.role || 'admin',
         })),
-        membersCount: Math.max(wMembers.length, 1),
+        membersCount: Math.max(uniqueWMembers.length, 1),
         itemsCount: wBases.length,
         bases: wBases,
         dashboards: wDashboards.map((d) => ({
