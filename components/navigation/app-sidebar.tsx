@@ -21,6 +21,7 @@ import {
   RotateCcw,
   RotateCw,
   Folder,
+  FolderPlus,
   BarChart3,
   Layers,
   FileCode,
@@ -61,6 +62,7 @@ interface AppSidebarProps {
   onDeleteBase?: (baseId: string) => void;
   onCreateTable: () => void;
   onCreateBase: () => void;
+  onCreateSubfolder?: (baseId: string, baseName: string, parentFolderId?: string | null) => void;
 }
 
 export const AppSidebar: React.FC<AppSidebarProps> = ({
@@ -90,6 +92,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
   onDeleteBase,
   onCreateTable,
   onCreateBase,
+  onCreateSubfolder,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedBases, setExpandedBases] = useState<Record<string, boolean>>({
@@ -387,11 +390,11 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
                           <ChevronRight className="w-3 h-3" />
                         )}
                       </button>
-                      <Database className="w-3.5 h-3.5 text-ink-2 shrink-0" />
+                      <Folder className="w-3.5 h-3.5 text-accent shrink-0" />
                       <span className="truncate">{b.name}</span>
                     </div>
 
-                    {/* Botón 3 puntos de la Base */}
+                    {/* Botón 3 puntos del Módulo */}
                     <button
                       type="button"
                       onClick={(e) => {
@@ -412,6 +415,19 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
                         <div className="px-3 py-1.5 text-[11px] font-bold text-ink-3 border-b border-line truncate">
                           {b.name} ({b.tablesCount || tablesList.length || 0})
                         </div>
+
+                        {/* Acción para crear Subcarpeta en este módulo */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setActiveMenuBaseId(null);
+                            onCreateSubfolder?.(b.id, b.name);
+                          }}
+                          className="w-full flex items-center gap-2 px-3 py-2 hover:bg-surface-sunken text-left text-accent font-semibold"
+                        >
+                          <FolderPlus className="w-3.5 h-3.5 text-accent" />
+                          <span>+ Nueva Subcarpeta</span>
+                        </button>
 
                         <button
                           type="button"
@@ -652,16 +668,26 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
                         </div>
                       )}
 
-                      {/* Botón "+ Nueva mesa" */}
+                      {/* Botones de acción dentro del módulo */}
                       {isCurrentBase && (
-                        <button
-                          type="button"
-                          onClick={onCreateTable}
-                          className="w-full flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs text-ink-3 hover:text-accent hover:bg-surface-sunken transition-colors text-left font-medium mt-1"
-                        >
-                          <Plus className="w-3 h-3" />
-                          <span>Nueva mesa</span>
-                        </button>
+                        <div className="pt-1.5 space-y-1">
+                          <button
+                            type="button"
+                            onClick={onCreateTable}
+                            className="w-full flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs text-ink-3 hover:text-accent hover:bg-surface-sunken transition-colors text-left font-medium"
+                          >
+                            <Plus className="w-3 h-3 text-accent" />
+                            <span>+ Nueva Tabla</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => onCreateSubfolder?.(b.id, b.name)}
+                            className="w-full flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs text-ink-3 hover:text-accent hover:bg-surface-sunken transition-colors text-left font-medium"
+                          >
+                            <FolderPlus className="w-3 h-3 text-accent" />
+                            <span>+ Nueva Subcarpeta</span>
+                          </button>
+                        </div>
                       )}
                     </div>
                   )}

@@ -26,6 +26,7 @@ import { CommentsDrawer } from '@/components/comments/comments-drawer';
 import { AuditLogDrawer } from '@/components/audit/audit-log-drawer';
 import { KpiRecipeModal } from '@/components/modals/kpi-recipe-modal';
 import { NewModuleModal } from '@/components/modals/new-module-modal';
+import { NewFolderModal } from '@/components/modals/new-folder-modal';
 import { 
   Database, Table as TableIcon, LayoutGrid, Kanban as KanbanIcon, 
   Calendar as CalendarIcon, FileText, Search, Download, Plus, Filter, ArrowUpDown, X, 
@@ -156,6 +157,13 @@ export default function HomePage() {
   const [showNewFieldModal, setShowNewFieldModal] = useState(false);
   const [showNewModuleModal, setShowNewModuleModal] = useState(false);
   const [newModuleWorkspaceId, setNewModuleWorkspaceId] = useState<string>('');
+  const [showNewFolderModal, setShowNewFolderModal] = useState(false);
+  const [folderModalContext, setFolderModalContext] = useState<{
+    baseId?: string | null;
+    baseName?: string;
+    parentFolderId?: string | null;
+    parentFolderName?: string;
+  }>({});
 
   // Navegación de Workspaces y Modales Globales
   const [viewMode, setViewMode] = useState<'workspaces' | 'database' | 'analytics' | 'catalog'>('workspaces');
@@ -389,6 +397,17 @@ export default function HomePage() {
   const handleCreateDatabaseInWorkspace = (workspaceId: string) => {
     setNewModuleWorkspaceId(workspaceId || activeWorkspaceId || workspaces[0]?.id || '');
     setShowNewModuleModal(true);
+  };
+
+  // Crear subcarpeta anidada (Issue #36)
+  const handleOpenCreateSubfolder = (
+    baseId?: string | null,
+    baseName?: string,
+    parentFolderId?: string | null,
+    parentFolderName?: string
+  ) => {
+    setFolderModalContext({ baseId, baseName, parentFolderId, parentFolderName });
+    setShowNewFolderModal(true);
   };
 
   // Cambiar entre tablas
@@ -946,6 +965,7 @@ export default function HomePage() {
               onRenameBase={() => setShowBaseSettingsModal(true)}
               onCreateTable={() => setShowNewTableModal(true)}
               onCreateBase={() => handleCreateDatabaseInWorkspace(activeWorkspaceId || '')}
+              onCreateSubfolder={(bId, bName, pId) => handleOpenCreateSubfolder(bId, bName, pId)}
               onInspectKpi={(code) => setInspectingKpiCode(code)}
             />
             <div className="flex-1 flex flex-col h-full overflow-hidden min-w-0">
@@ -1033,6 +1053,7 @@ export default function HomePage() {
               onRenameBase={() => setShowBaseSettingsModal(true)}
               onCreateTable={() => setShowNewTableModal(true)}
               onCreateBase={() => handleCreateDatabaseInWorkspace(activeWorkspaceId || '')}
+              onCreateSubfolder={(bId, bName, pId) => handleOpenCreateSubfolder(bId, bName, pId)}
               onInspectKpi={(code) => setInspectingKpiCode(code)}
             />
             <div className="flex-1 flex flex-col h-full overflow-hidden">
@@ -1052,6 +1073,7 @@ export default function HomePage() {
                   openDashboardTab(dashId);
                 }}
                 onBackToWorkspace={() => handleSelectTab('workspaces')}
+                onCreateSubfolder={() => handleOpenCreateSubfolder(catalogContext.base?.id, catalogContext.base?.name)}
               />
             </div>
           </div>
@@ -1097,6 +1119,7 @@ export default function HomePage() {
               onRenameBase={() => setShowBaseSettingsModal(true)}
               onCreateTable={() => setShowNewTableModal(true)}
               onCreateBase={() => handleCreateDatabaseInWorkspace(activeWorkspaceId || '')}
+              onCreateSubfolder={(bId, bName, pId) => handleOpenCreateSubfolder(bId, bName, pId)}
               onInspectKpi={(code) => setInspectingKpiCode(code)}
             />
 
@@ -2529,6 +2552,20 @@ export default function HomePage() {
           await loadWorkspaces();
           await loadTablesList();
           openCatalogTab(newModule, 'tables');
+        }}
+      />
+
+      {/* Modal de Creación de Subcarpeta Anidada (Issue #36) */}
+      <NewFolderModal
+        isOpen={showNewFolderModal}
+        onClose={() => setShowNewFolderModal(false)}
+        workspaceId={activeWorkspaceId || workspaces[0]?.id || ''}
+        baseId={folderModalContext.baseId}
+        baseName={folderModalContext.baseName}
+        parentFolderId={folderModalContext.parentFolderId}
+        parentFolderName={folderModalContext.parentFolderName}
+        onCreated={async () => {
+          await loadWorkspaces();
         }}
       />
     </div>

@@ -278,12 +278,17 @@ export const snapshots = pgTable('snapshots', {
 export const biFolders = pgTable('bi_folders', {
   id: uuid('id').defaultRandom().primaryKey(),
   workspaceId: uuid('workspace_id').references(() => workspaces.id, { onDelete: 'cascade' }).notNull(),
+  baseId: uuid('base_id').references(() => bases.id, { onDelete: 'cascade' }),
   name: text('name').notNull(),
+  code: text('code'),
+  icon: text('icon').default('folder').notNull(),
+  color: text('color').default('blue').notNull(),
   parentId: uuid('parent_id'),
   order: integer('order').default(0).notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 }, (t) => [
   index('bi_folders_workspace_idx').on(t.workspaceId),
+  index('bi_folders_base_idx').on(t.baseId),
   index('bi_folders_parent_idx').on(t.parentId),
 ]);
 
@@ -336,7 +341,8 @@ export const biDatasets = pgTable('bi_datasets', {
 export const biCards = pgTable('bi_cards', {
   id: uuid('id').defaultRandom().primaryKey(),
   code: text('code').notNull(), // 'K001', 'G001', etc.
-  dashboardId: uuid('dashboard_id').references(() => biDashboards.id, { onDelete: 'cascade' }).notNull(),
+  dashboardId: uuid('dashboard_id').references(() => biDashboards.id, { onDelete: 'cascade' }),
+  folderId: uuid('folder_id').references(() => biFolders.id, { onDelete: 'set null' }),
   tabId: uuid('tab_id').references(() => biDashboardTabs.id, { onDelete: 'set null' }),
   name: text('name').notNull(),
   description: text('description'),
@@ -359,8 +365,28 @@ export const biCards = pgTable('bi_cards', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 }, (t) => [
   index('bi_cards_dashboard_idx').on(t.dashboardId),
+  index('bi_cards_folder_idx').on(t.folderId),
   index('bi_cards_tab_idx').on(t.tabId),
   index('bi_cards_code_idx').on(t.code),
+]);
+
+export const biDashboardCards = pgTable('bi_dashboard_cards', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  dashboardId: uuid('dashboard_id').references(() => biDashboards.id, { onDelete: 'cascade' }).notNull(),
+  cardId: uuid('card_id').references(() => biCards.id, { onDelete: 'cascade' }).notNull(),
+  tabId: uuid('tab_id').references(() => biDashboardTabs.id, { onDelete: 'set null' }),
+  gridPosJson: jsonb('grid_pos_json').$type<{ x: number; y: number; w: number; h: number }>().default({
+    x: 0,
+    y: 0,
+    w: 6,
+    h: 4,
+  }).notNull(),
+  parameterMappings: jsonb('parameter_mappings').$type<Record<string, any>>().default({}).notNull(),
+  order: integer('order').default(0).notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+}, (t) => [
+  index('bi_dash_cards_dash_idx').on(t.dashboardId),
+  index('bi_dash_cards_card_idx').on(t.cardId),
 ]);
 
 export const biThresholds = pgTable('bi_thresholds', {

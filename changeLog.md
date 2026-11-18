@@ -2,6 +2,45 @@
 
 ---
 
+## 🗓️ [2026-11-17] - Fase 13: Carpetas y Subcarpetas Recursivas N-Niveles y Reusabilidad M:N de Tarjetas Analíticas (Issue #36)
+
+### 🎯 Intención
+Implementar la arquitectura validada por auditoría técnica para carpetas anidadas y reusabilidad analítica ([Issue #36](https://github.com/snadales/BaserowLite/issues/36)):
+1. Habilitar la creación libre de **carpetas y subcarpetas con niveles infinitos de profundidad** (`parentId`), personalizables con Emojis nativos y la paleta de colores del Sistema Yarken.
+2. Garantizar el **desacoplamiento total entre la capa visual (carpetas) y la capa física/relacional (tablas y SQL inmutables)**, demostrando que mover o crear carpetas jamás afecta ni rompe consultas SQL, endpoints ni flujos de n8n.
+3. Desacoplar `bi_cards` y crear la tabla asociativa `bi_dashboard_cards` ($M:N$) para permitir que una tarjeta analítica ($K007$) sea autónoma y pueda incrustarse en múltiples dashboards ($D001$, $D003$) con distintas posiciones y parámetros.
+4. Erradicar definitivamente la traducción literal `Nueva mesa` por `+ Nueva Tabla` e incorporar la acción `+ Nueva Subcarpeta` en el menú contextual de cada módulo y en el catálogo.
+
+### 📍 Estado Actual
+- **Migración de Esquema Drizzle y PostgreSQL**:
+  - `bi_folders`: Enriquecida con `icon` (soporte de emojis), `color` (paleta Yarken), `code` (`05.2`, etc.) y `base_id` para anidar carpetas a módulos.
+  - `bi_cards`: Desacoplada de dashboards rígidos convirtiendo `dashboard_id` en opcional e indexando `folder_id`.
+  - `bi_dashboard_cards`: Creada tabla pivote M:N con `grid_pos_json`, `parameter_mappings` y orden. Migradas las 20 tarjetas existentes hacia esta relación sin pérdida de datos.
+- **API `app/api/bi/folders/route.ts`**:
+  - GET soporta filtrado por `base_id` y por `parent_id` (incluyendo `root`).
+  - POST permite crear subcarpetas hijas asociadas a un padre y módulo.
+- **Modal `NewFolderModal` (`components/modals/new-folder-modal.tsx`)**:
+  - Permite definir Nombre, Código, Emoji (📁, 💼, 🤖, 📊, ⚡, 🔒, 👥, 📦, 🚛, 🎯, 💡, 📈, 💰, 🛒) y Color de Acento Yarken.
+  - Informa al usuario sobre el desacoplamiento de capas y la garantía de invariancia SQL.
+- **Consistencia de Navegación en `AppSidebar`**:
+  - Sustituida la etiqueta `Nueva mesa` por `+ Nueva Tabla` y añadido el botón directo `+ Nueva Subcarpeta`.
+  - Menú contextual `···` enriquecido con la opción prioritaria `+ Nueva Subcarpeta`.
+  - Iconos unificados a carpetas de dominio en lugar de cilindros de base de datos.
+- **Catálogo de Negocio (`AssetCatalogView`)**:
+  - Incorporado el botón de acción principal `[+ Nueva Subcarpeta]`.
+
+### 🏁 Estado Deseado
+- Una plataforma donde la estructura organizativa sea totalmente flexible, visual y anidada en carpetas sin límite de profundidad, mientras que los datos y fórmulas analíticas permanezcan inmutables, reutilizables y blindados.
+
+### ⚠️ Problemas Encontrados y Soluciones
+- *Problema:* `catalog/route.ts` lanzaba error de TypeScript al convertir `dashboardId` en nullable en `bi_cards`.
+  *Solución:* Se actualizó `dashMap.get` con guard condicional `c.dashboardId ? dashMap.get(c.dashboardId) : undefined`.
+
+### 🔄 Iteraciones e Historial de Ejecución
+1. **Iteración 136**: Creación de Issue #36, migración DDL PostgreSQL (`bi_dashboard_cards` y `bi_folders`), implementación de `NewFolderModal`, endpoint `api/bi/folders`, refactorización de `AppSidebar` y compilación Next.js 28/28.
+
+---
+
 ## 🗓️ [2026-11-17] - Fase 12: Agrupación Jerárquica por Área de Negocio y Modal de Creación de Módulos Unificados (Issue #35)
 
 ### 🎯 Intención

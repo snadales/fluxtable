@@ -61,6 +61,7 @@ interface AssetCatalogViewProps {
   onOpenDashboard: (dashboardIdOrCode: string) => void;
   onBackToWorkspace: () => void;
   onInspectKpi?: (kpiCode: string) => void;
+  onCreateSubfolder?: () => void;
 }
 
 export const AssetCatalogView: React.FC<AssetCatalogViewProps> = ({
@@ -75,6 +76,7 @@ export const AssetCatalogView: React.FC<AssetCatalogViewProps> = ({
   onOpenDashboard,
   onBackToWorkspace,
   onInspectKpi,
+  onCreateSubfolder,
 }) => {
   const [currentTab, setCurrentTab] = useState<'indicators' | 'charts' | 'tables' | 'dashboards'>(initialTab);
   const [searchQuery, setSearchQuery] = useState('');
@@ -134,6 +136,16 @@ export const AssetCatalogView: React.FC<AssetCatalogViewProps> = ({
           </div>
 
           <div className="flex items-center gap-2 self-start md:self-auto">
+            {onCreateSubfolder && (
+              <button
+                type="button"
+                onClick={onCreateSubfolder}
+                className="px-3 py-1.5 rounded-xl bg-accent text-white hover:bg-accent-strong text-xs font-semibold shadow-xs transition-colors flex items-center gap-1.5"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>+ Nueva Subcarpeta</span>
+              </button>
+            )}
             <button
               type="button"
               onClick={onBackToWorkspace}

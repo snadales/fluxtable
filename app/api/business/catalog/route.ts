@@ -82,7 +82,7 @@ export async function GET(request: NextRequest) {
                 tableLegacies.has(Number(targetTableId)) ||
                 bTables.some((t) => t.name === sTable?.name));
 
-            const dashInfo = dashMap.get(c.dashboardId);
+            const dashInfo = c.dashboardId ? dashMap.get(c.dashboardId) : undefined;
 
             if (isRelatedTable || (!targetTableId && dashInfo?.workspaceId === w.id && b.name.includes(c.name.slice(0, 4)))) {
               const cardItem = {

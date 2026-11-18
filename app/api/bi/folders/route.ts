@@ -2,14 +2,31 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth/auth-guard';
 import { db } from '@/db';
 import { biFolders, workspaces } from '@/db/schema';
-import { eq, asc } from 'drizzle-orm';
+import { eq, asc, and, isNull } from 'drizzle-orm';
 
 export async function GET(req: NextRequest) {
   const auth = await requireAuth(req);
   if (!auth.authenticated) return auth.response;
 
   try {
+    const { searchParams } = new URL(req.url);
+    const baseId = searchParams.get('base_id');
+    const parentId = searchParams.get('parent_id');
+
+    let conditions: any[] = [];
+    if (baseId) {
+      conditions.push(eq(biFolders.baseId, baseId as any));
+    }
+    if (parentId !== null && parentId !== undefined) {
+      if (parentId === 'root') {
+        conditions.push(isNull(biFolders.parentId));
+      } else {
+        conditions.push(eq(biFolders.parentId, parentId as any));
+      }
+    }
+
     const folders = await db.query.biFolders.findMany({
+      where: conditions.length > 0 ? and(...conditions) : undefined,
       orderBy: [asc(biFolders.order), asc(biFolders.name)],
     });
 
@@ -45,7 +62,11 @@ export async function POST(req: NextRequest) {
       .insert(biFolders)
       .values({
         workspaceId,
+        baseId: body.baseId || null,
         name: body.name || 'Nueva Carpeta',
+        code: body.code?.trim() || null,
+        icon: body.icon || '📁',
+        color: body.color || 'blue',
         parentId: body.parentId || null,
         order: body.order || 0,
       })
