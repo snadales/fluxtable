@@ -8,6 +8,7 @@ import {
   Layers
 } from 'lucide-react';
 import { FluxTableLogo, YarkenSymbol } from '@/components/brand/brand-logo';
+import { WorkspaceMembersModal } from '@/components/modals/workspace-members-modal';
 
 export interface BaseItem {
   id: string;
@@ -1029,6 +1030,16 @@ export const WorkspacesDashboard: React.FC<WorkspacesDashboardProps> = ({
             </div>
           </div>
         </div>
+      )}
+
+      {/* Modal de Miembros del Workspace (Issue #43) */}
+      {activeModal === 'members' && selectedTarget && (
+        <WorkspaceMembersModal
+          isOpen={true}
+          onClose={() => setActiveModal(null)}
+          workspaceId={selectedTarget.id}
+          workspaceName={selectedTarget.name}
+        />
       )}
     </div>
   );

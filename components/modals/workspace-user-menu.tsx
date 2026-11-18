@@ -158,8 +158,8 @@ export const WorkspaceUserMenu: React.FC<WorkspaceUserMenuProps> = ({
             <span className="font-mono text-slate-600 dark:text-slate-400 truncate max-w-[170px]">
               {user.email}
             </span>
-            <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-cyan-100 text-cyan-800 dark:bg-cyan-950 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-800">
-              Premium
+            <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+              {user.role || 'Admin'}
             </span>
           </div>
 

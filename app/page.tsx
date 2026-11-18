@@ -28,6 +28,7 @@ import { AuditLogDrawer } from '@/components/audit/audit-log-drawer';
 import { KpiRecipeModal } from '@/components/modals/kpi-recipe-modal';
 import { NewModuleModal } from '@/components/modals/new-module-modal';
 import { NewFolderModal } from '@/components/modals/new-folder-modal';
+import { WorkspaceMembersModal } from '@/components/modals/workspace-members-modal';
 import { 
   Database, Table as TableIcon, LayoutGrid, Kanban as KanbanIcon, 
   Calendar as CalendarIcon, FileText, Search, Download, Plus, Filter, ArrowUpDown, X, 
@@ -152,6 +153,7 @@ export default function HomePage() {
 
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showBaseSettingsModal, setShowBaseSettingsModal] = useState(false);
+  const [showWorkspaceMembersModal, setShowWorkspaceMembersModal] = useState(false);
   const [showApiTokensModal, setShowApiTokensModal] = useState(false);
   const [showNewTableModal, setShowNewTableModal] = useState(false);
   const [showNewFieldModal, setShowNewFieldModal] = useState(false);
@@ -941,7 +943,7 @@ export default function HomePage() {
             setShowTrashModal(true);
           }}
           onOpenAudit={() => setShowAuditDrawer(true)}
-          onOpenMembers={() => setShowBaseSettingsModal(true)}
+          onOpenMembers={() => setShowWorkspaceMembersModal(true)}
           onOpenApiDocs={() => setShowApiTokensModal(true)}
           onOpenSnapshots={() => setShowSnapshotsModal(true)}
           onRenameBase={() => setShowBaseSettingsModal(true)}
@@ -1110,16 +1112,6 @@ export default function HomePage() {
             <span className="hidden sm:inline">Workspaces</span>
           </button>
 
-          {/* Botón rápido a Dashboards & Analítica */}
-          <button
-            type="button"
-            onClick={() => setViewMode('analytics')}
-            className="flex items-center gap-1.5 px-2.5 py-1 text-xs text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors font-semibold border border-blue-200/60"
-            title="Ir a Dashboards & Analítica"
-          >
-            <BarChart2 className="w-3.5 h-3.5 text-[#1D5BD8]" />
-            <span className="hidden sm:inline">Dashboards & Analítica</span>
-          </button>
 
           {/* Indicador de Sincronización */}
           {syncStatus === 'saving' && (
@@ -2349,6 +2341,18 @@ export default function HomePage() {
         isOpen={showBaseSettingsModal}
         onClose={() => setShowBaseSettingsModal(false)}
         onSave={handleSaveMetadata}
+      />
+
+      {/* Modal de Gestión de Miembros del Workspace (Issue #43) */}
+      <WorkspaceMembersModal
+        isOpen={showWorkspaceMembersModal}
+        onClose={() => setShowWorkspaceMembersModal(false)}
+        workspaceId={activeWorkspaceId || workspaces[0]?.id || ''}
+        workspaceName={
+          workspaces.find((w) => w.id === (activeWorkspaceId || workspaces[0]?.id))?.name ||
+          'Mi Espacio'
+        }
+        currentUserEmail={user.email}
       />
 
       {/* Modal de Tokens de API de Base de Datos */}

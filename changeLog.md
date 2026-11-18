@@ -2,6 +2,33 @@
 
 ---
 
+## 🗓️ [2026-11-18] - Fase 20: Google OAuth, Depuración de BD, Modal de Miembros y Correcciones UX (Issue #43)
+
+### 🎯 Intención
+Abordar retroalimentación directa y pulido operativo ([Issue #43](https://github.com/snadales/fluxtable/issues/43)):
+1. Implementar autenticación Google OAuth 2.0 (`/api/auth/google` y `/api/auth/google/callback`) con validación de whitelist (`ALLOWED_EMAILS`), sesión segura parametrizada y manejo visual de errores en login.
+2. Purgar base de datos para migración ordenada: respaldo completo previo (`backup_before_wipe_20261118_1036.sql`) y vaciado de 23 tablas demo, conservando esquema, superadmin `snadales@gmail.com` y workspace raíz limpio `Mi Espacio`.
+3. Crear componente dedicado `WorkspaceMembersModal` y API `/api/database/workspaces/[id]/members` para listar, invitar y remover miembros con roles (Admin, Editor, Visor), resolviendo el bug donde se abría el modal de metadatos.
+4. Auditar botones y modales asegurando invocación correcta de cada acción.
+5. Eliminar badge hardcodeado "Premium" en el menú de usuario y purgar rastros residuales de planes comerciales SaaS.
+6. Corregir colisión de columna fija `#` y columna primaria en `DataGrid` (offset `left: 48px`), habilitando ancho fluido 100% responsivo sin espacios en blanco laterales.
+7. Retirar botón redundante `[Dashboards & Analítica]` de la cabecera de la tabla para mantener una interfaz limpia y enfocada en datos.
+
+### 📍 Estado Actual
+- **Google OAuth**: Endpoints activos listos para consumir `GOOGLE_CLIENT_ID` y `GOOGLE_CLIENT_SECRET`.
+- **Base de Datos**: 0 tablas y 0 registros residuales. 1 espacio inicial limpio para Sebastián.
+- **Gestión de Miembros**: Modal operativo y conectado a API REST de miembros.
+- **DataGrid**: Ancho completo al 100% y sticky header alineado sin colisiones.
+- **Pruebas**: 71/71 pruebas unitarias pasando, 0 errores TypeScript.
+
+### 🏁 Estado Deseado
+- Plataforma limpia, pulida, lista para carga de datos de producción y sin inconsistencias visuales ni funcionales.
+
+### 🔄 Iteraciones e Historial de Ejecución
+1. **Iteración 143**: Creación de Issue #43, respaldo pg_dump, vaciado SQL transaccional, implementación de Google OAuth, creación de `WorkspaceMembersModal` y endpoint de miembros, ajuste de DataGrid y tsc.
+
+---
+
 ## 🗓️ [2026-11-18] - Fase 19: Migración Oficial de Dominio a fluxtable.yarken.cl y Limpieza Legacy (Issue #42)
 
 ### 🎯 Intención

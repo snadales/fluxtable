@@ -1,17 +1,35 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { ShieldCheck, ArrowRight, Lock, Mail } from 'lucide-react';
+import { ShieldCheck, ArrowRight, Lock, Mail, AlertCircle } from 'lucide-react';
 import { BrandSymbol } from '@/components/brand/brand-logo';
 import { getBrandConfig } from '@/lib/brand-config';
 
-export default function LoginPage() {
+function LoginForm() {
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-
   const [errorMessage, setErrorMessage] = useState('');
+
+  useEffect(() => {
+    const err = searchParams.get('error');
+    if (err) {
+      if (err === 'UNAUTHORIZED_EMAIL') {
+        setErrorMessage('Tu correo no se encuentra en la lista de usuarios autorizados.');
+      } else if (err === 'ACCOUNT_DISABLED') {
+        setErrorMessage('Esta cuenta ha sido desactivada.');
+      } else if (err === 'INVALID_STATE') {
+        setErrorMessage('Sesión de autenticación expirada. Por favor, reintenta.');
+      } else if (err === 'CONFIG_ERROR') {
+        setErrorMessage('Google OAuth aún no está configurado en el servidor.');
+      } else {
+        setErrorMessage('Error al autenticar con Google: ' + decodeURIComponent(err));
+      }
+    }
+  }, [searchParams]);
 
   const handleGoogleLogin = () => {
     // Redirección directa al endpoint de Google OAuth
@@ -164,5 +182,13 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-bg text-ink-3 text-xs font-mono">Cargando acceso seguro...</div>}>
+      <LoginForm />
+    </Suspense>
   );
 }

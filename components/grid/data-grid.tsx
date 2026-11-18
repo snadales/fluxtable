@@ -417,7 +417,7 @@ export const DataGrid: React.FC<DataGridProps> = ({
         onDoubleClick={() => onRowSelect?.(row)}
         className={`hover:bg-accent/5 transition-colors ${rowTint} ${heightStyles.row}`}
       >
-        <td className={`w-12 px-2 text-center text-ink-3 font-mono text-[11px] border-r border-line ${heightStyles.cell}`}>
+        <td className={`w-12 min-w-[48px] max-w-[48px] px-2 text-center text-ink-3 font-mono text-[11px] border-r border-line sticky left-0 z-10 bg-surface ${heightStyles.cell}`}>
           {rowIdx + 1}
         </td>
         {columns.map((col, colIdx) => {
@@ -431,7 +431,7 @@ export const DataGrid: React.FC<DataGridProps> = ({
               onDoubleClick={() => startEdit(rowIdx, colIdx)}
               style={{ width: `${col.width}px`, minWidth: `${col.width}px` }}
               className={`border-r border-line transition-all ${heightStyles.cell} ${
-                col.isPrimary ? 'sticky left-0 bg-surface z-10' : ''
+                col.isPrimary ? 'sticky left-[48px] bg-surface z-10 shadow-[1px_0_0_0_rgba(0,0,0,0.06)]' : ''
               } ${
                 isSelected
                   ? 'ring-2 ring-accent z-20 bg-accent/5'
@@ -442,6 +442,8 @@ export const DataGrid: React.FC<DataGridProps> = ({
             </td>
           );
         })}
+        {/* Celda de relleno responsivo para estirar al 100% */}
+        <td className="w-full min-w-[60px] border-line"></td>
       </tr>
     );
   };
@@ -457,7 +459,7 @@ export const DataGrid: React.FC<DataGridProps> = ({
           {/* Header */}
           <thead>
             <tr className="bg-surface-sunken/80 border-b border-line text-ink-2 font-semibold">
-              <th className="w-12 px-3 py-2 text-center border-r border-line font-mono text-[11px] text-ink-3">
+              <th className="w-12 min-w-[48px] max-w-[48px] px-3 py-2 text-center border-r border-line font-mono text-[11px] text-ink-3 sticky left-0 z-20 bg-surface-sunken">
                 #
               </th>
               {columns.map((col) => (
@@ -465,7 +467,7 @@ export const DataGrid: React.FC<DataGridProps> = ({
                   key={col.id}
                   style={{ width: `${col.width}px`, minWidth: `${col.width}px` }}
                   className={`px-3 py-2 border-r border-line relative ${
-                    col.isPrimary ? 'sticky left-0 bg-surface-sunken font-bold text-ink z-10' : ''
+                    col.isPrimary ? 'sticky left-[48px] bg-surface-sunken font-bold text-ink z-20 shadow-[1px_0_0_0_rgba(0,0,0,0.08)]' : ''
                   }`}
                 >
                   <div className="flex items-center justify-between gap-1.5">
@@ -590,6 +592,8 @@ export const DataGrid: React.FC<DataGridProps> = ({
                   )}
                 </th>
               ))}
+              {/* Celda de cabecera de relleno para 100% de ancho */}
+              <th className="w-full min-w-[60px] border-b border-line bg-surface-sunken/80"></th>
             </tr>
           </thead>
 
@@ -603,7 +607,7 @@ export const DataGrid: React.FC<DataGridProps> = ({
                   <React.Fragment key={groupKey}>
                     {/* Header de Grupo */}
                     <tr className="bg-surface-sunken/90 border-y border-line font-bold text-xs text-ink">
-                      <td colSpan={columns.length + 1} className="px-3 py-2">
+                      <td colSpan={columns.length + 2} className="px-3 py-2">
                         <div className="flex items-center gap-2">
                           <button
                             type="button"
@@ -645,7 +649,7 @@ export const DataGrid: React.FC<DataGridProps> = ({
           {/* Fila Inferior de Resúmenes y Agregaciones (Summarizer Footer) */}
           <tfoot>
             <tr className="bg-surface-sunken/80 border-t border-line font-mono text-[11px] text-ink-2">
-              <td className="px-2 py-2 text-center font-bold">{rows.length}</td>
+              <td className="w-12 min-w-[48px] max-w-[48px] px-2 py-2 text-center font-bold sticky left-0 z-20 bg-surface-sunken border-r border-line">{rows.length}</td>
               {columns.map((col) => {
                 const currentAgg = aggregations[col.id] || 'none';
                 const summaryValue = calculateAggregation(col, currentAgg, rows);
@@ -653,7 +657,9 @@ export const DataGrid: React.FC<DataGridProps> = ({
                 return (
                   <td
                     key={col.id}
-                    className="px-3 py-2 border-r border-line font-semibold truncate relative group cursor-pointer hover:bg-surface transition-colors"
+                    className={`px-3 py-2 border-r border-line font-semibold truncate relative group cursor-pointer hover:bg-surface transition-colors ${
+                      col.isPrimary ? 'sticky left-[48px] z-20 bg-surface-sunken shadow-[1px_0_0_0_rgba(0,0,0,0.08)]' : ''
+                    }`}
                     onClick={(e) => {
                       e.stopPropagation();
                       setActiveFooterColId(activeFooterColId === col.id ? null : col.id);
@@ -708,6 +714,8 @@ export const DataGrid: React.FC<DataGridProps> = ({
                   </td>
                 );
               })}
+              {/* Celda de relleno de pie de página para 100% de ancho */}
+              <td className="w-full min-w-[60px] border-line"></td>
             </tr>
           </tfoot>
         </table>
