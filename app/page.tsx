@@ -895,80 +895,95 @@ export default function HomePage() {
         onCloseTab={handleCloseTab}
       />
 
-      {/* 1. Vista según viewMode / Pestaña Activa */}
-      <div className="flex-1 overflow-hidden relative">
-        {viewMode === 'workspaces' && (
-          <WorkspacesDashboard
-            workspaces={workspaces}
-            activeWorkspaceId={activeWorkspaceId}
-            onSelectWorkspace={setActiveWorkspaceId}
-            onOpenDatabase={handleOpenDatabase}
-            onOpenDashboard={(dashId) => {
-              openDashboardTab(dashId);
-            }}
-            onOpenCatalog={(base, defaultTab) => {
-              openCatalogTab(base, defaultTab);
-            }}
-            onCreateWorkspace={handleCreateWorkspace}
-            onCreateDatabase={handleCreateDatabaseInWorkspace}
-            onOpenTrash={() => {
-              loadTrash();
-              setShowTrashModal(true);
-            }}
-            onOpenAnalytics={() => openDashboardTab('D001')}
-            user={{
-              name: user.name,
-              email: user.email,
-              role: user.role,
-            }}
-            onOpenUserMenu={() => setShowWorkspaceUserMenu(true)}
-          />
-        )}
+      {/* 1. Shell Principal con AppSidebar ÚNICO y Persistente (Issue #37) */}
+      <div className="flex-1 flex overflow-hidden relative">
+        <AppSidebar
+          isOpen={isSidebarOpen}
+          onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
+          workspaces={workspaces}
+          currentWorkspaceId={activeWorkspaceId || workspaces[0]?.id}
+          currentBaseId={currentBaseId}
+          currentTableId={currentTableId}
+          currentViewMode={viewMode}
+          tablesList={tablesList}
+          rowCount={rows.length}
+          user={{
+            name: user.name,
+            email: user.email,
+            role: user.role,
+          }}
+          onOpenUserMenu={() => setShowWorkspaceUserMenu(true)}
+          onSelectWorkspace={(wsId) => {
+            setActiveWorkspaceId(wsId);
+            handleSelectTab('workspaces');
+          }}
+          onSelectBase={(baseId) => {
+            const b = workspaces.flatMap((w) => w.bases).find((x) => x.id === baseId);
+            if (b && b.subfolders) {
+              openCatalogTab(b, 'tables');
+            } else {
+              handleOpenDatabase(baseId);
+            }
+          }}
+          onSelectTable={(tableId) => {
+            openTableTab(tableId);
+          }}
+          onSelectDashboard={(dashId) => {
+            openDashboardTab(dashId);
+          }}
+          onOpenCatalog={(base, defaultTab) => {
+            openCatalogTab(base, defaultTab);
+          }}
+          onOpenWorkspaces={() => handleSelectTab('workspaces')}
+          onOpenAnalytics={() => openDashboardTab('D001')}
+          onOpenTrash={() => {
+            loadTrash();
+            setShowTrashModal(true);
+          }}
+          onOpenAudit={() => setShowAuditDrawer(true)}
+          onOpenMembers={() => setShowBaseSettingsModal(true)}
+          onOpenApiDocs={() => setShowApiTokensModal(true)}
+          onOpenSnapshots={() => setShowSnapshotsModal(true)}
+          onRenameBase={() => setShowBaseSettingsModal(true)}
+          onCreateTable={() => setShowNewTableModal(true)}
+          onCreateBase={() => handleCreateDatabaseInWorkspace(activeWorkspaceId || '')}
+          onCreateSubfolder={(bId, bName, pId) => handleOpenCreateSubfolder(bId, bName, pId)}
+          onInspectKpi={(code) => setInspectingKpiCode(code)}
+        />
 
-        {viewMode === 'analytics' && (
-          <div className="flex h-full overflow-hidden bg-slate-100 dark:bg-slate-900">
-            <AppSidebar
-              isOpen={isSidebarOpen}
-              onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
+        {/* Lienzo Principal de Contenido según viewMode */}
+        <div className="flex-1 flex flex-col h-full overflow-hidden min-w-0">
+          {viewMode === 'workspaces' && (
+            <WorkspacesDashboard
+              hideSidebar={true}
               workspaces={workspaces}
-              currentWorkspaceId={activeWorkspaceId || workspaces[0]?.id}
-              currentBaseId={currentBaseId}
-              currentTableId={currentTableId}
-              tablesList={tablesList}
-              rowCount={rows.length}
-              onSelectWorkspace={(wsId) => {
-                setActiveWorkspaceId(wsId);
-                handleSelectTab('workspaces');
-              }}
-              onSelectBase={(baseId) => {
-                handleOpenDatabase(baseId);
-              }}
-              onSelectTable={(tableId) => {
-                openTableTab(tableId);
-              }}
-              onSelectDashboard={(dashId) => {
+              activeWorkspaceId={activeWorkspaceId}
+              onSelectWorkspace={setActiveWorkspaceId}
+              onOpenDatabase={handleOpenDatabase}
+              onOpenDashboard={(dashId) => {
                 openDashboardTab(dashId);
               }}
               onOpenCatalog={(base, defaultTab) => {
                 openCatalogTab(base, defaultTab);
               }}
-              onOpenWorkspaces={() => handleSelectTab('workspaces')}
-              onOpenAnalytics={() => openDashboardTab('D001')}
+              onCreateWorkspace={handleCreateWorkspace}
+              onCreateDatabase={handleCreateDatabaseInWorkspace}
               onOpenTrash={() => {
                 loadTrash();
                 setShowTrashModal(true);
               }}
-              onOpenAudit={() => setShowAuditDrawer(true)}
-              onOpenMembers={() => setShowBaseSettingsModal(true)}
-              onOpenApiDocs={() => setShowApiTokensModal(true)}
-              onOpenSnapshots={() => setShowSnapshotsModal(true)}
-              onRenameBase={() => setShowBaseSettingsModal(true)}
-              onCreateTable={() => setShowNewTableModal(true)}
-              onCreateBase={() => handleCreateDatabaseInWorkspace(activeWorkspaceId || '')}
-              onCreateSubfolder={(bId, bName, pId) => handleOpenCreateSubfolder(bId, bName, pId)}
-              onInspectKpi={(code) => setInspectingKpiCode(code)}
+              onOpenAnalytics={() => openDashboardTab('D001')}
+              user={{
+                name: user.name,
+                email: user.email,
+                role: user.role,
+              }}
+              onOpenUserMenu={() => setShowWorkspaceUserMenu(true)}
             />
-            <div className="flex-1 flex flex-col h-full overflow-hidden min-w-0">
+          )}
+
+          {viewMode === 'analytics' && (
+            <div className="flex-1 flex flex-col h-full overflow-hidden min-w-0 bg-slate-100 dark:bg-slate-900">
               <header className="h-11 bg-white border-b border-slate-200 px-4 flex items-center justify-between shrink-0 shadow-xs">
                 <div className="flex items-center gap-3">
                   <button
@@ -1010,53 +1025,10 @@ export default function HomePage() {
                 />
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {viewMode === 'catalog' && catalogContext && (
-          <div className="flex h-full overflow-hidden bg-slate-50 dark:bg-slate-950">
-            <AppSidebar
-              isOpen={isSidebarOpen}
-              onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
-              workspaces={workspaces}
-              currentWorkspaceId={activeWorkspaceId || workspaces[0]?.id}
-              currentBaseId={currentBaseId}
-              currentTableId={currentTableId}
-              tablesList={tablesList}
-              rowCount={rows.length}
-              onSelectWorkspace={(wsId) => {
-                setActiveWorkspaceId(wsId);
-                handleSelectTab('workspaces');
-              }}
-              onSelectBase={(baseId) => {
-                handleOpenDatabase(baseId);
-              }}
-              onSelectTable={(tableId) => {
-                openTableTab(tableId);
-              }}
-              onSelectDashboard={(dashId) => {
-                openDashboardTab(dashId);
-              }}
-              onOpenCatalog={(base, defaultTab) => {
-                openCatalogTab(base, defaultTab);
-              }}
-              onOpenWorkspaces={() => handleSelectTab('workspaces')}
-              onOpenAnalytics={() => openDashboardTab('D001')}
-              onOpenTrash={() => {
-                loadTrash();
-                setShowTrashModal(true);
-              }}
-              onOpenAudit={() => setShowAuditDrawer(true)}
-              onOpenMembers={() => setShowBaseSettingsModal(true)}
-              onOpenApiDocs={() => setShowApiTokensModal(true)}
-              onOpenSnapshots={() => setShowSnapshotsModal(true)}
-              onRenameBase={() => setShowBaseSettingsModal(true)}
-              onCreateTable={() => setShowNewTableModal(true)}
-              onCreateBase={() => handleCreateDatabaseInWorkspace(activeWorkspaceId || '')}
-              onCreateSubfolder={(bId, bName, pId) => handleOpenCreateSubfolder(bId, bName, pId)}
-              onInspectKpi={(code) => setInspectingKpiCode(code)}
-            />
-            <div className="flex-1 flex flex-col h-full overflow-hidden">
+          {viewMode === 'catalog' && catalogContext && (
+            <div className="flex-1 flex flex-col h-full overflow-hidden min-w-0 bg-slate-50 dark:bg-slate-950">
               <AssetCatalogView
                 moduleName={catalogContext.base?.name || 'Módulo de Negocio'}
                 workspaceName={workspaces.find((w) => w.id === activeWorkspaceId)?.name || 'Negocios'}
@@ -1076,54 +1048,9 @@ export default function HomePage() {
                 onCreateSubfolder={() => handleOpenCreateSubfolder(catalogContext.base?.id, catalogContext.base?.name)}
               />
             </div>
-          </div>
-        )}
+          )}
 
-        {viewMode === 'database' && (
-          <div className="flex h-full overflow-hidden bg-slate-50 dark:bg-slate-950">
-            <AppSidebar
-              isOpen={isSidebarOpen}
-              onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
-              workspaces={workspaces}
-              currentWorkspaceId={activeWorkspaceId || workspaces[0]?.id}
-              currentBaseId={currentBaseId}
-              currentTableId={currentTableId}
-              tablesList={tablesList}
-              rowCount={rows.length}
-              onSelectWorkspace={(wsId) => {
-                setActiveWorkspaceId(wsId);
-                handleSelectTab('workspaces');
-              }}
-              onSelectBase={(baseId) => {
-                handleOpenDatabase(baseId);
-              }}
-              onSelectTable={(tableId) => {
-                openTableTab(tableId);
-              }}
-              onSelectDashboard={(dashId) => {
-                openDashboardTab(dashId);
-              }}
-              onOpenCatalog={(base, defaultTab) => {
-                openCatalogTab(base, defaultTab);
-              }}
-              onOpenWorkspaces={() => handleSelectTab('workspaces')}
-              onOpenAnalytics={() => openDashboardTab('D001')}
-              onOpenTrash={() => {
-                loadTrash();
-                setShowTrashModal(true);
-              }}
-              onOpenAudit={() => setShowAuditDrawer(true)}
-              onOpenMembers={() => setShowBaseSettingsModal(true)}
-              onOpenApiDocs={() => setShowApiTokensModal(true)}
-              onOpenSnapshots={() => setShowSnapshotsModal(true)}
-              onRenameBase={() => setShowBaseSettingsModal(true)}
-              onCreateTable={() => setShowNewTableModal(true)}
-              onCreateBase={() => handleCreateDatabaseInWorkspace(activeWorkspaceId || '')}
-              onCreateSubfolder={(bId, bName, pId) => handleOpenCreateSubfolder(bId, bName, pId)}
-              onInspectKpi={(code) => setInspectingKpiCode(code)}
-            />
-
-            {/* 2. Área Principal de Contenido */}
+          {viewMode === 'database' && (
             <div className="flex-1 flex flex-col h-full overflow-hidden min-w-0">
         {/* Top Bar / App Navigation */}
         <header className="h-12 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center justify-between px-4 shrink-0 shadow-sm">
@@ -2283,8 +2210,8 @@ export default function HomePage() {
         </div>
       )}
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* Modal de Papelera */}

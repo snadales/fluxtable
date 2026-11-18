@@ -42,8 +42,15 @@ interface AppSidebarProps {
   currentWorkspaceId?: string;
   currentBaseId?: string;
   currentTableId?: string;
+  currentViewMode?: 'workspaces' | 'database' | 'analytics' | 'catalog';
   tablesList: Array<{ id: string; name: string; icon?: string; legacyId?: number | null }>;
   rowCount: number;
+  user?: {
+    name: string;
+    email: string;
+    role: string;
+  };
+  onOpenUserMenu?: () => void;
   onSelectWorkspace: (wsId: string) => void;
   onSelectBase: (baseId: string) => void;
   onSelectTable: (tableId: string) => void;
@@ -72,8 +79,11 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
   currentWorkspaceId,
   currentBaseId,
   currentTableId,
+  currentViewMode,
   tablesList,
   rowCount,
+  user,
+  onOpenUserMenu,
   onSelectWorkspace,
   onSelectBase,
   onSelectTable,
@@ -150,78 +160,105 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
 
   return (
     <aside className="w-64 border-r border-line bg-surface flex flex-col h-full shrink-0 select-none transition-all duration-200 z-20">
-      {/* 1. Header con Selector de Workspace y Botón Colapsar */}
-      <div className="h-12 border-b border-line px-3 flex items-center justify-between shrink-0 bg-surface">
-        <div className="relative flex-1 mr-2">
-          <button
-            type="button"
-            onClick={() => setIsWorkspaceDropdownOpen(!isWorkspaceDropdownOpen)}
-            className="w-full flex items-center justify-between gap-2 px-2 py-1.5 rounded-xl hover:bg-surface-sunken transition-colors text-left"
-          >
-            <div className="flex items-center gap-2 min-w-0">
-              <div className="w-6 h-6 rounded-lg bg-accent text-white font-bold text-xs flex items-center justify-center shrink-0 shadow-2xs">
-                {currentWorkspace?.name ? currentWorkspace.name.slice(0, 1).toUpperCase() : 'N'}
+      {/* 1. Header con Selector de Workspace, Usuario y Botón Colapsar */}
+      <div className="border-b border-line p-2.5 space-y-2 shrink-0 bg-surface">
+        <div className="flex items-center justify-between">
+          <div className="relative flex-1 mr-2">
+            <button
+              type="button"
+              onClick={() => setIsWorkspaceDropdownOpen(!isWorkspaceDropdownOpen)}
+              className="w-full flex items-center justify-between gap-2 px-2 py-1.5 rounded-xl hover:bg-surface-sunken transition-colors text-left"
+            >
+              <div className="flex items-center gap-2 min-w-0">
+                <div className="w-6 h-6 rounded-lg bg-accent text-white font-bold text-xs flex items-center justify-center shrink-0 shadow-2xs">
+                  {currentWorkspace?.name ? currentWorkspace.name.slice(0, 1).toUpperCase() : 'N'}
+                </div>
+                <span className="font-bold text-xs text-ink truncate">
+                  {currentWorkspace?.name || 'Negocios'}
+                </span>
               </div>
-              <span className="font-bold text-xs text-ink truncate">
-                {currentWorkspace?.name || 'Negocios'}
-              </span>
-            </div>
-            <ChevronsUpDown className="w-3.5 h-3.5 text-ink-3 shrink-0" />
-          </button>
+              <ChevronsUpDown className="w-3.5 h-3.5 text-ink-3 shrink-0" />
+            </button>
 
-          {/* Menú Dropdown de Workspaces */}
-          {isWorkspaceDropdownOpen && (
-            <div className="absolute top-11 left-0 w-64 bg-surface border border-line rounded-2xl shadow-xl py-1.5 z-50 text-xs">
-              <div className="px-3 py-1 text-[10px] font-bold tracking-wider uppercase text-ink-3">
-                Espacios de trabajo
-              </div>
-              {workspaces.map((ws) => (
+            {/* Menú Dropdown de Workspaces */}
+            {isWorkspaceDropdownOpen && (
+              <div className="absolute top-11 left-0 w-64 bg-surface border border-line rounded-2xl shadow-xl py-1.5 z-50 text-xs">
+                <div className="px-3 py-1 text-[10px] font-bold tracking-wider uppercase text-ink-3">
+                  Espacios de trabajo
+                </div>
+                {workspaces.map((ws) => (
+                  <button
+                    key={ws.id}
+                    type="button"
+                    onClick={() => {
+                      onSelectWorkspace(ws.id);
+                      setIsWorkspaceDropdownOpen(false);
+                    }}
+                    className={`w-full flex items-center justify-between px-3 py-2 hover:bg-surface-sunken transition-colors ${
+                      ws.id === currentWorkspace?.id ? 'font-bold text-accent bg-accent/5' : 'text-ink'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 truncate">
+                      <div className="w-5 h-5 rounded-md bg-accent/20 text-accent font-bold text-[10px] flex items-center justify-center">
+                        {ws.name.slice(0, 1).toUpperCase()}
+                      </div>
+                      <span className="truncate">{ws.name}</span>
+                    </div>
+                    <span className="text-[10px] text-ink-3 font-mono">
+                      {ws.itemsCount || ws.bases?.length || 0}
+                    </span>
+                  </button>
+                ))}
+                <div className="h-px bg-line my-1" />
                 <button
-                  key={ws.id}
                   type="button"
                   onClick={() => {
-                    onSelectWorkspace(ws.id);
                     setIsWorkspaceDropdownOpen(false);
+                    onOpenWorkspaces();
                   }}
-                  className={`w-full flex items-center justify-between px-3 py-2 hover:bg-surface-sunken transition-colors ${
-                    ws.id === currentWorkspace?.id ? 'font-bold text-accent bg-accent/5' : 'text-ink'
-                  }`}
+                  className="w-full flex items-center gap-2 px-3 py-1.5 text-ink-2 hover:text-ink hover:bg-surface-sunken text-left"
                 >
-                  <div className="flex items-center gap-2 truncate">
-                    <div className="w-5 h-5 rounded-md bg-accent/20 text-accent font-bold text-[10px] flex items-center justify-center">
-                      {ws.name.slice(0, 1).toUpperCase()}
-                    </div>
-                    <span className="truncate">{ws.name}</span>
-                  </div>
-                  <span className="text-[10px] text-ink-3 font-mono">
-                    {ws.itemsCount || ws.bases?.length || 0}
-                  </span>
+                  <Folder className="w-3.5 h-3.5" />
+                  <span>Ver todos los espacios</span>
                 </button>
-              ))}
-              <div className="h-px bg-line my-1" />
-              <button
-                type="button"
-                onClick={() => {
-                  setIsWorkspaceDropdownOpen(false);
-                  onOpenWorkspaces();
-                }}
-                className="w-full flex items-center gap-2 px-3 py-1.5 text-ink-2 hover:text-ink hover:bg-surface-sunken text-left"
-              >
-                <Folder className="w-3.5 h-3.5" />
-                <span>Ver todos los espacios</span>
-              </button>
-            </div>
-          )}
+              </div>
+            )}
+          </div>
+
+          <button
+            type="button"
+            onClick={onToggle}
+            className="p-1 rounded-lg text-ink-3 hover:text-ink hover:bg-surface-sunken transition-colors"
+            title="Ocultar barra lateral"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
         </div>
 
-        <button
-          type="button"
-          onClick={onToggle}
-          className="p-1 rounded-lg text-ink-3 hover:text-ink hover:bg-surface-sunken transition-colors"
-          title="Ocultar barra lateral"
-        >
-          <ChevronLeft className="w-4 h-4" />
-        </button>
+        {/* User selector Header integrado */}
+        {user && (
+          <button
+            type="button"
+            onClick={onOpenUserMenu}
+            className="w-full flex items-center justify-between px-2 py-1.5 rounded-xl hover:bg-surface-sunken transition-colors text-left group border border-line/50 bg-surface-sunken/30"
+            title="Menú y configuración de usuario"
+          >
+            <div className="flex items-center gap-2 truncate">
+              <div className="w-6 h-6 rounded-lg bg-accent text-white font-bold text-[11px] flex items-center justify-center shrink-0 shadow-2xs">
+                {user.name.slice(0, 2).toUpperCase()}
+              </div>
+              <div className="truncate min-w-0">
+                <div className="font-semibold text-xs text-ink truncate leading-tight">
+                  {user.name}
+                </div>
+                <div className="text-[10px] text-ink-3 truncate leading-tight">
+                  {user.email}
+                </div>
+              </div>
+            </div>
+            <ChevronDown className="w-3.5 h-3.5 text-ink-3 group-hover:text-ink shrink-0" />
+          </button>
+        )}
       </div>
 
       {/* 2. Barra de Búsqueda Rápida */}
@@ -246,14 +283,18 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
         <button
           type="button"
           onClick={onOpenWorkspaces}
-          className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl bg-blue-50/70 hover:bg-blue-100/70 text-accent transition-colors text-left font-semibold border border-blue-200/60"
+          className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl transition-colors text-left font-semibold ${
+            currentViewMode === 'workspaces'
+              ? 'bg-blue-50/80 dark:bg-blue-950/40 text-accent border border-blue-200/70 shadow-2xs'
+              : 'hover:bg-surface-sunken hover:text-ink'
+          }`}
           title="Ver todos los Espacios de Trabajo"
         >
           <div className="flex items-center gap-2">
-            <Folder className="w-3.5 h-3.5 text-accent" />
+            <Folder className={`w-3.5 h-3.5 ${currentViewMode === 'workspaces' ? 'text-accent' : 'text-ink-3'}`} />
             <span>Espacios de Trabajo</span>
           </div>
-          <span className="text-[10px] font-mono font-bold text-accent">
+          <span className={`text-[10px] font-mono font-bold ${currentViewMode === 'workspaces' ? 'text-accent' : 'text-ink-3'}`}>
             {workspaces.length}
           </span>
         </button>
@@ -264,7 +305,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
           className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-xl hover:bg-surface-sunken hover:text-ink transition-colors text-left"
         >
           <Clock className="w-3.5 h-3.5 text-ink-3" />
-          <span>Recents</span>
+          <span>Recientes</span>
         </button>
 
         <button
@@ -369,14 +410,20 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
 
               return (
                 <div key={b.id} className="space-y-0.5">
-                  {/* Nodo Padre: Base de Datos */}
+                  {/* Nodo Padre: Base de Datos / Módulo */}
                   <div
                     className={`group relative flex items-center justify-between px-2 py-1.5 rounded-xl text-xs font-semibold cursor-pointer transition-all ${
                       isCurrentBase
                         ? 'bg-accent/10 text-accent font-bold'
                         : 'text-ink hover:bg-surface-sunken'
                     }`}
-                    onClick={() => onSelectBase(b.id)}
+                    onClick={() => {
+                      if (onOpenCatalog && b.subfolders) {
+                        onOpenCatalog(b, 'tables');
+                      } else {
+                        onSelectBase(b.id);
+                      }
+                    }}
                   >
                     <div className="flex items-center gap-2 truncate min-w-0 flex-1">
                       <button

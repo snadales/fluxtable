@@ -2,6 +2,42 @@
 
 ---
 
+## 🗓️ [2026-11-17] - Fase 14: Unificación de Single-Shell AppSidebar y Erradicación del Salto de Navegación (Issue #37)
+
+### 🎯 Intención
+Erradicar de raíz el salto y la mutación abrupta de la barra lateral (Sidebar) al navegar entre **Espacios de Trabajo (Home)** y cualquier **Módulo de Negocio, Tabla o Dashboard** ([Issue #37](https://github.com/snadales/BaserowLite/issues/37)):
+1. Eliminar la dualidad de componentes entre el `<aside>` hardcodeado de `WorkspacesDashboard` y el `AppSidebar` de las vistas internas.
+2. Elevar `AppSidebar` a nivel de **Shell Raíz Persistente** en `app/page.tsx`, envolviendo todos los modos de vista (`workspaces`, `catalog`, `analytics`, `database`) sin desmontarse jamás.
+3. Unificar el encabezado del Sidebar integrando el Selector de Workspace (`N Negocios ▾`), el Menú de Usuario (`SE Sebastián Nadales ▾`) y el botón de colapso `<`.
+4. Garantizar persistencia total del estado de navegación, scroll, expansión de módulos y tabs sin parpadeos (*layout shift 0px*).
+
+### 📍 Estado Actual
+- **Arquitectura Single-Shell en `app/page.tsx`**:
+  - `AppSidebar` vive en el contenedor raíz `<div className="flex-1 flex overflow-hidden relative">` envolviendo el canvas de contenido.
+  - Eliminados los tres montajes redundantes de `AppSidebar` dentro de `viewMode === 'analytics'`, `catalog` y `database`.
+  - Pasado `hideSidebar={true}` a `WorkspacesDashboard` para renderizar únicamente su lienzo principal de cuadrículas de módulos agrupadas por área de negocio.
+- **Unificación de Header y Navegación en `AppSidebar`**:
+  - Encabezado unificado: Contiene el selector de espacio de trabajo activo (`[N] Negocios ▾`) con dropdown completo para alternar entre workspaces, el card de usuario (`SE Sebastián Nadales snadales@gmail.com`) que abre `WorkspaceUserMenu`, y el toggle para colapsar la barra.
+  - Accesos de sistema en español armonizados: `Espacios de Trabajo` con badge de conteo y resaltado dinámico de pestaña activa (`currentViewMode === 'workspaces'`), `Recientes` (adiós "Recents"), `Notificaciones`, `Miembros`, `Registro de auditoría` y `Papelera`.
+  - Árbol de Carpetas y Módulos: Al hacer clic sobre cualquier módulo (`b.name`) se abre directamente su pestaña de Catálogo estructurado (`onOpenCatalog`), manteniendo los desplegables de Indicadores (K), Gráficos (G), Tablas (T) y Dashboards (D).
+- **Control de Calidad y Pruebas**:
+  - 64/64 pruebas unitarias pasando al 100% (`npm test`).
+  - 28/28 rutas de Next.js compiladas de forma óptima sin errores de tipos (`npm run build`).
+
+### 🏁 Estado Deseado
+- Navegación instantánea y fluida sin cambios bruscos de interfaz, ofreciendo una experiencia idéntica a herramientas enterprise como Linear o Slack.
+
+### ⚠️ Problemas Encontrados y Soluciones
+- *Problema:* Error de JSX por cierre de comentario sintáctico no balanceado en `database` viewMode.
+  *Solución:* Se corrigió el tag de comentario `{/* Top Bar / App Navigation */}`.
+- *Problema:* Referencia a función inexistente `setSelectedWorkspaceForNewModule`.
+  *Solución:* Se utilizó la función ya provista `handleCreateDatabaseInWorkspace(activeWorkspaceId || '')`.
+
+### 🔄 Iteraciones e Historial de Ejecución
+1. **Iteración 137**: Creación de Issue #37, unificación de `AppSidebar` como Shell Raíz, eliminación de sidebar secundario en `WorkspacesDashboard`, armonización de cabecera con perfil de usuario y workspace, 64/64 tests y 28/28 páginas Next.js compiladas.
+
+---
+
 ## 🗓️ [2026-11-17] - Fase 13: Carpetas y Subcarpetas Recursivas N-Niveles y Reusabilidad M:N de Tarjetas Analíticas (Issue #36)
 
 ### 🎯 Intención

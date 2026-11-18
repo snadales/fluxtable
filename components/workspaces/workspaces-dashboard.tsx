@@ -59,6 +59,7 @@ interface WorkspacesDashboardProps {
   onOpenUserMenu: () => void;
   onOpenApiTokens?: () => void;
   onOpenSnapshots?: (tableOrBaseId?: string) => void;
+  hideSidebar?: boolean;
 }
 
 export const WorkspacesDashboard: React.FC<WorkspacesDashboardProps> = ({
@@ -76,6 +77,7 @@ export const WorkspacesDashboard: React.FC<WorkspacesDashboardProps> = ({
   onOpenUserMenu,
   onOpenApiTokens,
   onOpenSnapshots,
+  hideSidebar = false,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'database' | 'dashboard'>('all');
@@ -164,14 +166,15 @@ export const WorkspacesDashboard: React.FC<WorkspacesDashboardProps> = ({
 
   return (
     <div 
-      className="flex h-screen overflow-hidden bg-bg text-ink"
+      className={`flex overflow-hidden bg-bg text-ink ${hideSidebar ? 'h-full flex-1' : 'h-screen'}`}
       onClick={() => {
         if (activeBaseMenuId) setActiveBaseMenuId(null);
         if (activeWorkspaceMenuId) setActiveWorkspaceMenuId(null);
       }}
     >
       {/* 1. Left Sidebar Jerárquico en Árbol */}
-      <aside className="w-64 border-r border-line bg-surface flex flex-col justify-between shrink-0 shadow-2xs select-none">
+      {!hideSidebar && (
+        <aside className="w-64 border-r border-line bg-surface flex flex-col justify-between shrink-0 shadow-2xs select-none">
         <div className="flex flex-col h-full overflow-hidden">
           {/* User selector Header */}
           <div className="p-3 border-b border-line shrink-0">
@@ -391,6 +394,7 @@ export const WorkspacesDashboard: React.FC<WorkspacesDashboardProps> = ({
           </div>
         </div>
       </aside>
+      )}
 
       {/* 2. Main Content Area */}
       <main className="flex-1 flex flex-col overflow-hidden">
