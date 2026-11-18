@@ -2,6 +2,30 @@
 
 ---
 
+## 🗓️ [2026-11-18] - Fase 19: Migración Oficial de Dominio a fluxtable.yarken.cl y Limpieza Legacy (Issue #42)
+
+### 🎯 Intención
+Completar la transición de identidad al dominio canónico `fluxtable.yarken.cl` y eliminar todos los registros legacy obsoletos ([Issue #42](https://github.com/snadales/fluxtable/issues/42)):
+1. Actualizar ingress de Cloudflare Tunnel (`services` `a8bc2e17-8551-438e-aa99-c4a69f8e4069`) apuntando `fluxtable.yarken.cl` -> `http://127.0.0.1:8097`.
+2. Crear CNAME en Cloudflare DNS (`fluxtable.yarken.cl`) con proxy activo.
+3. Eliminar CNAMEs obsoletos (`tables.yarken.cl` y `baserow-lite.yarken.cl`).
+4. Actualizar proxy inverso Caddy en ZBook (`/home/snadales/docker/caddy/Caddyfile`) asignando `@fluxtable` a `fluxtable.yarken.cl` y recargando el servicio.
+5. Actualizar DNS Split-Horizon en AdGuard Home (ZBook `192.168.60.25` y Satélite NUC `192.168.60.22`) apuntando `fluxtable.yarken.cl` a `192.168.60.25` en 0ms.
+6. Actualizar CSP en `next.config.mjs`, variables en `.env.example`, nodos n8n y documentación oficial.
+
+### 📍 Estado Actual
+- **Dominio Público & LAN**: `https://fluxtable.yarken.cl` 100% operativo con respuesta HTTP 200 OK.
+- **Limpieza de Red**: `tables.yarken.cl` y `baserow-lite.yarken.cl` eliminados de Cloudflare DNS, Cloudflare Tunnel, Caddy y AdGuard Home.
+- **Seguridad**: Cabeceras de seguridad CSP actualizadas permitiendo únicamente `https://fluxtable.yarken.cl`.
+
+### 🏁 Estado Deseado
+- Ecosistema 100% canónico bajo `fluxtable.yarken.cl` sin deuda técnica de nombres antiguos.
+
+### 🔄 Iteraciones e Historial de Ejecución
+1. **Iteración 142**: Creación de Issue #42, actualización de Cloudflare Tunnel API y DNS, reconfiguración de Caddy, reconfiguración de AdGuard Home en ZBook y NUC, actualización de CSP en Next.js, reconstrucción de contenedor y verificación empírica completa.
+
+---
+
 ## 🗓️ [2026-11-18] - Fase 18: Arquitectura White-Label, Logo Adaptable y Desacople Open Source (Issue #41)
 
 ### 🎯 Intención

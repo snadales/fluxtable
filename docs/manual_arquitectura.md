@@ -2,7 +2,7 @@
 
 > **Plataforma de Datos & Business Intelligence | Sistema Yarken**  
 > *Versión 2.0 (Edición Cobalto) - Fecha: 2026-11-17*  
-> *Host de Producción: srv-zbook (`192.168.60.25:8097`) | Dominio: `https://tables.yarken.cl`*
+> *Host de Producción: srv-zbook (`192.168.60.25:8097`) | Dominio: `https://fluxtable.yarken.cl`*
 
 ---
 
@@ -31,7 +31,7 @@ flowchart TD
     end
 
     subgraph Edge["Perímetro de Red & Seguridad"]
-        CF["Cloudflare Edge & Zero Trust\ntables.yarken.cl"]
+        CF["Cloudflare Edge & Zero Trust\nfluxtable.yarken.cl"]
         Tunnel["Cloudflare Tunnel (cloudflared)\nsrv-zbook"]
     end
 

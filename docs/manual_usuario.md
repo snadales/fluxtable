@@ -2,7 +2,7 @@
 
 > **Plataforma de Datos & Business Intelligence | Sistema Yarken**  
 > *Versión 2.0 (Edición Cobalto) - Fecha: 2026-11-17*  
-> *Acceso Web: [https://tables.yarken.cl](https://tables.yarken.cl)*
+> *Acceso Web: [https://fluxtable.yarken.cl](https://fluxtable.yarken.cl)*
 
 ---
 

@@ -41,7 +41,7 @@ const nextConfig = {
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "font-src 'self' https://fonts.gstatic.com data:",
               "img-src 'self' data: blob: https:",
-              "connect-src 'self' https://tables.yarken.cl http://192.168.60.25:8097 ws: wss:",
+              "connect-src 'self' https://fluxtable.yarken.cl http://192.168.60.25:8097 ws: wss:",
               "frame-ancestors 'none'",
               "base-uri 'self'",
               "form-action 'self'",

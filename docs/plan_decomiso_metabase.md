@@ -89,7 +89,7 @@ ssh zbook "cd /home/snadales/docker/metabase && docker compose down"
 ```
 
 ### Paso 3: Retiro de Rutas en Reverse Proxy / Cloudflare Tunnel
-- Actualizar `config.yml` de cloudflared en ZBook: redirigir `metabase.yarken.cl` hacia `tables.yarken.cl/analytics` (o mostrar página de redirección informativa 301).
+- Actualizar `config.yml` de cloudflared en ZBook: redirigir `metabase.yarken.cl` hacia `fluxtable.yarken.cl/analytics` (o mostrar página de redirección informativa 301).
 - Actualizar el menú de `Homepage` en ZBook para retirar el tile de Metabase y consolidar el acceso a BaserowLite BI.
 
 ### Paso 4: Decomiso del Usuario `metabase_ro` en Bases Satélite

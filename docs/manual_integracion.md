@@ -2,7 +2,7 @@
 
 > **Plataforma de Datos & Business Intelligence | Sistema Yarken**  
 > *Versión 2.0 (Edición Cobalto) - Fecha: 2026-11-17*  
-> *Host de Producción: srv-zbook (`https://tables.yarken.cl`)*
+> *Host de Producción: srv-zbook (`https://fluxtable.yarken.cl`)*
 
 ---
 
@@ -160,7 +160,7 @@ sequenceDiagram
 El repositorio incluye el paquete oficial [`packages/n8n-nodes-fluxtable`](file:///Users/snadales/Dev/01_Homelab/07_BaserowLite/packages/n8n-nodes-fluxtable) para integrar n8n directamente.
 
 ### 5.1. Componentes del Paquete
-- **`FluxTableApi.credentials.ts`**: Gestiona la autenticación con la URL base (`https://tables.yarken.cl`) y el Database Token.
+- **`FluxTableApi.credentials.ts`**: Gestiona la autenticación con la URL base (`https://fluxtable.yarken.cl`) y el Database Token.
 - **`FluxTable.node.ts`**: Nodo de acción con soporte para:
   - **Recursos**: `Row`, `Field` (Esquema), `Snapshot` (Respaldo) y `Table`.
   - **Operaciones**: `Create`, `Get`, `Get Many` (con paginación automática), `Update`, `Delete` y `Batch Create`.

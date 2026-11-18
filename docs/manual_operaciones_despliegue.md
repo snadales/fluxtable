@@ -2,7 +2,7 @@
 
 > **Plataforma de Datos & Business Intelligence | Sistema Yarken**  
 > *Versión 2.0 (Edición Cobalto) - Fecha: 2026-11-17*  
-> *Servidor: srv-zbook (`192.168.60.25:8097`) | Dominio: `https://tables.yarken.cl`*
+> *Servidor: srv-zbook (`192.168.60.25:8097`) | Dominio: `https://fluxtable.yarken.cl`*
 
 ---
 
@@ -17,7 +17,7 @@ flowchart LR
     end
 
     subgraph CF["Cloudflare Edge"]
-        Edge["tables.yarken.cl\n(Zero Trust Access)"]
+        Edge["fluxtable.yarken.cl\n(Zero Trust Access)"]
     end
 
     subgraph ZBook["srv-zbook (192.168.60.25)"]
