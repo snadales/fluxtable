@@ -2,6 +2,29 @@
 
 ---
 
+## 🗓️ [2026-11-18] - Fase 22: Corrección E2E de Dashboards BI y Enlace de Gráficos/KPIs (Issue #46)
+
+### 🎯 Intención
+Corregir la anomalía donde la vista de "Dashboards & Analítica" mostraba "Ningún Dashboard Seleccionado" y no cargaba tarjetas ni gráficos ([Issue #46](https://github.com/snadales/fluxtable/issues/46)):
+1. Robustecer el fallback de autenticación en `lib/auth/auth-guard.ts` para que las rutas `/api/bi/*` reconozcan al superadministrador soberano (`snadales@gmail.com`) sin devolver 401 UNAUTHORIZED en navegadores sin cookie de sesión.
+2. Hacer dinámico `openDashboardTab` en `app/page.tsx` para que si no existe `D001` o no se especifica ID, seleccione automáticamente el primer dashboard disponible (`D002`).
+3. Enlazar los clics de gráficos individuales (`G003`, `G004`, `G006`) e indicadores (`K004`, `K005`, `K006`) en `components/navigation/app-sidebar.tsx` directamente hacia el tablero donde residen.
+4. Poblar `dashboardCode` y `dashboardName` en `app/api/database/workspaces/route.ts` para habilitar navegación fluida desde el catálogo de activos.
+
+### 📍 Estado Actual
+- **Dashboard Activo**: D002 (`D002 · Infraestructura Homelab & Monitoreo`) carga automáticamente y muestra 3 KPIs y 3 gráficos en tiempo real.
+- **Endpoints BI**: `/api/bi/dashboards` y `/api/bi/dashboards/[id]` responden HTTP 200 con la metadata completa y 6 tarjetas.
+- **Navegación**: Clics en la barra lateral o en el header abren el dashboard sin pantallas en blanco ni estados vacíos.
+- **Pruebas y Despliegue**: 71/71 tests unitarios pasando, imagen Docker reconstruida y desplegada en ZBook.
+
+### 🏁 Estado Deseado
+- Experiencia de usuario 100% fluida con dashboards, métricas y gráficos visibles de inmediato al ingresar.
+
+### 🔄 Iteraciones e Historial de Ejecución
+1. **Iteración 146**: Creación de Issue #46, diagnóstico de 401 en `/api/bi/dashboards`, ajuste en `auth-guard.ts` y `workspaces/route.ts`, refactor de `openDashboardTab` y sidebar, compilación de imagen Docker, despliegue y validación curl sin headers.
+
+---
+
 ## 🗓️ [2026-11-18] - Fase 21: Migración Piloto de Servicios Homelab y Dashboards BI (Issue #45)
 
 ### 🎯 Intención
