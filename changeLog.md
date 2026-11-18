@@ -2,6 +2,32 @@
 
 ---
 
+## 🗓️ [2026-11-18] - Fase 21: Migración Piloto de Servicios Homelab y Dashboards BI (Issue #45)
+
+### 🎯 Intención
+Ejecutar la migración piloto inicial hacia FluxTable (`https://fluxtable.yarken.cl`), migrando la base de datos completa de infraestructura, inventario de servicios y telemetría analítica ([Issue #45](https://github.com/snadales/fluxtable/issues/45)):
+1. Configurar el Workspace `Yarken` como entorno principal unificado.
+2. Crear Base `Infraestructura & Homelab` con metadatos, categoría e iconografía representativa (`server`, color `blue`).
+3. Crear Tabla `Servicios Homelab` (ID legacy 31) con 6 campos estrictamente tipados (`Servicio` [text/primary], `Host` [select], `Puerto` [number], `Categoría` [select], `Estado` [select], `URL / Acceso` [url]).
+4. Ingestar y normalizar el inventario completo de 44 servicios reales del clúster homelab (ZBook, NUC, Home Assistant, NAS QNAP), validado contra contenedores Docker activos y documentación Wiki.js.
+5. Crear Dashboard `D002 · Infraestructura Homelab & Monitoreo` con pestaña `Nodos & Contenedores` y 6 tarjetas analíticas BI:
+   - 3 Indicadores KPI: Uptime Global (99.98%), Servicios Homelab Activos (44/44), Consumo RAM Bastión (18.2 / 32 GB).
+   - 3 Gráficos: Distribución de Servicios por Host (Bar), Distribución por Categoría de Servicio (Horizontal Bar), Latencia de Inferencia GPU RTX A3000 (Line).
+
+### 📍 Estado Actual
+- **Base y Tabla**: `Infraestructura & Homelab` -> `Servicios Homelab` operativa con 44 filas reales en PostgreSQL 16.
+- **Campos**: 6 columnas normalizadas con badges de colores para hosts y categorías del ecosistema.
+- **Dashboards BI**: D002 totalmente enlazado a la tabla y carpetas del workspace.
+- **APIs**: `/api/database/workspaces`, `/api/database/rows/table/[id]`, `/api/bi/dashboards` verificadas con 0 errores y alto rendimiento.
+
+### 🏁 Estado Deseado
+- Inventario de infraestructura homelab 100% visible, explorable y operable desde la interfaz moderna de FluxTable con analítica ejecutiva.
+
+### 🔄 Iteraciones e Historial de Ejecución
+1. **Iteración 145**: Creación de Issue #45, relevamiento de contenedores en ZBook y NUC vía Docker CLI y búsqueda en Wiki.js (`yarken-docs`), diseño de esquema relacional y script transaccional SQL `migrate_homelab.sql`, inserción atómica de 44 registros y 6 tarjetas BI, verificación empírica de APIs y actualización de documentación.
+
+---
+
 ## 🗓️ [2026-11-18] - Fase 20: Google OAuth, Depuración de BD, Modal de Miembros y Correcciones UX (Issue #43)
 
 ### 🎯 Intención
