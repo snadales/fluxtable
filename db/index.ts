@@ -13,7 +13,7 @@ const pool =
   new Pool({
     connectionString:
       process.env.DATABASE_URL ||
-      'postgresql://baserow_user:baserow_pass@localhost:5432/baserow_lite',
+      'postgresql://fluxtable_user:fluxtable_pass@localhost:5432/fluxtable',
     max: 20,
     idleTimeoutMillis: 30000,
     connectionTimeoutMillis: 5000,

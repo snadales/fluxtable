@@ -35,28 +35,28 @@ FluxTable cuenta con una suite completa de manuales técnicos, operativos y de u
 
 | Manual / Documento | Enlace | Audiencia y Contenido |
 | :--- | :--- | :--- |
-| **🏛️ Manual de Arquitectura** | [docs/manual_arquitectura.md](file:///Users/snadales/Dev/01_Homelab/07_BaserowLite/docs/manual_arquitectura.md) | Visión sistémica, microservicios, stack Next.js 14 + Drizzle + Postgres + DuckDB, aislamiento multi-tenant y diagramas Mermaid. |
-| **📖 Manual de Usuario Final** | [docs/manual_usuario.md](file:///Users/snadales/Dev/01_Homelab/07_BaserowLite/docs/manual_usuario.md) | Guía paso a paso para usuarios y analistas: Workspaces, Tablas, Campos, Vistas (Grid, Kanban, Form, Calendario) y Dashboards BI. |
-| **🛠️ Manual Técnico y de Desarrollo** | [docs/manual_tecnico.md](file:///Users/snadales/Dev/01_Homelab/07_BaserowLite/docs/manual_tecnico.md) | Guía para desarrolladores: estructura del código, API Routes, motor de fórmulas AST, query builder y testing con Jest/Vitest. |
-| **🗄️ Manual de Base de Datos** | [docs/manual_base_de_datos.md](file:///Users/snadales/Dev/01_Homelab/07_BaserowLite/docs/manual_base_de_datos.md) | Diccionario de datos, Diagrama Entidad-Relación (ERD), índices de alto rendimiento, afinamiento Postgres y backups. |
-| **🔌 Manual de Integración y APIs** | [docs/manual_integracion.md](file:///Users/snadales/Dev/01_Homelab/07_BaserowLite/docs/manual_integracion.md) | Especificación de API REST, batching masivo, webhooks salientes, nodo custom de n8n (`n8n-nodes-fluxtable`) y pools externos (Odoo/Voz/Pimcore). |
-| **🚢 Manual de Operaciones y Despliegue** | [docs/manual_operaciones_despliegue.md](file:///Users/snadales/Dev/01_Homelab/07_BaserowLite/docs/manual_operaciones_despliegue.md) | Despliegue Docker en ZBook (`192.168.60.25:8097`), Cloudflare Tunnel Zero Trust (`tables.yarken.cl`), secretos 1Password y Runbook de incidentes. |
-| **🛡️ Manual de Seguridad y Pentest** | [docs/manual_seguridad.md](file:///Users/snadales/Dev/01_Homelab/07_BaserowLite/docs/manual_seguridad.md) | Blindaje defensivo anti-DDL/DML (HTTP 403), prevención de inyecciones SQL ($1, $2), certificación de pentest 8/8 y RBAC. |
-| **📊 Manual Especializado de BI & Analytics** | [docs/manual_bi_analytics.md](file:///Users/snadales/Dev/01_Homelab/07_BaserowLite/docs/manual_bi_analytics.md) | Reemplazo de Metabase, inteligencia temporal MoM/YoY, tipos de visualizaciones Recharts, carpetas, dashboards y alertas por umbrales. |
-| **🧪 Informe de Pruebas y Pentest** | [docs/informe_pruebas_desempeno_seguridad.md](file:///Users/snadales/Dev/01_Homelab/07_BaserowLite/docs/informe_pruebas_desempeno_seguridad.md) | Resultados empíricos de concurrencia (518 req/s), saturación, prueba ácida (500 queries) y telemetría de memoria RAM. |
-| **📋 Plan de Decomiso de Metabase** | [docs/plan_decomiso_metabase.md](file:///Users/snadales/Dev/01_Homelab/07_BaserowLite/docs/plan_decomiso_metabase.md) | Plan de coexistencia paralela de 7 días, benchmarks de CPU/RAM (94% ahorro) y transición definitiva. |
+| **🏛️ Manual de Arquitectura** | [docs/manual_arquitectura.md](file:///Users/snadales/Dev/01_Homelab/07_FluxTable/docs/manual_arquitectura.md) | Visión sistémica, microservicios, stack Next.js 14 + Drizzle + Postgres + DuckDB, aislamiento multi-tenant y diagramas Mermaid. |
+| **📖 Manual de Usuario Final** | [docs/manual_usuario.md](file:///Users/snadales/Dev/01_Homelab/07_FluxTable/docs/manual_usuario.md) | Guía paso a paso para usuarios y analistas: Workspaces, Tablas, Campos, Vistas (Grid, Kanban, Form, Calendario) y Dashboards BI. |
+| **🛠️ Manual Técnico y de Desarrollo** | [docs/manual_tecnico.md](file:///Users/snadales/Dev/01_Homelab/07_FluxTable/docs/manual_tecnico.md) | Guía para desarrolladores: estructura del código, API Routes, motor de fórmulas AST, query builder y testing con Jest/Vitest. |
+| **🗄️ Manual de Base de Datos** | [docs/manual_base_de_datos.md](file:///Users/snadales/Dev/01_Homelab/07_FluxTable/docs/manual_base_de_datos.md) | Diccionario de datos, Diagrama Entidad-Relación (ERD), índices de alto rendimiento, afinamiento Postgres y backups. |
+| **🔌 Manual de Integración y APIs** | [docs/manual_integracion.md](file:///Users/snadales/Dev/01_Homelab/07_FluxTable/docs/manual_integracion.md) | Especificación de API REST, batching masivo, webhooks salientes, nodo custom de n8n (`n8n-nodes-fluxtable`) y pools externos (Odoo/Voz/Pimcore). |
+| **🚢 Manual de Operaciones y Despliegue** | [docs/manual_operaciones_despliegue.md](file:///Users/snadales/Dev/01_Homelab/07_FluxTable/docs/manual_operaciones_despliegue.md) | Despliegue Docker en ZBook (`192.168.60.25:8097`), Cloudflare Tunnel Zero Trust (`tables.yarken.cl`), secretos 1Password y Runbook de incidentes. |
+| **🛡️ Manual de Seguridad y Pentest** | [docs/manual_seguridad.md](file:///Users/snadales/Dev/01_Homelab/07_FluxTable/docs/manual_seguridad.md) | Blindaje defensivo anti-DDL/DML (HTTP 403), prevención de inyecciones SQL ($1, $2), certificación de pentest 8/8 y RBAC. |
+| **📊 Manual Especializado de BI & Analytics** | [docs/manual_bi_analytics.md](file:///Users/snadales/Dev/01_Homelab/07_FluxTable/docs/manual_bi_analytics.md) | Reemplazo de Metabase, inteligencia temporal MoM/YoY, tipos de visualizaciones Recharts, carpetas, dashboards y alertas por umbrales. |
+| **🧪 Informe de Pruebas y Pentest** | [docs/informe_pruebas_desempeno_seguridad.md](file:///Users/snadales/Dev/01_Homelab/07_FluxTable/docs/informe_pruebas_desempeno_seguridad.md) | Resultados empíricos de concurrencia (518 req/s), saturación, prueba ácida (500 queries) y telemetría de memoria RAM. |
+| **📋 Plan de Decomiso de Metabase** | [docs/plan_decomiso_metabase.md](file:///Users/snadales/Dev/01_Homelab/07_FluxTable/docs/plan_decomiso_metabase.md) | Plan de coexistencia paralela de 7 días, benchmarks de CPU/RAM (94% ahorro) y transición definitiva. |
 
 ---
 
 ## 🗺️ Índice de Referencias Adicionales
 
-- 📜 [Historial de Cambios (changeLog.md)](file:///Users/snadales/Dev/01_Homelab/07_BaserowLite/changeLog.md)
-- 🔐 [Usuarios, Google OAuth, Logs y Trazabilidad (docs/authAndObservability.md)](file:///Users/snadales/Dev/01_Homelab/07_BaserowLite/docs/authAndObservability.md)
-- 🔍 [Análisis de Paridad y Factibilidad de Migración (docs/migrationCheck.md)](file:///Users/snadales/Dev/01_Homelab/07_BaserowLite/docs/migrationCheck.md)
-- 🎨 [Motor de Vistas, Colores y Formatos (docs/viewEngine.md)](file:///Users/snadales/Dev/01_Homelab/07_BaserowLite/docs/viewEngine.md)
-- 🧮 [Motor de Fórmulas Ligeras AST (docs/formulaEngine.md)](file:///Users/snadales/Dev/01_Homelab/07_BaserowLite/docs/formulaEngine.md)
-- 🌐 [Especificación de la API REST y OpenAPI (docs/apiSpec.md)](file:///Users/snadales/Dev/01_Homelab/07_BaserowLite/docs/apiSpec.md)
-- 🔒 [Plantilla de Variables de Entorno (.env.example)](file:///Users/snadales/Dev/01_Homelab/07_BaserowLite/.env.example)
+- 📜 [Historial de Cambios (changeLog.md)](file:///Users/snadales/Dev/01_Homelab/07_FluxTable/changeLog.md)
+- 🔐 [Usuarios, Google OAuth, Logs y Trazabilidad (docs/authAndObservability.md)](file:///Users/snadales/Dev/01_Homelab/07_FluxTable/docs/authAndObservability.md)
+- 🔍 [Análisis de Paridad y Factibilidad de Migración (docs/migrationCheck.md)](file:///Users/snadales/Dev/01_Homelab/07_FluxTable/docs/migrationCheck.md)
+- 🎨 [Motor de Vistas, Colores y Formatos (docs/viewEngine.md)](file:///Users/snadales/Dev/01_Homelab/07_FluxTable/docs/viewEngine.md)
+- 🧮 [Motor de Fórmulas Ligeras AST (docs/formulaEngine.md)](file:///Users/snadales/Dev/01_Homelab/07_FluxTable/docs/formulaEngine.md)
+- 🌐 [Especificación de la API REST y OpenAPI (docs/apiSpec.md)](file:///Users/snadales/Dev/01_Homelab/07_FluxTable/docs/apiSpec.md)
+- 🔒 [Plantilla de Variables de Entorno (.env.example)](file:///Users/snadales/Dev/01_Homelab/07_FluxTable/.env.example)
 
 ---
 
@@ -69,7 +69,7 @@ FluxTable cuenta con una suite completa de manuales técnicos, operativos y de u
 ### Puesta en Marcha Rápida (1 Solo Comando)
 ```bash
 # 1. Acceder al directorio del proyecto
-cd /Users/snadales/Dev/01_Homelab/07_BaserowLite
+cd /Users/snadales/Dev/01_Homelab/07_FluxTable
 
 # 2. Configurar variables de entorno iniciales
 cp .env.example .env
@@ -87,7 +87,7 @@ BaserowLite opera bajo una estricta política de **convivencia en paralelo**:
 - **Baserow Clásico (Producción):** Permanece 100% activo en el puerto `:8090` (`https://baserow.yarken.cl`) atendiendo todos los flujos vigentes de Navarino Compras, n8n y Postulaciones.
 - **BaserowLite (Validación):** Se ejecuta de forma aislada en el puerto `:8097` (`http://192.168.60.25:8097`) con su propio PostgreSQL en `:5435` y almacenamiento local independiente.
 - **Sin Migración Forzada:** No se ejecutan cortes, ni migración destructiva, ni redirecciones de DNS. Ambos sistemas coexisten pacíficamente para validar a fondo la estabilidad, el rendimiento y la experiencia de usuario antes de cualquier decisión futura.
-- Guía detallada: [Plan de Convivencia en Paralelo (docs/parallelValidationPlan.md)](file:///Users/snadales/Dev/01_Homelab/07_BaserowLite/docs/parallelValidationPlan.md).
+- Guía detallada: [Plan de Convivencia en Paralelo (docs/parallelValidationPlan.md)](file:///Users/snadales/Dev/01_Homelab/07_FluxTable/docs/parallelValidationPlan.md).
 
 ---
 
@@ -123,7 +123,7 @@ El script genera un dump comprimido en `./data/backups/baserow_lite_pg_<timestam
 
 ### 2. Restauración Rápida
 ```bash
-gunzip -c ./data/backups/baserow_lite_pg_archivo.sql.gz | docker exec -i baserow_lite_db psql -U baserow_user -d baserow_lite
+gunzip -c ./data/backups/baserow_lite_pg_archivo.sql.gz | docker exec -i fluxtable-db psql -U baserow_user -d baserow_lite
 ```
 
 ---

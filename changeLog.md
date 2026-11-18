@@ -2,6 +2,35 @@
 
 ---
 
+## 🗓️ [2026-11-18] - Fase 17: Renombramiento Integral y Unificación de Identidad a FluxTable (Issue #40)
+
+### 🎯 Intención
+Alinear la identidad de infraestructura del servicio con el **Estándar de Servicio Yarken (v2)** (`convenciones-y-nombres` §1) ([Issue #40](https://github.com/snadales/fluxtable/issues/40)):
+1. Renombrar repositorio GitHub oficial de `snadales/BaserowLite` a `snadales/fluxtable`.
+2. Renombrar directorio local en Mac a `07_FluxTable` (manteniendo symlink de compatibilidad `07_BaserowLite`).
+3. Actualizar `docker-compose.yml` con nombres estandarizados: `fluxtable-app`, `fluxtable-db`, red `fluxtable_internal` y base de datos `fluxtable`.
+4. Renombrar base de datos en PostgreSQL en ZBook (`baserow_lite` -> `fluxtable`) y directorio en servidor a `/home/snadales/docker/fluxtable`.
+5. Mantener puerto 8097 y healthcheck oficial `/api/v1/salud` para cero interrupción en Cloudflare Tunnel (`tables.yarken.cl`).
+
+### 📍 Estado Actual
+- **GitHub**: Repositorio renombrado a `snadales/fluxtable` con remote origin actualizado.
+- **Entorno Local**: Carpeta `/Users/snadales/Dev/01_Homelab/07_FluxTable` activa y symlink `/Users/snadales/Dev/01_Homelab/07_BaserowLite` operativo.
+- **Docker Compose**: Contenedores estandarizados a `fluxtable-app` y `fluxtable-db`.
+- **Base de Datos**: Respaldo previo íntegro (124 KB) guardado en `backups/`.
+- **Control de Calidad**: 68/68 pruebas unitarias pasando al 100% y 0 errores de compilación TypeScript.
+
+### 🏁 Estado Deseado
+- Ecosistema unificado de punta a punta bajo el nombre canónico **FluxTable**.
+
+### ⚠️ Problemas Encontrados y Soluciones
+- *Problema:* El usuario de postgres en contenedor se llama `baserow` y no `baserow_user` como figuraba en el compose original.
+  *Solución:* Se identificaron las variables de entorno reales en producción y se diseñó la migración asegurando permisos sin riesgo de bloqueo.
+
+### 🔄 Iteraciones e Historial de Ejecución
+1. **Iteración 140**: Creación de Issue #40, respaldo `pg_dump` de seguridad, renombramiento de repositorio en GitHub con `gh repo rename`, renombramiento de carpetas locales y compose, validación de 68/68 tests.
+
+---
+
 ## 🗓️ [2026-11-17] - Fase 16: Alineación Normativa con Estándar de Servicio Yarken v2 (Issue #39)
 
 ### 🎯 Intención
