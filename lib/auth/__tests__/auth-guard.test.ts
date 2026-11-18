@@ -7,7 +7,9 @@ describe('Auth Guard & RBAC', () => {
     const req = new NextRequest('http://localhost:3000/api/database/tables');
     const result = await requireAuth(req);
     expect(result.authenticated).toBe(false);
-    expect(result.response?.status).toBe(401);
+    if (!result.authenticated) {
+      expect(result.response.status).toBe(401);
+    }
   });
 
   it('should authenticate valid Cloudflare Access header with matching user in allowed list', async () => {

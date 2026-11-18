@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import {
-  Database,
   Search,
   ChevronLeft,
   ChevronRight,
@@ -13,23 +12,19 @@ import {
   Bell,
   Users,
   UserPlus,
-  HelpCircle,
   ShieldCheck,
   Trash2,
   Plus,
-  Table as TableIcon,
   RotateCcw,
   RotateCw,
   Folder,
   FolderPlus,
   BarChart3,
-  Layers,
   FileCode,
   Edit3,
   Copy,
   Camera,
   Lock,
-  X,
   ArrowUpRight
 } from 'lucide-react';
 import { FluxTableLogo, YarkenSymbol } from '@/components/brand/yarken-logo';

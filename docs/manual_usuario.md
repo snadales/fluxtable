@@ -36,14 +36,21 @@ flowchart TD
 
 ## 3. Navegación e Interfaz
 
-La interfaz sigue los estándares del **Brandbook Cobalto**:
-- **Barra de Navegación Superior**:
-  - Logotipo canónico **Lechuza-Y** con baldosa azul Cobalto (`#1D5BD8`) y el identificador `FluxTable · SISTEMA YARKEN`.
-  - Selector de Workspaces y botón de acceso directo a Ajustes de Cuenta y Tokens.
-- **Barra Lateral Izquierda**:
-  - Lista de tablas de la base activa.
-  - Sección **BI & Analytics**: acceso a los Dashboards y carpetas de reportes.
-- **Lienzo Central**: Fondo tenue `bg` (`#F7F8FA`) que eleva las tarjetas y tablas en blanco puro (`surface: #FFFFFF`).
+La interfaz sigue una arquitectura de **Shell Raíz Persistente (Single-Shell)** bajo el **Brandbook Cobalto**:
+- **Barra Global de Pestañas Multi-Documento (`DocumentTabBar`)**:
+  - Ubicada en la parte superior, permite mantener abiertas simultáneamente múltiples pestañas de trabajo: Espacios de Trabajo (Home), Tablas de datos (`T865`), Dashboards consolidados (`D001`) y Catálogos de Módulos.
+  - Cada pestaña recuerda su posición, filtros y vistas, y puede cerrarse individualmente con una cruz (`×`).
+- **Barra Lateral Izquierda Unificada (`AppSidebar`)**:
+  - **Selector de Workspace (`[N] Negocios ▾`)**: Menú desplegable para conmutar al instante entre espacios de trabajo.
+  - **Tarjeta de Usuario (`SE Sebastián Nadales ▾`)**: Acceso rápido a perfil, preferencias, cambio de nombre y cierre de sesión.
+  - **Buscador Rápido (`⌘K`)**: Filtra módulos, carpetas y tablas al instante.
+  - **Accesos de Sistema**: `Espacios de Trabajo` (con contador en vivo), `Recientes`, `Papelera` y `Registro de auditoría`.
+  - **Árbol de Carpetas y Módulos**: Despliega la jerarquía de módulos del área. Al hacer clic en un módulo abre su Catálogo de Negocio, y al expandir el chevron revela sus Indicadores (K), Gráficos (G), Tablas (T) y Dashboards (D).
+- **Catálogo Estructurado de Activos (`AssetCatalogView`)**:
+  - Clasifica los componentes del módulo en 4 secciones canónicas: `01 Indicadores`, `02 Gráficos`, `03 Tablas` y `05 Dashboards`.
+  - Botón interactivo `[+ Nueva Subcarpeta]` para crear subcarpetas anidadas con emojis y colores.
+- **Inspector de Receta de Construcción de KPIs (`KpiRecipeModal`)**:
+  - Al hacer clic en cualquier indicador ($K001-K999$), se despliega un inspector con el valor en vivo, la consulta SQL / Metabase de construcción, la ventana de refresco y el semáforo de umbrales SLA (**Óptimo**, **Advertencia**, **Crítico**), con accesos directos a la tabla fuente o al tablero.
 
 ---
 

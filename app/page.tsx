@@ -30,10 +30,9 @@ import { NewFolderModal } from '@/components/modals/new-folder-modal';
 import { 
   Database, Table as TableIcon, LayoutGrid, Kanban as KanbanIcon, 
   Calendar as CalendarIcon, FileText, Search, Download, Plus, Filter, ArrowUpDown, X, 
-  ExternalLink, Clock, ShieldCheck, Trash2, RotateCcw, RefreshCw,
-  CheckCircle2, AlertCircle, Sparkles, PlusCircle, Eye, Rss, Copy, Check,
-  Ship, Package, ShoppingCart, Briefcase, BarChart2, Globe, Tag, Settings,
-  Key, User, LogOut, ChevronDown, Folder, Palette, ChevronRight, Home, ArrowLeft, LayoutDashboard,
+  Clock, Trash2, RotateCcw, RefreshCw, CheckCircle2, AlertCircle, Eye, Rss, Copy, Check,
+  Ship, Package, ShoppingCart, Briefcase, BarChart2, Globe, Settings,
+  ChevronDown, Folder, Palette, LayoutDashboard,
   Webhook, History, Layers, MoreHorizontal, MessageSquare
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';

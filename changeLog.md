@@ -2,6 +2,45 @@
 
 ---
 
+## 🗓️ [2026-11-17] - Fase 15: Limpieza de Código, Depuración de Servicio y Sincronización Total de Documentación (Issue #38)
+
+### 🎯 Intención
+Ejecutar una auditoría y mantenimiento exhaustivo de la plataforma ([Issue #38](https://github.com/snadales/BaserowLite/issues/38)):
+1. Limpiar el código fuente eliminando imports de iconos y variables no utilizadas en componentes clave (`app/page.tsx`, `AppSidebar`, `WorkspacesDashboard`).
+2. Resolver advertencias y discrepancias de tipado TypeScript estricto (`npx tsc --noEmit`).
+3. Depurar el servicio en Bastión ZBook, verificando logs de inicio, telemetría y salud de contenedores (`baserow_lite_app`, `baserow_lite_db`).
+4. Actualizar sincrónicamente toda la suite de documentación maestra (`readMe.md`, `docs/architecture.md`, `docs/dataModel.md`, `docs/manual_tecnico.md`, `docs/manual_usuario.md`, `docs/manual_bi_analytics.md`) reflejando los hitos de Single-Shell, DocumentTabBar, Carpetas Recursivas, M:N Reusabilidad analítica y KpiRecipeModal.
+
+### 📍 Estado Actual
+- **Depuración del Servicio en Producción**:
+  - Contenedores Docker `baserow_lite_app` y `baserow_lite_db` operando en estado `healthy` en ZBook (`192.168.60.25:8097`).
+  - Inicio de Next.js en 298ms con 0 errores y endpoint `/api/health` respondiendo `200 OK` en <5ms.
+- **Limpieza de Código y Tipos**:
+  - Eliminados más de 20 iconos y exports huérfanos de `lucide-react` en `app/page.tsx`, `components/navigation/app-sidebar.tsx` y `components/workspaces/workspaces-dashboard.tsx`.
+  - Corregido el narrow de tipos en `lib/auth/__tests__/auth-guard.test.ts`. `npx tsc --noEmit` ejecuta con **0 errores**.
+- **Suite de Documentación Actualizada**:
+  - `readMe.md`: Incorporadas características de Single-Shell (0px layout shift), DocumentTabBar, Carpetas N-Niveles con emojis, Reusabilidad M:N de tarjetas y KpiRecipeModal.
+  - `docs/architecture.md`: Actualizado diagrama de topología Mermaid con el Shell Raíz Persistente y el desacoplamiento de capas visual vs relacional.
+  - `docs/dataModel.md`: Incorporadas las definiciones de `bi_folders`, `bi_dashboards`, `bi_cards`, `bi_dashboard_cards`, `webhooks`, `snapshots` y `comments`.
+  - `docs/manual_bi_analytics.md`: Añadidas secciones de invariancia SQL, reusabilidad $M:N$ de tarjetas ($K007$) y auditoría de recetas de KPIs.
+  - `docs/manual_tecnico.md`: Actualizada la estructura de directorios y la versión del stack tecnológico (Next.js 15, Drizzle ORM, Vitest).
+  - `docs/manual_usuario.md`: Documentada la navegación unificada, DocumentTabBar y el Catálogo de Activos de Negocio.
+- **Control de Calidad**:
+  - 64/64 pruebas unitarias pasando al 100% (`npm test`).
+  - 28/28 páginas Next.js compiladas de forma óptima (`npm run build`).
+
+### 🏁 Estado Deseado
+- Plataforma limpia, sin advertencias de compilación ni código muerto, con documentación técnica y de usuario perfectamente sincronizada con la realidad operativa.
+
+### ⚠️ Problemas Encontrados y Soluciones
+- *Problema:* `auth-guard.test.ts` generaba error de TypeScript por acceso a `result.response` en una unión discriminada.
+  *Solución:* Se agregó el guard `if (!result.authenticated)` permitiendo a TypeScript inferir el tipo exacto sin advertencias.
+
+### 🔄 Iteraciones e Historial de Ejecución
+1. **Iteración 138**: Creación de Issue #38, corrección de tipado en tests, depuración de imports no utilizados, actualización integral de la suite de 6 documentos en `docs/` y `readMe.md`, validación de 64/64 pruebas y sincronización a producción.
+
+---
+
 ## 🗓️ [2026-11-17] - Fase 14: Unificación de Single-Shell AppSidebar y Erradicación del Salto de Navegación (Issue #37)
 
 ### 🎯 Intención

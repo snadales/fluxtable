@@ -1,39 +1,64 @@
 # 🏗️ Arquitectura General del Sistema y Despliegue
 
-Este documento describe la arquitectura global, la infraestructura en contenedores, las políticas de seguridad y la operación local de **BaserowLite**.
+Este documento describe la arquitectura global, la infraestructura en contenedores, las políticas de seguridad y la operación local y productiva de **FluxTable** (Sistema Yarken).
 
 ---
 
-## 1. Topología del Sistema
+## 1. Topología del Sistema y Arquitectura Single-Shell
 
 ```mermaid
 flowchart TD
     User["Usuario / Navegador / API Client"] --> ReverseProxy["Next.js 15 Standalone (:3000)"]
     
-    subgraph Containerized Application
-        ReverseProxy --> AppRouter["App Router (Dashboard, Grid, Kanban, Form)"]
-        ReverseProxy --> RouteHandlers["Route Handlers (/api/v1/...)"]
-        ReverseProxy --> ServerActions["Server Actions (Mutaciones atómicas)"]
+    subgraph SingleShell ["Shell Raíz Persistente (app/page.tsx)"]
+        ReverseProxy --> TabBar["Barra Global Multi-Documento (DocumentTabBar)"]
+        ReverseProxy --> RootSidebar["AppSidebar Persistente (0px Layout Shift)"]
         
-        AppRouter --> ViewEngine["Motor de Vistas (TanStack Virtual, DND)"]
-        RouteHandlers --> AuthGuard["Guard de Tokens & RBAC"]
-        ServerActions --> FormulaEngine["Evaluador AST Formula-Lite"]
+        TabBar --> DynamicCanvas["Lienzo de Contenido Dinámico"]
         
-        AuthGuard --> DrizzleORM["Drizzle ORM Engine"]
-        FormulaEngine --> DrizzleORM
-        
-        StorageModule["LocalStorageProvider"] --> UploadsVol[("./data/uploads (Volumen Local)")]
+        subgraph Views ["Modos de Vista (viewMode)"]
+            DynamicCanvas --> VWorkspaces["WorkspacesDashboard (Grid de Módulos)"]
+            DynamicCanvas --> VCatalog["AssetCatalogView (Catálogo de Indicadores K, G, T, D)"]
+            DynamicCanvas --> VAnalytics["BiAnalyticsPage (Reemplazo Nativo Metabase)"]
+            DynamicCanvas --> VDatabase["DataGrid / Kanban / Calendar / Form"]
+        end
     end
 
-    subgraph Data Storage
+    subgraph CoreEngine ["Módulos de Motor y Servicios"]
+        VDatabase --> FormulaEngine["Evaluador AST Formula-Lite"]
+        VAnalytics --> BiEngine["Motor Analítico (MoM, YoY, P90, Cache LRU)"]
+        VAnalytics --> KpiInspector["KpiRecipeModal (Receta SQL/Metabase)"]
+        RootSidebar --> AuthGuard["Guard de Tokens & RBAC Zero Trust"]
+        DynamicCanvas --> WebhookDispatcher["Webhook Dispatcher (n8n Events)"]
+        DynamicCanvas --> SnapshotManager["Snapshot & Rollback Manager"]
+    end
+
+    subgraph Persistence ["Almacenamiento y Persistencia"]
+        AuthGuard --> DrizzleORM["Drizzle ORM Engine"]
+        BiEngine --> DrizzleORM
+        FormulaEngine --> DrizzleORM
         DrizzleORM --> Postgres[(PostgreSQL 16 Alpine)]
-        Postgres --> DBVol[("./data/postgres (Volumen Local)")]
+        Postgres --> DBVol[("./data/postgres")]
     end
 ```
 
 ---
 
-## 2. Docker Compose para Ejecución Local con Un Solo Comando
+## 2. Principios de Diseño y Desacoplamiento de Capas
+
+1. **Arquitectura Single-Shell (Issue #37):**
+   - El Sidebar (`AppSidebar`) vive una sola vez a nivel raíz en `app/page.tsx`, envolviendo el lienzo dinámico.
+   - Jamás se desmonta ni parpadea al alternar entre pestañas o módulos. El selector de Workspace, el card de usuario y el estado expandido del árbol se mantienen persistentes.
+2. **Desacoplamiento entre Capa Visual y Capa Relacional (Issue #36):**
+   - **Capa Visual / Organizativa (`bi_folders`):** Soporta infinitos niveles de subcarpetas (`parentId`), códigos de negocio (`01`, `03.2`), emojis nativos y colores de acento.
+   - **Capa Física / Invariancia SQL:** Las tablas (`tables`, `records`) y consultas analíticas permanecen atadas a sus IDs inmutables (`t026_flujos_n8n`, `K007`). Mover o crear carpetas jamás rompe endpoints, vistas materializadas ni workflows de n8n.
+3. **Reusabilidad Analítica $M:N$ (Issue #36):**
+   - Las tarjetas analíticas (`bi_cards`) son entidades autónomas vinculadas a módulos de negocio.
+   - La tabla pivote `bi_dashboard_cards` permite que una misma tarjeta ($K007$) se incruste en múltiples tableros ejecutivos ($D001$, $D003$) con posiciones y filtros independientes.
+
+---
+
+## 3. Docker Compose para Ejecución Local y en Bastión ZBook
 
 El proyecto se inicia completamente con:
 ```bash

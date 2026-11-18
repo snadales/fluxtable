@@ -329,3 +329,130 @@ export interface ViewConfig {
   successMessage?: string;
 }
 ```
+
+---
+
+## 5. Módulo de Webhooks, Snapshots y Comentarios Polimórficos
+
+```typescript
+// -----------------------------------------------------------------------------
+// Webhooks Salientes y Snapshots Atómicos (Issues #28, #30)
+// -----------------------------------------------------------------------------
+export const webhooks = pgTable('webhooks', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  tableId: uuid('table_id').references(() => tables.id, { onDelete: 'cascade' }).notNull(),
+  name: text('name').notNull(),
+  url: text('url').notNull(),
+  events: text('events').array().notNull(), // ['rows.created', 'rows.updated', 'rows.deleted']
+  secret: text('secret'),
+  isActive: boolean('is_active').default(true).notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+});
+
+export const snapshots = pgTable('snapshots', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  tableId: uuid('table_id').references(() => tables.id, { onDelete: 'cascade' }).notNull(),
+  name: text('name').notNull(),
+  description: text('description'),
+  schemaSnapshot: jsonb('schema_snapshot').notNull(), // Columnas y metadatos
+  recordsSnapshot: jsonb('records_snapshot').notNull(), // Registros completos
+  rowCount: integer('row_count').notNull(),
+  createdBy: text('created_by').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+});
+
+export const comments = pgTable('comments', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  targetType: text('target_type', { enum: ['row', 'table', 'dashboard', 'card'] }).notNull(),
+  targetId: text('target_id').notNull(),
+  authorName: text('author_name').notNull(),
+  authorEmail: text('author_email').notNull(),
+  content: text('content').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+});
+```
+
+---
+
+## 6. Módulo BI & Business Analytics (Reemplazo de Metabase)
+
+```typescript
+// -----------------------------------------------------------------------------
+// Carpetas Recursivas N-Niveles, Dashboards y Tarjetas M:N (Issues #32-#36)
+// -----------------------------------------------------------------------------
+
+// Carpetas con anidamiento jerárquico infinito (parentId) y personalización visual
+export const biFolders = pgTable('bi_folders', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  workspaceId: uuid('workspace_id').references(() => workspaces.id, { onDelete: 'cascade' }).notNull(),
+  baseId: uuid('base_id').references(() => bases.id, { onDelete: 'cascade' }),
+  parentId: uuid('parent_id'), // Auto-referencia para N-niveles de subcarpetas
+  name: text('name').notNull(),
+  code: text('code'), // Ej: '01', '03.2'
+  icon: text('icon'), // Soporte de emojis o nombres de icono
+  color: text('color'), // Token de color Yarken (blue, purple, emerald, etc.)
+  description: text('description'),
+  order: integer('order').default(0).notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+});
+
+// Dashboards analíticos consolidadores
+export const biDashboards = pgTable('bi_dashboards', {
+  id: text('id').primaryKey(), // Ej: 'D001', 'D003'
+  workspaceId: uuid('workspace_id').references(() => workspaces.id, { onDelete: 'cascade' }).notNull(),
+  folderId: uuid('folder_id').references(() => biFolders.id, { onDelete: 'set null' }),
+  name: text('name').notNull(),
+  description: text('description'),
+  tags: text('tags').array(),
+  isStarred: boolean('is_starred').default(false).notNull(),
+  order: integer('order').default(0).notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+});
+
+// Tarjetas Analíticas Autónomas (KPIs K001-K999, Gráficos G001-G999, Tablas T001-T999)
+export const biCards = pgTable('bi_cards', {
+  id: text('id').primaryKey(), // Ej: 'K007', 'G001'
+  dashboardId: text('dashboard_id').references(() => biDashboards.id, { onDelete: 'set null' }),
+  folderId: uuid('folder_id').references(() => biFolders.id, { onDelete: 'set null' }),
+  name: text('name').notNull(),
+  description: text('description'),
+  type: text('type', { enum: ['metric', 'chart', 'table', 'markdown'] }).notNull(),
+  chartType: text('chart_type', { enum: ['line', 'bar', 'pie', 'funnel', 'gauge', 'heatmap'] }),
+  queryConfig: jsonb('query_config').notNull(), // { dataset, sql, metrics, dimensions, filters }
+  timeRange: text('time_range').default('30d').notNull(),
+  comparePeriod: text('compare_period').default('mom').notNull(),
+  visualizationSettings: jsonb('visualization_settings').default({}).notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+});
+
+// Relación M:N entre Dashboards y Tarjetas Analíticas
+export const biDashboardCards = pgTable('bi_dashboard_cards', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  dashboardId: text('dashboard_id').references(() => biDashboards.id, { onDelete: 'cascade' }).notNull(),
+  cardId: text('card_id').references(() => biCards.id, { onDelete: 'cascade' }).notNull(),
+  gridPosJson: jsonb('grid_pos_json').notNull().default({ x: 0, y: 0, w: 6, h: 4 }),
+  parameterMappings: jsonb('parameter_mappings').default({}).notNull(),
+  order: integer('order').default(0).notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+});
+
+// Umbrales y Alertas Operativas
+export const biThresholds = pgTable('bi_thresholds', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  cardId: text('card_id').references(() => biCards.id, { onDelete: 'cascade' }).notNull(),
+  name: text('name').notNull(),
+  optimalCondition: text('optimal_condition'),
+  warningCondition: text('warning_condition'),
+  criticalCondition: text('critical_condition'),
+  status: text('status', { enum: ['optimal', 'warning', 'critical'] }).default('optimal').notNull(),
+  notificationChannels: text('notification_channels').array().default(['telegram']),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+});
+```
+

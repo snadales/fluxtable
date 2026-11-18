@@ -90,6 +90,22 @@ Para mantener cientos de reportes ordenados:
 - **Cuadrícula Responsiva**: Las tarjetas se ajustan automáticamente a resoluciones de escritorio, tablets o pantallas de monitoreo.
 - **Modo Presentación (Kiosk Mode)**: Oculta la barra de navegación lateral y superior para proyectar el dashboard en pantallas de operaciones sin distracciones.
 
+### 5.3. Desacoplamiento de Capas: Invariancia SQL vs Carpetas Visuales
+FluxTable separa tajantemente la organización visual humana de la capa de ejecución de datos:
+- **Capa Visual (`bi_folders`)**: Subcarpetas anidadas con infinitos niveles (`parentId`), emojis personalizables (📁, 📊, ⚡, 🤖, etc.) y colores Cobalto Yarken. Los usuarios pueden reorganizar, renombrar o mover carpetas libremente.
+- **Capa Física / Invariancia SQL**: Las consultas analíticas se ejecutan contra tablas físicas (`t026_flujos_n8n`) o tarjetas identificadas por códigos inmutables (`K007`). Ningún cambio en la estructura visual de carpetas altera ni rompe consultas SQL, endpoints REST ni flujos de n8n.
+
+### 5.4. Reusabilidad Analítica $M:N$ de Tarjetas (`bi_dashboard_cards`)
+A diferencia de herramientas que aíslan los componentes dentro de un único reporte:
+- Las **Tarjetas Analíticas** (`bi_cards`) son activos de datos independientes (`K001-K999`, `G001-G999`).
+- Mediante la tabla de asociación `bi_dashboard_cards`, un mismo indicador (por ejemplo $K007$: *Flujos n8n ejecutados 24h*) puede incrustarse tanto en el tablero de operaciones ($D003$) como en el tablero ejecutivo consolidado ($D001$) sin duplicar código ni consultas.
+
+### 5.5. Inspector de Receta de Construcción de KPIs (`KpiRecipeModal`)
+Al hacer clic en el botón de inspección o en cualquier KPI:
+- Se despliega el modal interactivo con la **Receta Técnica de Construcción (SQL / Metabase)**.
+- Muestra la consulta SQL exacta en vivo, la ventana temporal móvil (ej: 24 horas), la frecuencia de refresco y los umbrales de alerta SLA (**Óptimo**, **Advertencia**, **Crítico**).
+- Incluye botones de salto directo para abrir la **Tabla Fuente** (`T026`) o ver el **Dashboard Consolidador** (`D003`).
+
 ---
 
 ## 6. Sistema de Alertas por Umbrales y Notificaciones

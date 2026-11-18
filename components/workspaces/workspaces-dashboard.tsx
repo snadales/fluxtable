@@ -2,10 +2,10 @@
 
 import React, { useState } from 'react';
 import { 
-  Database, LayoutDashboard, Plus, Search, ChevronDown, MoreHorizontal, 
-  Settings, Users, Trash2, Clock, FileText, ChevronRight, Check,
-  Folder, ShieldCheck, BarChart3, Edit3, Copy, Camera, Download, Upload, LogOut, X,
-  Layers, Lock
+  LayoutDashboard, Plus, Search, ChevronDown, MoreHorizontal, 
+  Settings, Users, Trash2, Clock, FileText, ChevronRight,
+  Folder, BarChart3, Edit3, Copy, Camera, Download, Upload, X,
+  Layers
 } from 'lucide-react';
 import { FluxTableLogo, YarkenSymbol } from '@/components/brand/yarken-logo';
 

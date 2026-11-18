@@ -12,14 +12,14 @@ FluxTable está construido bajo un enfoque moderno full-stack en TypeScript sobr
 
 | Capa | Tecnología | Versión | Propósito |
 | :--- | :--- | :--- | :--- |
-| **Framework** | Next.js (App Router) | `14.2.x` | Renderizado SSR, Server Components, API Routes |
+| **Framework** | Next.js (App Router) | `15.5.x` | Renderizado SSR, Server Components, API Routes |
 | **Lenguaje** | TypeScript | `5.6.x` | Tipado estático estricto en frontend, backend y ORM |
 | **Estilos** | Tailwind CSS | `3.4.x` | Utilidades de diseño, tokens del Brandbook Cobalto |
 | **Base de Datos** | PostgreSQL Alpine | `16.x` | Persistencia relacional, soporte JSONB y transacciones |
 | **ORM** | Drizzle ORM + Kit | `0.33.x` | Mapeo tipado, migraciones reproducibles y queries SQL |
-| **Motor Analítico** | DuckDB (WASM/Embedded) | `1.1.x` | Agregaciones complejas y percentiles in-memory |
+| **Motor Analítico** | BI Engine + QueryBuilder | `1.0.x` | Agregaciones complejas, time intelligence y percentiles |
 | **Visualización** | Recharts + Lucide Icons | `2.12.x` | Gráficos vectoriales SVG y suite de iconografía |
-| **Testing** | Jest / Vitest + Python | `29.x / 3.12` | 58 unit tests y suites de pruebas de estrés y pentest |
+| **Testing** | Vitest + TypeScript | `2.1.x` | 64 unit tests y suites de pruebas de estrés y pentest |
 
 ---
 
@@ -27,27 +27,43 @@ FluxTable está construido bajo un enfoque moderno full-stack en TypeScript sobr
 
 ```
 07_BaserowLite/
-├── app/                              # Next.js 14 App Router
+├── app/                              # Next.js 15 App Router
 │   ├── api/                          # Endpoints REST del backend
+│   │   ├── admin/                    # Herramientas administrativas y métricas
 │   │   ├── auth/                     # Autenticación y sesiones
 │   │   ├── bi/                       # Motor analítico (/query, /dashboards, /cards, /folders)
+│   │   ├── business/                 # Catálogo estructurado de activos (/catalog)
+│   │   ├── database/                 # Tablas, campos, filas, bases, webhooks, snapshots
 │   │   ├── health/                   # Endpoint de telemetría y health check
-│   │   └── v1/                       # APIs públicas de workspaces, tablas, filas y esquemas
+│   │   └── v1/                       # APIs públicas de attachments, audit-logs, calendar ical
 │   ├── login/                        # Pantalla de inicio de sesión Cobalto
 │   ├── globals.css                   # Variables CSS y estilos base del Brandbook
 │   ├── layout.tsx                    # Root Layout con fuentes Manrope y JetBrains Mono
-│   └── page.tsx                      # Vista principal y carga del dashboard
+│   └── page.tsx                      # Vista principal (Arquitectura Single-Shell)
 ├── components/                       # Componentes React reutilizables
+│   ├── assets/                       # Catálogo de Activos de Negocio (AssetCatalogView)
+│   ├── audit/                        # Auditoría forense en drawer lateral (AuditLogDrawer)
+│   ├── bi/                           # Componentes analíticos (BiAnalyticsPage, BiCardRenderer)
 │   ├── brand/                        # Logotipo Yarken Lechuza-Y y lockup oficial
-│   ├── grid/                         # Motor de tabla editable y virtualización de celdas
-│   ├── modals/                       # Diálogos de creación de campos, vistas y tarjetas BI
-│   ├── views/                        # Vistas de tabla (Grid, Kanban, Formulario, Calendario)
-│   └── workspaces/                   # Dashboard de gestión de espacios y aplicaciones
+│   ├── calendar/                     # Vista de calendario con sincronización iCal
+│   ├── comments/                     # Comentarios contextuales polimórficos
+│   ├── grid/                         # DataGrid virtualizado, filtros, orden y columnas
+│   ├── modals/                       # KpiRecipeModal, NewFolderModal, NewModuleModal, etc.
+│   ├── navigation/                   # AppSidebar persistente y DocumentTabBar multi-pestaña
+│   ├── ui/                           # Badges, ProgressBar, Rating
+│   └── workspaces/                   # WorkspacesDashboard (Grid de módulos agrupados por área)
 ├── db/                               # Capa de Base de Datos y ORM
 │   ├── index.ts                      # Instancia del cliente PostgreSQL con Drizzle
 │   ├── schema.ts                     # Definición de tablas y relaciones tipadas
+│   ├── seed.ts                       # Sembrado de datos de demostración
 │   └── migrations/                   # Archivos SQL de migración versionados
 ├── lib/                              # Lógica de negocio del servidor y utilidades
+│   ├── audit/                        # Trazabilidad y actor lineage
+│   ├── auth/                         # Guard de autenticación y RBAC
+│   ├── bi/                           # Query builder, pool manager, threshold checker
+│   ├── formula/                      # Evaluador AST seguro (Formula-Lite)
+│   └── storage/                      # Almacenamiento local de adjuntos
+```
 │   ├── auth.ts                       # Verificación de JWT, cookies de sesión y API tokens
 │   ├── bi/                           # Motor analítico y conectores
 │   │   ├── analytics/query-builder.ts# Generador de consultas SQL parametrizadas y filtros
