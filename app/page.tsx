@@ -483,11 +483,25 @@ export default function HomePage() {
   }, [tablesList, metadata.tableName]);
 
   // Abrir dashboard en pestaña
-  const openDashboardTab = useCallback((dashboardId: string, codeHint?: string, nameHint?: string) => {
-    const tabId = `dashboard-${dashboardId}`;
-    const dashboards = useDashboardStore.getState().dashboards;
-    const foundDash = dashboards.find(d => d.id === dashboardId || d.code === dashboardId);
-    const title = nameHint || foundDash?.name || `Dashboard ${dashboardId}`;
+  const openDashboardTab = useCallback(async (dashboardId?: string, codeHint?: string, nameHint?: string) => {
+    let store = useDashboardStore.getState();
+    if (!store.dashboards || store.dashboards.length === 0) {
+      await store.fetchDashboardsAndFolders();
+      store = useDashboardStore.getState();
+    }
+
+    let targetId = dashboardId;
+    let foundDash = store.dashboards?.find(d => d.id === targetId || d.code === targetId);
+
+    // Si no se encuentra el dashboard solicitado o no se pasó ID, seleccionar el primer dashboard disponible
+    if (!foundDash && store.dashboards && store.dashboards.length > 0) {
+      foundDash = store.dashboards[0];
+      targetId = foundDash.id || foundDash.code;
+    }
+
+    const effectiveId = targetId || 'D002';
+    const tabId = `dashboard-${effectiveId}`;
+    const title = nameHint || foundDash?.name || `Dashboard ${effectiveId}`;
     const code = codeHint || foundDash?.code || 'D';
 
     setOpenTabs((prev) => {
@@ -503,13 +517,13 @@ export default function HomePage() {
           type: 'dashboard',
           code,
           closable: true,
-          params: { dashboardId },
+          params: { dashboardId: effectiveId },
         },
       ];
     });
 
     setActiveTabId(tabId);
-    useDashboardStore.getState().selectDashboard(dashboardId);
+    await useDashboardStore.getState().selectDashboard(effectiveId);
     setViewMode('analytics');
   }, []);
 
@@ -937,7 +951,7 @@ export default function HomePage() {
             openCatalogTab(base, defaultTab);
           }}
           onOpenWorkspaces={() => handleSelectTab('workspaces')}
-          onOpenAnalytics={() => openDashboardTab('D001')}
+          onOpenAnalytics={() => openDashboardTab()}
           onOpenTrash={() => {
             loadTrash();
             setShowTrashModal(true);
@@ -974,7 +988,7 @@ export default function HomePage() {
                 loadTrash();
                 setShowTrashModal(true);
               }}
-              onOpenAnalytics={() => openDashboardTab('D001')}
+              onOpenAnalytics={() => openDashboardTab()}
               user={{
                 name: user.name,
                 email: user.email,

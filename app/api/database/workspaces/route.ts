@@ -94,27 +94,37 @@ export async function GET(request: NextRequest) {
 
           const indicators = bCards
             .filter((c) => c.chartType === 'kpi')
-            .map((k) => ({
-              id: k.id,
-              code: k.code,
-              name: k.name,
-              displayValue: (k.visualConfigJson as any)?.displayValue,
-              growth: (k.visualConfigJson as any)?.growth,
-              subtitle: (k.visualConfigJson as any)?.subtitle,
-              sourceTable: (k.visualConfigJson as any)?.sourceTable,
-              dashboardId: k.dashboardId,
-            }));
+            .map((k) => {
+              const dash = wDashboards.find((d) => d.id === k.dashboardId);
+              return {
+                id: k.id,
+                code: k.code,
+                name: k.name,
+                displayValue: (k.visualConfigJson as any)?.displayValue,
+                growth: (k.visualConfigJson as any)?.growth,
+                subtitle: (k.visualConfigJson as any)?.subtitle,
+                sourceTable: (k.visualConfigJson as any)?.sourceTable,
+                dashboardId: k.dashboardId,
+                dashboardCode: dash?.code || 'D002',
+                dashboardName: dash?.name || 'Dashboard',
+              };
+            });
 
           const charts = bCards
             .filter((c) => c.chartType !== 'kpi')
-            .map((g) => ({
-              id: g.id,
-              code: g.code,
-              name: g.name,
-              chartType: g.chartType,
-              sourceTable: (g.visualConfigJson as any)?.sourceTable,
-              dashboardId: g.dashboardId,
-            }));
+            .map((g) => {
+              const dash = wDashboards.find((d) => d.id === g.dashboardId);
+              return {
+                id: g.id,
+                code: g.code,
+                name: g.name,
+                chartType: g.chartType,
+                sourceTable: (g.visualConfigJson as any)?.sourceTable,
+                dashboardId: g.dashboardId,
+                dashboardCode: dash?.code || 'D002',
+                dashboardName: dash?.name || 'Dashboard',
+              };
+            });
 
           const relatedDashboards = wDashboards.filter(
             (d) =>

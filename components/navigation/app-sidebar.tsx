@@ -588,9 +588,9 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
                               <button
                                 key={k.id}
                                 type="button"
-                                onClick={() => onInspectKpi ? onInspectKpi(k.code) : onOpenCatalog ? onOpenCatalog(b, 'indicators') : null}
+                                onClick={() => onSelectDashboard ? onSelectDashboard(k.dashboardId || k.dashboardCode || 'D002') : onInspectKpi ? onInspectKpi(k.code) : onOpenCatalog ? onOpenCatalog(b, 'indicators') : null}
                                 className="w-full flex items-center justify-between px-2 py-0.5 rounded text-[10px] text-ink-3 hover:text-ink hover:bg-surface-sunken/60 truncate cursor-pointer group/k"
-                                title={`Ver Receta Técnica de Construcción de ${k.code} (SQL, Umbrales y Linaje)`}
+                                title={`Ver ${k.code} (${k.name}) en Dashboard ${k.dashboardCode || 'D002'}`}
                               >
                                 <span className="font-mono text-blue-700 font-bold group-hover/k:underline">{k.code}</span>
                                 <span className="truncate max-w-[100px] text-left">{k.name}</span>
@@ -623,10 +623,11 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
                               <button
                                 key={g.id}
                                 type="button"
-                                onClick={() => onOpenCatalog ? onOpenCatalog(b, 'charts') : null}
-                                className="w-full flex items-center justify-between px-2 py-0.5 rounded text-[10px] text-ink-3 hover:text-ink hover:bg-surface-sunken/60 truncate"
+                                onClick={() => onSelectDashboard ? onSelectDashboard(g.dashboardId || g.dashboardCode || 'D002') : onOpenCatalog ? onOpenCatalog(b, 'charts') : null}
+                                className="w-full flex items-center justify-between px-2 py-0.5 rounded text-[10px] text-ink-3 hover:text-ink hover:bg-surface-sunken/60 truncate cursor-pointer group/g"
+                                title={`Ver ${g.code} (${g.name}) en Dashboard ${g.dashboardCode || 'D002'}`}
                               >
-                                <span className="font-mono text-emerald-700 font-bold">{g.code}</span>
+                                <span className="font-mono text-emerald-700 font-bold group-hover/g:underline">{g.code}</span>
                                 <span className="truncate max-w-[120px] text-left">{g.name}</span>
                               </button>
                             ))}
