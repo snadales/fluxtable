@@ -2,6 +2,46 @@
 
 ---
 
+## 🗓️ [2026-11-17] - Fase 12: Agrupación Jerárquica por Área de Negocio y Modal de Creación de Módulos Unificados (Issue #35)
+
+### 🎯 Intención
+Eliminar de forma definitiva la desconexión visual y la desorganización de módulos en el Home de Workspaces ([Issue #35](https://github.com/snadales/BaserowLite/issues/35)):
+1. Remover el botón redundante y aislado "Dashboards & Analítica (NUEVO)" del sidebar de `WorkspacesDashboard`.
+2. Reemplazar la lista plana y desordenada de 18 tarjetas genéricas "Base de datos" por una estructura agrupada por **Áreas de Negocio** (*Operaciones*, *Comercial*, *Seguridad & Homelab*, *Voz & Asistentes IA*, *Finanzas*, *PIM & Catálogo*).
+3. Transformar la nomenclatura de las tarjetas a **Módulo de Negocio**, exhibiendo sus 4 componentes unificados: Indicadores ($K$), Gráficos ($G$), Tablas ($T$) y Dashboards ($D$).
+4. Diseñar e implementar el modal profesional `NewModuleModal` para crear nuevas Carpetas/Módulos con selector de Nombre, Área, Icono, Color y Descripción, conectado a la nueva API `POST /api/database/bases`.
+
+### 📍 Estado Actual
+- **Remoción del Botón Aislado y Renombrado de Sidebar**:
+  - `components/workspaces/workspaces-dashboard.tsx`: Eliminado el botón flotante "Dashboards & Analítica (NUEVO)".
+  - Renombrada la sección de navegación a `Carpetas y Módulos` con botón `[+ Nuevo Módulo de Negocio]`.
+  - El árbol expandible en el sidebar ahora despliega las 4 subcarpetas canónicas del Framework Yarken (`01 Indicadores`, `02 Gráficos`, `03 Tablas`, `05 Dashboards`) con sus respectivos conteos.
+- **Agrupación Jerárquica por Área de Negocio**:
+  - `components/workspaces/workspaces-dashboard.tsx`: Implementado agrupador reactivo por `b.category`.
+  - Cada área de negocio se presenta con su encabezado distintivo (`📁 Operaciones`, `📁 Comercial`, `📁 Seguridad`, etc.) y contador de módulos.
+  - Cada tarjeta se titula con su nombre de dominio y subtítulo `Módulo de Negocio • {Área}`, eliminando la ambigüedad de "Base de datos".
+  - Las 4 subcarpetas se despliegan como píldoras interactivas con acceso directo a cada vista en `AssetCatalogView`.
+- **Modal de Creación `NewModuleModal`**:
+  - `components/modals/new-module-modal.tsx`: Modal completo con validaciones, selector de categorías existentes o personalizadas, paleta de colores Yarken (Cobalto `#1D5BD8`, Esmeralda, Violeta, Ámbar, Rosa, Cian) y banner explicativo del aprovisionamiento automático de subcarpetas.
+- **API `POST /api/database/bases`**:
+  - `app/api/database/bases/route.ts`: Endpoint robusto que inserta el nuevo módulo en PostgreSQL, asigna su workspace y retorna el objeto listo para navegación.
+- **Integración en `app/page.tsx`**:
+  - Conectado el flujo de creación para que tanto el botón `+` del sidebar como el botón `+ Nuevo Módulo` abran el modal y abran automáticamente la pestaña del nuevo módulo al crearse.
+
+### 🏁 Estado Deseado
+- Espacios de trabajo 100% integrados donde no existan aplicaciones aisladas ni dobles árboles; cada módulo representa un dominio de negocio que agrupa naturalmente sus tablas, indicadores y tableros ejecutivos.
+
+### ⚠️ Problemas Encontrados y Soluciones
+- *Problema:* El usuario percibía que los dashboards seguían separados de las bases de datos debido al botón aislado en el sidebar y a que las tarjetas decían "Base de datos • Reciente".
+  *Solución:* Se retiró el botón aislado, se renombró el concepto a "Módulo de Negocio" y se agruparon las tarjetas por área de negocio con sus 4 subcarpetas visibles e interactivas.
+- *Problema:* La creación de bases usaba un `prompt()` plano de JavaScript que creaba tablas en lugar de bases.
+  *Solución:* Se creó `NewModuleModal` y la ruta `POST /api/database/bases`.
+
+### 🔄 Iteraciones e Historial de Ejecución
+1. **Iteración 135**: Creación de Issue #35, implementación de `NewModuleModal`, endpoint `POST /api/database/bases`, agrupación por área de negocio en `WorkspacesDashboard` y compilación Next.js 28/28.
+
+---
+
 ## 🗓️ [2026-11-17] - Fase 11: Unificación Radical Workspaces-BI (Sidebar Único de Módulos) y Visor de Receta de Construcción de KPIs (Issue #34)
 
 ### 🎯 Intención

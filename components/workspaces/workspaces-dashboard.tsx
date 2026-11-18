@@ -222,22 +222,6 @@ export const WorkspacesDashboard: React.FC<WorkspacesDashboardProps> = ({
                 </span>
               </button>
 
-              {onOpenAnalytics && (
-                <button
-                  type="button"
-                  onClick={onOpenAnalytics}
-                  className="w-full flex items-center justify-between px-3 py-2 rounded-lg font-medium transition-colors text-left text-accent bg-accent-tint hover:bg-accent-tint/80 font-semibold border border-accent/20"
-                >
-                  <div className="flex items-center gap-2.5">
-                    <BarChart3 className="w-4 h-4 text-accent" />
-                    <span>Dashboards & Analítica</span>
-                  </div>
-                  <span className="text-[9px] font-bold px-1.5 py-0.5 bg-accent text-white rounded">
-                    NUEVO
-                  </span>
-                </button>
-              )}
-
               <button
                 type="button"
                 onClick={() => setSidebarTab('recent')}
@@ -268,18 +252,18 @@ export const WorkspacesDashboard: React.FC<WorkspacesDashboardProps> = ({
               </button>
             </div>
 
-            {/* Árbol Jerárquico de Bases de Datos */}
+            {/* Árbol Jerárquico de Carpetas y Módulos de Negocio */}
             <div className="pt-2 border-t border-line space-y-2">
               <div className="flex items-center justify-between px-2 text-[11px] font-bold uppercase tracking-wider text-ink-3">
-                <span>Bases de datos</span>
+                <span>Carpetas y Módulos</span>
                 <button
                   type="button"
                   onClick={() => {
                     const firstWs = workspaces[0];
                     if (firstWs) onCreateDatabase(firstWs.id);
                   }}
-                  className="p-1 rounded hover:bg-surface-sunken text-ink-3 hover:text-ink"
-                  title="Nueva base de datos"
+                  className="p-1 rounded hover:bg-surface-sunken text-ink-3 hover:text-accent transition-colors"
+                  title="Nuevo Módulo de Negocio"
                 >
                   <Plus className="w-3.5 h-3.5" />
                 </button>
@@ -291,7 +275,13 @@ export const WorkspacesDashboard: React.FC<WorkspacesDashboardProps> = ({
                   return (
                     <div key={b.id} className="space-y-0.5">
                       <div
-                        onClick={() => handleItemClick(b)}
+                        onClick={() => {
+                          if (onOpenCatalog && b.subfolders) {
+                            onOpenCatalog(b, 'tables');
+                          } else {
+                            handleItemClick(b);
+                          }
+                        }}
                         className="group flex items-center justify-between px-2.5 py-1.5 rounded-lg hover:bg-surface-sunken cursor-pointer transition-colors text-ink-2 hover:text-ink"
                       >
                         <div className="flex items-center gap-2 truncate">
@@ -306,8 +296,8 @@ export const WorkspacesDashboard: React.FC<WorkspacesDashboardProps> = ({
                               }`}
                             />
                           </button>
-                          <Database className="w-3.5 h-3.5 text-accent shrink-0" />
-                          <span className="truncate font-medium">{b.name}</span>
+                          <Folder className="w-3.5 h-3.5 text-accent shrink-0" />
+                          <span className="truncate font-medium text-xs">{b.name}</span>
                         </div>
 
                         <button
@@ -322,16 +312,70 @@ export const WorkspacesDashboard: React.FC<WorkspacesDashboardProps> = ({
                         </button>
                       </div>
 
-                      {/* Sub-ramas del árbol: Tablas */}
+                      {/* Sub-ramas del árbol: 4 Subcarpetas Canónicas Metabase §1b */}
                       {isExpanded && (
-                        <div className="pl-6 pr-2 py-1 space-y-0.5 border-l border-line ml-3">
+                        <div className="pl-6 pr-2 py-1 space-y-1 border-l border-line ml-3 text-[11px]">
+                          {/* 01 Indicadores */}
+                          {b.subfolders?.indicators && b.subfolders.indicators.length > 0 && (
+                            <div
+                              onClick={() => onOpenCatalog && onOpenCatalog(b, 'indicators')}
+                              className="flex items-center justify-between px-2 py-1 rounded text-ink-3 hover:text-accent hover:bg-surface-sunken cursor-pointer font-medium"
+                            >
+                              <div className="flex items-center gap-1.5 truncate">
+                                <Folder className="w-3 h-3 text-blue-600" />
+                                <span>01 Indicadores</span>
+                              </div>
+                              <span className="text-[9px] font-mono font-bold text-blue-600">
+                                {b.subfolders.indicators.length}
+                              </span>
+                            </div>
+                          )}
+
+                          {/* 02 Gráficos */}
+                          {b.subfolders?.charts && b.subfolders.charts.length > 0 && (
+                            <div
+                              onClick={() => onOpenCatalog && onOpenCatalog(b, 'charts')}
+                              className="flex items-center justify-between px-2 py-1 rounded text-ink-3 hover:text-accent hover:bg-surface-sunken cursor-pointer font-medium"
+                            >
+                              <div className="flex items-center gap-1.5 truncate">
+                                <Folder className="w-3 h-3 text-emerald-600" />
+                                <span>02 Gráficos</span>
+                              </div>
+                              <span className="text-[9px] font-mono font-bold text-emerald-600">
+                                {b.subfolders.charts.length}
+                              </span>
+                            </div>
+                          )}
+
+                          {/* 03 Tablas */}
                           <div
-                            onClick={() => onOpenDatabase(b.id)}
-                            className="flex items-center gap-1.5 px-2 py-1 rounded text-[11px] text-ink-3 hover:text-ink hover:bg-surface-sunken cursor-pointer font-medium"
+                            onClick={() => onOpenCatalog ? onOpenCatalog(b, 'tables') : onOpenDatabase(b.id)}
+                            className="flex items-center justify-between px-2 py-1 rounded text-ink-3 hover:text-accent hover:bg-surface-sunken cursor-pointer font-medium"
                           >
-                            <Layers className="w-3 h-3 text-ink-3" />
-                            <span>Ver todas las tablas</span>
+                            <div className="flex items-center gap-1.5 truncate">
+                              <Layers className="w-3 h-3 text-amber-600" />
+                              <span>03 Tablas</span>
+                            </div>
+                            <span className="text-[9px] font-mono font-bold text-amber-600">
+                              {b.subfolders?.tables?.length || b.tablesCount || 0}
+                            </span>
                           </div>
+
+                          {/* 05 Dashboards */}
+                          {b.subfolders?.dashboards && b.subfolders.dashboards.length > 0 && (
+                            <div
+                              onClick={() => onOpenCatalog && onOpenCatalog(b, 'dashboards')}
+                              className="flex items-center justify-between px-2 py-1 rounded text-ink-3 hover:text-accent hover:bg-surface-sunken cursor-pointer font-medium"
+                            >
+                              <div className="flex items-center gap-1.5 truncate">
+                                <BarChart3 className="w-3 h-3 text-rose-600" />
+                                <span>05 Dashboards</span>
+                              </div>
+                              <span className="text-[9px] font-mono font-bold text-rose-600">
+                                {b.subfolders.dashboards.length}
+                              </span>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
@@ -444,7 +488,7 @@ export const WorkspacesDashboard: React.FC<WorkspacesDashboardProps> = ({
                       className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-surface border border-line text-ink hover:bg-surface-sunken flex items-center gap-1 shadow-2xs transition-colors"
                     >
                       <Plus className="w-3.5 h-3.5" />
-                      <span>Crear</span>
+                      <span>Nuevo Módulo</span>
                     </button>
 
                     <button
@@ -557,217 +601,254 @@ export const WorkspacesDashboard: React.FC<WorkspacesDashboardProps> = ({
                   </div>
                 </div>
 
-                {/* Databases Grid Inside Workspace */}
+                {/* Carpetas y Módulos de Negocio agrupados por Área */}
                 {!isCollapsed && (
                   <div className="p-6">
                     {filteredBases.length > 0 ? (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                        {filteredBases.map((b) => {
-                          const isDashboard = b.type === 'dashboard';
-                          return (
-                            <div
-                              key={b.id}
-                              onClick={() => {
-                                if (onOpenCatalog && b.subfolders) {
-                                  onOpenCatalog(b, 'indicators');
-                                } else {
-                                  handleItemClick(b);
-                                }
-                              }}
-                              className="group p-4 rounded-xl border border-line bg-surface hover:border-accent hover:shadow-md cursor-pointer transition-all flex flex-col justify-between gap-3 relative"
-                            >
-                              <div className="flex items-start justify-between gap-3 w-full">
-                              <div className="flex items-start gap-3 truncate">
-                                <div
-                                  className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-2xs ${
-                                    isDashboard
-                                      ? 'bg-rose-50 text-rose-600 border border-rose-200 dark:bg-rose-950/60 dark:border-rose-900'
-                                      : 'bg-emerald-50 text-emerald-600 border border-emerald-200 dark:bg-emerald-950/60 dark:border-emerald-900'
-                                  }`}
-                                >
-                                  {isDashboard ? (
-                                    <LayoutDashboard className="w-5 h-5" />
-                                  ) : (
-                                    <Database className="w-5 h-5" />
-                                  )}
-                                </div>
-                                <div className="truncate">
-                                  <div className="font-semibold text-xs text-ink group-hover:text-accent transition-colors truncate">
-                                    {b.name}
-                                  </div>
-                                  <div className="text-[11px] text-ink-3 truncate">
-                                    {isDashboard ? 'Dashboard' : 'Base de datos'} • {b.viewedAt || 'Reciente'}
-                                  </div>
-                                </div>
-                              </div>
-
-                              {/* Botón de 3 puntos en Base (Print 3) */}
-                              <div className="relative">
-                                <button
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setActiveBaseMenuId(activeBaseMenuId === b.id ? null : b.id);
-                                  }}
-                                  className="text-ink-3 hover:text-ink p-1 opacity-0 group-hover:opacity-100 hover:bg-surface-sunken rounded-lg transition-all"
-                                  title="Opciones de la base"
-                                >
-                                  <MoreHorizontal className="w-4 h-4" />
-                                </button>
-
-                                {activeBaseMenuId === b.id && (
-                                  <div 
-                                    className="absolute right-0 top-6 w-52 bg-surface border border-line rounded-xl shadow-xl z-50 py-1.5 text-xs text-ink animate-in fade-in zoom-in-95 duration-100"
-                                    onClick={(e) => e.stopPropagation()}
-                                  >
-                                    <div className="px-3 py-1 font-semibold text-ink-3 text-[10px] uppercase tracking-wider border-b border-line mb-1 truncate">
-                                      {b.name}
-                                    </div>
-                                    <button
-                                      type="button"
-                                      onClick={(e) => handleOpenMembers(b.id, b.name, 'base', e)}
-                                      className="w-full px-3 py-1.5 flex items-center gap-2.5 hover:bg-surface-sunken text-left"
-                                    >
-                                      <Users className="w-3.5 h-3.5 text-ink-3" />
-                                      <span>Gestionar miembros</span>
-                                    </button>
-                                    <button
-                                      type="button"
-                                      onClick={(e) => handleOpenApiDocs(b, e)}
-                                      className="w-full px-3 py-1.5 flex items-center gap-2.5 hover:bg-surface-sunken text-left"
-                                    >
-                                      <FileText className="w-3.5 h-3.5 text-ink-3" />
-                                      <span>Ver documentos API</span>
-                                    </button>
-                                    <button
-                                      type="button"
-                                      onClick={(e) => handleOpenRename(b.id, b.name, 'base', e)}
-                                      className="w-full px-3 py-1.5 flex items-center gap-2.5 hover:bg-surface-sunken text-left"
-                                    >
-                                      <Edit3 className="w-3.5 h-3.5 text-ink-3" />
-                                      <span>Renombrar</span>
-                                    </button>
-                                    <button
-                                      type="button"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        alert(`Base "${b.name}" duplicada exitosamente.`);
-                                        setActiveBaseMenuId(null);
-                                      }}
-                                      className="w-full px-3 py-1.5 flex items-center gap-2.5 hover:bg-surface-sunken text-left"
-                                    >
-                                      <Copy className="w-3.5 h-3.5 text-ink-3" />
-                                      <span>Duplicar</span>
-                                    </button>
-                                    <button
-                                      type="button"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        setActiveBaseMenuId(null);
-                                        if (onOpenSnapshots) onOpenSnapshots(b.id);
-                                      }}
-                                      className="w-full px-3 py-1.5 flex items-center gap-2.5 hover:bg-surface-sunken text-left"
-                                    >
-                                      <Camera className="w-3.5 h-3.5 text-ink-3" />
-                                      <span>Instantáneas</span>
-                                    </button>
-                                    <button
-                                      type="button"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        onOpenTrash();
-                                        setActiveBaseMenuId(null);
-                                      }}
-                                      className="w-full px-3 py-1.5 flex items-center gap-2.5 hover:bg-surface-sunken text-left border-t border-line mt-1 pt-1.5"
-                                    >
-                                      <Trash2 className="w-3.5 h-3.5 text-ink-3" />
-                                      <span>Ver basura</span>
-                                    </button>
-                                    <button
-                                      type="button"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        if (confirm(`¿Estás seguro de que deseas borrar "${b.name}"?`)) {
-                                          alert('Base de datos enviada a la papelera.');
-                                        }
-                                        setActiveBaseMenuId(null);
-                                      }}
-                                      className="w-full px-3 py-1.5 flex items-center gap-2.5 hover:bg-error-tint text-error text-left"
-                                    >
-                                      <Trash2 className="w-3.5 h-3.5 text-error" />
-                                      <span>Borrar</span>
-                                    </button>
-                                  </div>
-                                )}
+                      <div className="space-y-8">
+                        {Object.entries(
+                          filteredBases.reduce((acc, b) => {
+                            const cat = b.category || 'Operaciones';
+                            if (!acc[cat]) acc[cat] = [];
+                            acc[cat].push(b);
+                            return acc;
+                          }, {} as Record<string, BaseItem[]>)
+                        ).map(([areaCategory, areaBases]) => (
+                          <div key={areaCategory} className="space-y-3">
+                            <div className="flex items-center justify-between pb-1.5 border-b border-line">
+                              <div className="flex items-center gap-2">
+                                <Folder className="w-4 h-4 text-accent" />
+                                <h3 className="text-xs font-bold uppercase tracking-wider text-ink">
+                                  {areaCategory}
+                                </h3>
+                                <span className="px-2 py-0.5 rounded-full text-[10px] font-mono bg-surface-sunken text-ink-3 border border-line">
+                                  {areaBases.length} {areaBases.length === 1 ? 'módulo' : 'módulos'}
+                                </span>
                               </div>
                             </div>
 
-                            {/* Píldoras de Subcarpetas Estándar Metabase §1b (01 Indicadores, 02 Gráficos, 03 Tablas, 05 Dashboards) */}
-                            {b.subfolders && (
-                              <div className="flex flex-wrap items-center gap-1.5 pt-3 border-t border-line/60 w-full mt-2">
-                                {b.subfolders.indicators && b.subfolders.indicators.length > 0 && (
-                                  <button
-                                    type="button"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      if (onOpenCatalog) onOpenCatalog(b, 'indicators');
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                              {areaBases.map((b) => {
+                                const isDashboard = b.type === 'dashboard';
+                                return (
+                                  <div
+                                    key={b.id}
+                                    onClick={() => {
+                                      if (onOpenCatalog && b.subfolders) {
+                                        onOpenCatalog(b, 'tables');
+                                      } else {
+                                        handleItemClick(b);
+                                      }
                                     }}
-                                    className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono font-medium bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 transition-colors"
-                                    title="Ver Indicadores (K)"
+                                    className="group p-4 rounded-xl border border-line bg-surface hover:border-accent hover:shadow-md cursor-pointer transition-all flex flex-col justify-between gap-3 relative"
                                   >
-                                    <span>📁 01 Indicadores</span>
-                                    <span className="font-bold">({b.subfolders.indicators.length})</span>
-                                  </button>
-                                )}
+                                    <div className="flex items-start justify-between gap-3 w-full">
+                                      <div className="flex items-start gap-3 truncate">
+                                        <div
+                                          className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-2xs ${
+                                            isDashboard
+                                              ? 'bg-rose-50 text-rose-600 border border-rose-200 dark:bg-rose-950/60 dark:border-rose-900'
+                                              : 'bg-blue-50 text-[#1D5BD8] border border-blue-200 dark:bg-blue-950/60 dark:border-blue-900'
+                                          }`}
+                                        >
+                                          {isDashboard ? (
+                                            <LayoutDashboard className="w-5 h-5" />
+                                          ) : (
+                                            <Folder className="w-5 h-5" />
+                                          )}
+                                        </div>
+                                        <div className="truncate">
+                                          <div className="font-semibold text-xs text-ink group-hover:text-accent transition-colors truncate">
+                                            {b.name}
+                                          </div>
+                                          <div className="text-[11px] text-ink-3 truncate">
+                                            Módulo de Negocio • {b.category || 'Operaciones'}
+                                          </div>
+                                        </div>
+                                      </div>
 
-                                {b.subfolders.charts && b.subfolders.charts.length > 0 && (
-                                  <button
-                                    type="button"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      if (onOpenCatalog) onOpenCatalog(b, 'charts');
-                                    }}
-                                    className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono font-medium bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 transition-colors"
-                                    title="Ver Gráficos (G)"
-                                  >
-                                    <span>📁 02 Gráficos</span>
-                                    <span className="font-bold">({b.subfolders.charts.length})</span>
-                                  </button>
-                                )}
+                                      {/* Botón de 3 puntos en Base (Print 3) */}
+                                      <div className="relative">
+                                        <button
+                                          type="button"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setActiveBaseMenuId(activeBaseMenuId === b.id ? null : b.id);
+                                          }}
+                                          className="text-ink-3 hover:text-ink p-1 opacity-0 group-hover:opacity-100 hover:bg-surface-sunken rounded-lg transition-all"
+                                          title="Opciones del módulo"
+                                        >
+                                          <MoreHorizontal className="w-4 h-4" />
+                                        </button>
 
-                                <button
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    if (onOpenCatalog) onOpenCatalog(b, 'tables');
-                                    else handleItemClick(b);
-                                  }}
-                                  className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono font-medium bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200 transition-colors"
-                                  title="Ver Tablas (T)"
-                                >
-                                  <span>📁 03 Tablas</span>
-                                  <span className="font-bold">({b.subfolders.tables?.length || b.tablesCount || 0})</span>
-                                </button>
+                                        {activeBaseMenuId === b.id && (
+                                          <div 
+                                            className="absolute right-0 top-6 w-52 bg-surface border border-line rounded-xl shadow-xl z-50 py-1.5 text-xs text-ink animate-in fade-in zoom-in-95 duration-100"
+                                            onClick={(e) => e.stopPropagation()}
+                                          >
+                                            <div className="px-3 py-1 font-semibold text-ink-3 text-[10px] uppercase tracking-wider border-b border-line mb-1 truncate">
+                                              {b.name}
+                                            </div>
+                                            <button
+                                              type="button"
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                setActiveBaseMenuId(null);
+                                                if (onOpenCatalog) onOpenCatalog(b, 'tables');
+                                              }}
+                                              className="w-full px-3 py-1.5 flex items-center gap-2.5 hover:bg-surface-sunken text-left"
+                                            >
+                                              <Folder className="w-3.5 h-3.5 text-ink-3" />
+                                              <span>Explorar módulo</span>
+                                            </button>
+                                            <button
+                                              type="button"
+                                              onClick={(e) => handleOpenMembers(b.id, b.name, 'base', e)}
+                                              className="w-full px-3 py-1.5 flex items-center gap-2.5 hover:bg-surface-sunken text-left"
+                                            >
+                                              <Users className="w-3.5 h-3.5 text-ink-3" />
+                                              <span>Gestionar miembros</span>
+                                            </button>
+                                            <button
+                                              type="button"
+                                              onClick={(e) => handleOpenApiDocs(b, e)}
+                                              className="w-full px-3 py-1.5 flex items-center gap-2.5 hover:bg-surface-sunken text-left"
+                                            >
+                                              <FileText className="w-3.5 h-3.5 text-ink-3" />
+                                              <span>Ver documentos API</span>
+                                            </button>
+                                            <button
+                                              type="button"
+                                              onClick={(e) => handleOpenRename(b.id, b.name, 'base', e)}
+                                              className="w-full px-3 py-1.5 flex items-center gap-2.5 hover:bg-surface-sunken text-left"
+                                            >
+                                              <Edit3 className="w-3.5 h-3.5 text-ink-3" />
+                                              <span>Renombrar</span>
+                                            </button>
+                                            <button
+                                              type="button"
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                alert(`Módulo "${b.name}" duplicado exitosamente.`);
+                                                setActiveBaseMenuId(null);
+                                              }}
+                                              className="w-full px-3 py-1.5 flex items-center gap-2.5 hover:bg-surface-sunken text-left"
+                                            >
+                                              <Copy className="w-3.5 h-3.5 text-ink-3" />
+                                              <span>Duplicar</span>
+                                            </button>
+                                            <button
+                                              type="button"
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                setActiveBaseMenuId(null);
+                                                if (onOpenSnapshots) onOpenSnapshots(b.id);
+                                              }}
+                                              className="w-full px-3 py-1.5 flex items-center gap-2.5 hover:bg-surface-sunken text-left"
+                                            >
+                                              <Camera className="w-3.5 h-3.5 text-ink-3" />
+                                              <span>Instantáneas</span>
+                                            </button>
+                                            <button
+                                              type="button"
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                onOpenTrash();
+                                                setActiveBaseMenuId(null);
+                                              }}
+                                              className="w-full px-3 py-1.5 flex items-center gap-2.5 hover:bg-surface-sunken text-left border-t border-line mt-1 pt-1.5"
+                                            >
+                                              <Trash2 className="w-3.5 h-3.5 text-ink-3" />
+                                              <span>Ver basura</span>
+                                            </button>
+                                            <button
+                                              type="button"
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                if (confirm(`¿Estás seguro de que deseas borrar "${b.name}"?`)) {
+                                                  alert('Módulo enviado a la papelera.');
+                                                }
+                                                setActiveBaseMenuId(null);
+                                              }}
+                                              className="w-full px-3 py-1.5 flex items-center gap-2.5 hover:bg-error-tint text-error text-left"
+                                            >
+                                              <Trash2 className="w-3.5 h-3.5 text-error" />
+                                              <span>Borrar</span>
+                                            </button>
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
 
-                                {b.subfolders.dashboards && b.subfolders.dashboards.length > 0 && (
-                                  <button
-                                    type="button"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      if (onOpenCatalog) onOpenCatalog(b, 'dashboards');
-                                    }}
-                                    className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono font-medium bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200 transition-colors"
-                                    title="Ver Dashboards (D)"
-                                  >
-                                    <span>📊 05 Dashboards</span>
-                                    <span className="font-bold">({b.subfolders.dashboards.length})</span>
-                                  </button>
-                                )}
-                              </div>
-                            )}
+                                    {/* Píldoras de Subcarpetas Estándar Metabase §1b (01 Indicadores, 02 Gráficos, 03 Tablas, 05 Dashboards) */}
+                                    {b.subfolders && (
+                                      <div className="flex flex-wrap items-center gap-1.5 pt-3 border-t border-line/60 w-full mt-2">
+                                        {b.subfolders.indicators && b.subfolders.indicators.length > 0 && (
+                                          <button
+                                            type="button"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              if (onOpenCatalog) onOpenCatalog(b, 'indicators');
+                                            }}
+                                            className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono font-medium bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 transition-colors"
+                                            title="Ver Indicadores (K)"
+                                          >
+                                            <span>📁 01 Indicadores</span>
+                                            <span className="font-bold">({b.subfolders.indicators.length})</span>
+                                          </button>
+                                        )}
+
+                                        {b.subfolders.charts && b.subfolders.charts.length > 0 && (
+                                          <button
+                                            type="button"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              if (onOpenCatalog) onOpenCatalog(b, 'charts');
+                                            }}
+                                            className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono font-medium bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 transition-colors"
+                                            title="Ver Gráficos (G)"
+                                          >
+                                            <span>📁 02 Gráficos</span>
+                                            <span className="font-bold">({b.subfolders.charts.length})</span>
+                                          </button>
+                                        )}
+
+                                        <button
+                                          type="button"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            if (onOpenCatalog) onOpenCatalog(b, 'tables');
+                                            else handleItemClick(b);
+                                          }}
+                                          className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono font-medium bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200 transition-colors"
+                                          title="Ver Tablas (T)"
+                                        >
+                                          <span>📁 03 Tablas</span>
+                                          <span className="font-bold">({b.subfolders.tables?.length || b.tablesCount || 0})</span>
+                                        </button>
+
+                                        {b.subfolders.dashboards && b.subfolders.dashboards.length > 0 && (
+                                          <button
+                                            type="button"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              if (onOpenCatalog) onOpenCatalog(b, 'dashboards');
+                                            }}
+                                            className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono font-medium bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200 transition-colors"
+                                            title="Ver Dashboards (D)"
+                                          >
+                                            <span>📊 05 Dashboards</span>
+                                            <span className="font-bold">({b.subfolders.dashboards.length})</span>
+                                          </button>
+                                        )}
+                                      </div>
+                                    )}
+                                  </div>
+                                );
+                              })}
+                            </div>
                           </div>
-                          );
-                        })}
+                        ))}
                       </div>
                     ) : (
                       <div className="text-center py-8 text-ink-3 text-xs">

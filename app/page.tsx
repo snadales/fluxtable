@@ -25,6 +25,7 @@ import { DocumentTabBar, DocumentTab } from '@/components/navigation/document-ta
 import { CommentsDrawer } from '@/components/comments/comments-drawer';
 import { AuditLogDrawer } from '@/components/audit/audit-log-drawer';
 import { KpiRecipeModal } from '@/components/modals/kpi-recipe-modal';
+import { NewModuleModal } from '@/components/modals/new-module-modal';
 import { 
   Database, Table as TableIcon, LayoutGrid, Kanban as KanbanIcon, 
   Calendar as CalendarIcon, FileText, Search, Download, Plus, Filter, ArrowUpDown, X, 
@@ -153,6 +154,8 @@ export default function HomePage() {
   const [showApiTokensModal, setShowApiTokensModal] = useState(false);
   const [showNewTableModal, setShowNewTableModal] = useState(false);
   const [showNewFieldModal, setShowNewFieldModal] = useState(false);
+  const [showNewModuleModal, setShowNewModuleModal] = useState(false);
+  const [newModuleWorkspaceId, setNewModuleWorkspaceId] = useState<string>('');
 
   // Navegación de Workspaces y Modales Globales
   const [viewMode, setViewMode] = useState<'workspaces' | 'database' | 'analytics' | 'catalog'>('workspaces');
@@ -382,27 +385,10 @@ export default function HomePage() {
     }
   };
 
-  // Crear base en workspace
-  const handleCreateDatabaseInWorkspace = async (workspaceId: string) => {
-    const name = prompt('Nombre de la nueva Base de Datos:');
-    if (!name?.trim()) return;
-
-    try {
-      const res = await fetch('/api/database/tables', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: name.trim(),
-          baseId: workspaceId,
-        }),
-      });
-      if (res.ok) {
-        await loadWorkspaces();
-        await loadTablesList();
-      }
-    } catch (e) {
-      console.error('Error creando base en workspace:', e);
-    }
+  // Crear módulo/carpeta en workspace (Issue #35)
+  const handleCreateDatabaseInWorkspace = (workspaceId: string) => {
+    setNewModuleWorkspaceId(workspaceId || activeWorkspaceId || workspaces[0]?.id || '');
+    setShowNewModuleModal(true);
   };
 
   // Cambiar entre tablas
@@ -959,7 +945,7 @@ export default function HomePage() {
               onOpenSnapshots={() => setShowSnapshotsModal(true)}
               onRenameBase={() => setShowBaseSettingsModal(true)}
               onCreateTable={() => setShowNewTableModal(true)}
-              onCreateBase={() => setShowNewTableModal(true)}
+              onCreateBase={() => handleCreateDatabaseInWorkspace(activeWorkspaceId || '')}
               onInspectKpi={(code) => setInspectingKpiCode(code)}
             />
             <div className="flex-1 flex flex-col h-full overflow-hidden min-w-0">
@@ -1046,7 +1032,7 @@ export default function HomePage() {
               onOpenSnapshots={() => setShowSnapshotsModal(true)}
               onRenameBase={() => setShowBaseSettingsModal(true)}
               onCreateTable={() => setShowNewTableModal(true)}
-              onCreateBase={() => setShowNewTableModal(true)}
+              onCreateBase={() => handleCreateDatabaseInWorkspace(activeWorkspaceId || '')}
               onInspectKpi={(code) => setInspectingKpiCode(code)}
             />
             <div className="flex-1 flex flex-col h-full overflow-hidden">
@@ -1110,7 +1096,7 @@ export default function HomePage() {
               onOpenSnapshots={() => setShowSnapshotsModal(true)}
               onRenameBase={() => setShowBaseSettingsModal(true)}
               onCreateTable={() => setShowNewTableModal(true)}
-              onCreateBase={() => setShowNewTableModal(true)}
+              onCreateBase={() => handleCreateDatabaseInWorkspace(activeWorkspaceId || '')}
               onInspectKpi={(code) => setInspectingKpiCode(code)}
             />
 
@@ -2529,6 +2515,20 @@ export default function HomePage() {
         }}
         onOpenDashboard={(dashboardId) => {
           openDashboardTab(dashboardId);
+        }}
+      />
+
+      {/* Modal de Creación de Nueva Carpeta / Módulo de Negocio (Issue #35) */}
+      <NewModuleModal
+        isOpen={showNewModuleModal}
+        onClose={() => setShowNewModuleModal(false)}
+        workspaceId={newModuleWorkspaceId || activeWorkspaceId || workspaces[0]?.id || ''}
+        workspaceName={workspaces.find((w) => w.id === (newModuleWorkspaceId || activeWorkspaceId))?.name || 'Negocios'}
+        existingCategories={Array.from(new Set(workspaces.flatMap((w) => w.bases.map((b) => b.category)).filter(Boolean) as string[]))}
+        onCreated={async (newModule) => {
+          await loadWorkspaces();
+          await loadTablesList();
+          openCatalogTab(newModule, 'tables');
         }}
       />
     </div>
