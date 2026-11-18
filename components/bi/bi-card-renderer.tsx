@@ -199,6 +199,14 @@ export function BiCardRenderer({ card, onNavigateToTable, onInspectKpi }: BiCard
           type: isLine ? 'line' : 'bar',
           data: values,
           smooth: isLine,
+          label: {
+            show: true,
+            position: isHorizontal ? 'right' : (isLine ? 'top' : 'top'),
+            fontSize: 10,
+            fontWeight: 'bold',
+            color: '#334155',
+            formatter: (p: any) => (typeof p.value === 'number' ? p.value.toLocaleString() : p.value),
+          },
           itemStyle: {
             color: card.visualConfigJson?.color || (isLine ? '#1D5BD8' : '#1D5BD8'),
             borderRadius: isHorizontal ? [0, 4, 4, 0] : [4, 4, 0, 0],

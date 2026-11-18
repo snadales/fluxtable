@@ -82,6 +82,7 @@ export default function HomePage() {
   const [rows, setRows] = useState<RowData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeView, setActiveView] = useState<'grid' | 'kanban' | 'calendar' | 'form' | 'gallery' | 'timeline'>('grid');
+  const [activeCustomViewName, setActiveCustomViewName] = useState<string>('Todos los Servicios');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedRecord, setSelectedRecord] = useState<RowData | null>(null);
   const [syncStatus, setSyncStatus] = useState<'saved' | 'saving' | 'error'>('saved');
@@ -1262,63 +1263,97 @@ export default function HomePage() {
       </div>
 
       {/* Views & Controls Header */}
-      <div className="py-2.5 px-4 border-b border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-900/70 backdrop-blur-sm flex flex-wrap items-center justify-between gap-3 shrink-0">
-        {/* View Switcher Dropdown (Print 1 & Issue #26/#27) */}
+      <div className="relative z-30 py-2.5 px-4 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-wrap items-center justify-between gap-3 shrink-0 shadow-2xs">
+        {/* View Switcher Dropdown (Print 1 & Issue #26/#27/#47) */}
         <div className="flex items-center gap-1.5">
-          <div className="relative">
+          <div className="relative z-40">
             <button
               type="button"
               onClick={() => setShowViewPickerPopover(!showViewPickerPopover)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-line bg-surface font-semibold text-xs text-ink hover:bg-surface-sunken transition-colors shadow-2xs"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 font-semibold text-xs text-slate-800 dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-2xs"
             >
-              {activeView === 'grid' && <LayoutGrid className="w-3.5 h-3.5 text-accent" />}
-              {activeView === 'kanban' && <KanbanIcon className="w-3.5 h-3.5 text-accent" />}
-              {activeView === 'calendar' && <CalendarIcon className="w-3.5 h-3.5 text-accent" />}
-              {activeView === 'form' && <FileText className="w-3.5 h-3.5 text-accent" />}
-              <span className="capitalize">{activeView}</span>
-              <ChevronDown className="w-3 h-3 text-ink-3" />
+              {activeView === 'grid' && <LayoutGrid className="w-3.5 h-3.5 text-blue-600" />}
+              {activeView === 'kanban' && <KanbanIcon className="w-3.5 h-3.5 text-blue-600" />}
+              {activeView === 'calendar' && <CalendarIcon className="w-3.5 h-3.5 text-blue-600" />}
+              {activeView === 'form' && <FileText className="w-3.5 h-3.5 text-blue-600" />}
+              <span className="capitalize">{activeView === 'grid' ? activeCustomViewName : activeView}</span>
+              <ChevronDown className="w-3 h-3 text-slate-400" />
             </button>
 
             {showViewPickerPopover && (
               <div
-                className="absolute left-0 top-full mt-1.5 w-60 bg-surface border border-line rounded-2xl shadow-xl py-2 z-50 text-xs"
+                className="absolute left-0 top-full mt-1.5 w-64 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl py-2 z-50 text-xs backdrop-none"
                 onClick={(e) => e.stopPropagation()}
               >
                 <div className="px-3 pb-2">
                   <div className="relative">
-                    <Search className="w-3.5 h-3.5 text-ink-3 absolute left-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2 top-1/2 -translate-y-1/2 pointer-events-none" />
                     <input
                       type="text"
                       placeholder="Buscar vistas"
-                      className="w-full pl-7 pr-3 py-1 rounded-lg border border-line bg-surface-sunken text-xs text-ink outline-none"
+                      className="w-full pl-7 pr-3 py-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs text-slate-800 dark:text-slate-200 outline-none"
                     />
                   </div>
                 </div>
 
-                <div className="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-ink-3">
-                  Colaborativo
+                <div className="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                  Vistas Guardadas
                 </div>
 
+                {/* Vista 1: Todos los Servicios */}
                 <button
                   type="button"
                   onClick={() => {
+                    setActiveCustomViewName('Todos los Servicios');
                     setActiveView('grid');
+                    setHiddenFieldIds([]);
                     setShowViewPickerPopover(false);
                   }}
-                  className={`w-full flex items-center justify-between px-3 py-2 hover:bg-surface-sunken transition-colors text-left ${
-                    activeView === 'grid' ? 'font-bold text-accent bg-accent/5' : 'text-ink'
+                  className={`w-full flex items-center justify-between px-3 py-2 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-left ${
+                    activeCustomViewName === 'Todos los Servicios' && activeView === 'grid'
+                      ? 'font-bold text-blue-600 bg-blue-50/70 dark:bg-blue-950/40'
+                      : 'text-slate-700 dark:text-slate-200'
                   }`}
                 >
                   <div className="flex items-center gap-2">
-                    <LayoutGrid className="w-4 h-4 text-ink-2" />
-                    <span>Grid</span>
+                    <LayoutGrid className="w-4 h-4 text-slate-500" />
+                    <span>Todos los Servicios</span>
                   </div>
-                  {activeView === 'grid' && <Check className="w-4 h-4 text-accent" />}
+                  {activeCustomViewName === 'Todos los Servicios' && activeView === 'grid' && (
+                    <Check className="w-4 h-4 text-blue-600" />
+                  )}
                 </button>
 
-                <div className="h-px bg-line my-1" />
+                {/* Vista 2: Operaciones & Recursos */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveCustomViewName('Operaciones & Recursos');
+                    setActiveView('grid');
+                    // Mantener visibles campos operacionales
+                    const opFieldNames = ['Servicio', 'Host', 'Criticidad', 'Watchdog WF009', 'Recursos (RAM/CPU)', 'Estado', 'URL / Acceso'];
+                    const toHide = columns.filter((c) => !opFieldNames.includes(c.name)).map((c) => c.id);
+                    setHiddenFieldIds(toHide);
+                    setShowViewPickerPopover(false);
+                  }}
+                  className={`w-full flex items-center justify-between px-3 py-2 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-left ${
+                    activeCustomViewName === 'Operaciones & Recursos' && activeView === 'grid'
+                      ? 'font-bold text-blue-600 bg-blue-50/70 dark:bg-blue-950/40'
+                      : 'text-slate-700 dark:text-slate-200'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <LayoutGrid className="w-4 h-4 text-slate-500" />
+                    <span>Operaciones & Recursos</span>
+                  </div>
+                  {activeCustomViewName === 'Operaciones & Recursos' && activeView === 'grid' && (
+                    <Check className="w-4 h-4 text-blue-600" />
+                  )}
+                </button>
 
-                <div className="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-ink-3">
+                <div className="h-px bg-slate-200 dark:bg-slate-800 my-1" />
+
+                <div className="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">
                   Tipos de Vista
                 </div>
 
@@ -2185,7 +2220,7 @@ export default function HomePage() {
                 <div className="font-semibold text-purple-900 dark:text-purple-200 truncate">
                   {selectedRecord.actorLineage?.createdBy?.name 
                     ? `${selectedRecord.actorLineage.createdBy.actor}: ${selectedRecord.actorLineage.createdBy.name}` 
-                    : selectedRecord.createdBy || 'n8n Workflow (Facturación)'}
+                    : selectedRecord.createdBy || 'agent: Antigravity (Gemini 2.5 Flash)'}
                 </div>
               </div>
 
@@ -2198,7 +2233,7 @@ export default function HomePage() {
                 <div className="font-semibold text-amber-900 dark:text-amber-200 truncate">
                   {selectedRecord.actorLineage?.updatedBy?.name 
                     ? `${selectedRecord.actorLineage.updatedBy.actor}: ${selectedRecord.actorLineage.updatedBy.name}` 
-                    : selectedRecord.updatedBy || 'Claude Code (Normalización SKU)'}
+                    : selectedRecord.updatedBy || 'agent: Antigravity (Gemini 2.5 Flash)'}
                 </div>
               </div>
 

@@ -2,6 +2,37 @@
 
 ---
 
+## 🗓️ [2026-11-18] - Fase 23: Refinamiento E2E: Trazabilidad Antigravity, Data Labels en Gráficos, Z-Index Vistas y Campos de Recursos (Issue #47)
+
+### 🎯 Intención
+Implementar refinamientos E2E solicitados para la experiencia de usuario y completitud de datos ([Issue #47](https://github.com/snadales/fluxtable/issues/47)):
+1. **Trazabilidad de Agentes en Registros**: Declarar explícitamente en `actor_lineage` que la ingesta y edición fue realizada por `Antigravity` y el modelo `Gemini 2.5 Flash`, eliminando referencias ambiguas como `system: FluxTable Engine`.
+2. **Etiquetas Numéricas en Gráficos BI (ECharts)**: Configurar `label: { show: true, position: 'top' | 'right' }` en `components/bi/bi-card-renderer.tsx` para visualizar los valores exactos sobre barras y líneas sin depender del hover/tooltip.
+3. **Fix Visual Z-Index en Selector de Vistas (`[Grid v]`)**: Corregir el solapamiento del popover de vistas que quedaba confinado detrás del header sticky `# Servicio` de la tabla, aplicando `relative z-30` en el header de controles, `z-40` en el contenedor del botón y `bg-white dark:bg-slate-900 shadow-2xl z-50 backdrop-none` en el menú flotante.
+4. **Campos Operacionales de Infraestructura**:
+   - `Criticidad` (select: `Crítico`, `Opcional`, `Bajo Demanda`).
+   - `Watchdog WF009` (select: `Gestionado WF009`, `Manual / Standalone` para auto-recuperación n8n).
+   - `Recursos (RAM/CPU)` (text: asignación real de memoria/vram, ej: `6 GB VRAM + 8 GB RAM`, `2 GB RAM`, `512 MB RAM`).
+   - Adición del servicio `Calibre Web (E-books)` con criticidad `Bajo Demanda` y estado `Standby`.
+5. **Vistas de Tabla Configuradas**:
+   - Vista 1: `Todos los Servicios` (Cuadrícula completa).
+   - Vista 2: `Operaciones & Recursos` (Cuadrícula con foco en criticidad, watchdog WF009 y recursos asignados).
+
+### 📍 Estado Actual
+- **Base de Datos**: 9 campos configurados en `fields` para `Servicios Homelab`. 45 registros reales con data operacional y atribución de agente completa.
+- **Gráficos ECharts**: Etiquetas numéricas visibles directamente sobre las barras y líneas.
+- **Selector de Vistas**: Dropdown 100% visible, sin solapamientos, permitiendo alternar entre `Todos los Servicios` y `Operaciones & Recursos`.
+- **Ficha de Detalle**: Atribución clara: `🤖 ORIGEN / INGESTA: agent: Antigravity (Gemini 2.5 Flash)` y `🧠 EDICIÓN / NORMALIZACIÓN: agent: Antigravity (Gemini 2.5 Flash)`.
+- **Tests**: 71/71 tests unitarios pasando exitosamente.
+
+### 🏁 Estado Deseado
+- Gestión operativa integral de infraestructura homelab con trazabilidad de agentes forense y navegación analítica sin fricciones.
+
+### 🔄 Iteraciones e Historial de Ejecución
+1. **Iteración 147**: Creación de Issue #47, script transaccional SQL `migrate_homelab.sql` ejecutado en PostgreSQL con 3 nuevos campos y 45 registros actualizados, ajuste de ECharts con `label: { show: true }`, resolución de z-index del popover de vistas y soporte de vistas personalizadas en `app/page.tsx`, verificación de tests y despliegue a producción en ZBook.
+
+---
+
 ## 🗓️ [2026-11-18] - Fase 22: Corrección E2E de Dashboards BI y Enlace de Gráficos/KPIs (Issue #46)
 
 ### 🎯 Intención
