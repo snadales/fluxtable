@@ -27,7 +27,7 @@ import {
   Lock,
   ArrowUpRight
 } from 'lucide-react';
-import { FluxTableLogo, YarkenSymbol } from '@/components/brand/yarken-logo';
+import { FluxTableLogo, YarkenSymbol } from '@/components/brand/brand-logo';
 import { WorkspaceGroup, BaseItem } from '@/components/workspaces/workspaces-dashboard';
 
 interface AppSidebarProps {

@@ -25,51 +25,51 @@ export const AdminToolsModal: React.FC<AdminToolsModalProps> = ({
   const usersList = [
     {
       id: '1',
-      username: 'snadales@gmail.com',
-      name: 'Sebastián Nadales',
-      workspaces: ['Negocios', 'LinkedIn', 'Yarken', 'Salud (privado)', 'Salud-Roshi'],
+      username: 'admin@fluxtable.local',
+      name: 'Administrador',
+      workspaces: ['Principal', 'Finanzas', 'Operaciones'],
       lastLogin: '11/17/2026 8:06 AM',
       signedUp: '10/09/2026 4:55 PM',
       active: true,
       tfa: false,
-      initials: 'SN',
+      initials: 'AD',
     },
     {
       id: '2',
-      username: 'agente-optimizador@yarken.cl',
-      name: 'Agente Optimizador',
-      workspaces: ['Negocios'],
+      username: 'analista@fluxtable.local',
+      name: 'Analista de Datos',
+      workspaces: ['Principal'],
       lastLogin: '11/13/2026 3:01 PM',
       signedUp: '10/27/2026 8:39 AM',
       active: true,
       tfa: false,
-      initials: 'AO',
+      initials: 'AN',
     },
   ];
 
   const workspacesList = [
     {
-      id: 'ws_negocios',
-      name: 'Negocios',
-      members: ['agente-optimizador@yarken.cl', 'snadales@gmail.com'],
+      id: 'ws_principal',
+      name: 'Principal',
+      members: ['admin@fluxtable.local', 'analista@fluxtable.local'],
       applications: 19,
       rowCount: '22,852',
       storageUsed: '14.2 MB',
       created: '10/09/2026 4:56 PM',
     },
     {
-      id: 'ws_linkedin',
-      name: 'LinkedIn',
-      members: ['snadales@gmail.com'],
+      id: 'ws_operaciones',
+      name: 'Operaciones',
+      members: ['admin@fluxtable.local'],
       applications: 2,
       rowCount: '290,193',
       storageUsed: '48.6 MB',
       created: '10/12/2026 5:05 PM',
     },
     {
-      id: 'ws_yarken',
-      name: 'Yarken',
-      members: ['snadales@gmail.com'],
+      id: 'ws_general',
+      name: 'General',
+      members: ['admin@fluxtable.local'],
       applications: 2,
       rowCount: '420',
       storageUsed: '1.8 MB',
@@ -488,7 +488,7 @@ export const AdminToolsModal: React.FC<AdminToolsModalProps> = ({
                   Authentication Providers
                 </h3>
                 <p className="text-xs text-slate-500">
-                  Proveedores de autenticación habilitados para FluxTable en Yarken Homelab.
+                  Proveedores de autenticación habilitados para FluxTable.
                 </p>
 
                 <div className="space-y-3">
@@ -520,7 +520,7 @@ export const AdminToolsModal: React.FC<AdminToolsModalProps> = ({
                 <div className="p-4 rounded-xl border border-blue-200 dark:border-blue-800 bg-blue-50/60 dark:bg-blue-950/20 space-y-2">
                   <div className="flex items-center gap-2 text-blue-900 dark:text-blue-200 font-bold text-sm">
                     <ShieldCheck className="w-5 h-5 text-accent" />
-                    <span>FluxTable · Edición Ilimitada (Sistema Yarken)</span>
+                    <span>FluxTable · Edición Open-Source Soberana</span>
                   </div>
                   <p className="text-xs text-blue-800 dark:text-blue-300">
                     A diferencia de Baserow clásico que bloquea SSO, auditoría y vistas avanzadas bajo planes de pago Premium y Advanced, FluxTable incluye todas las capacidades de base de datos y BI analítico habilitadas de forma 100% gratuita y soberana.

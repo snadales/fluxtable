@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
   if (!auth.authenticated || !auth.user) {
     return NextResponse.json(
       {
-        tipo: 'https://problemas.yarken.cl/autenticacion-requerida',
+        tipo: 'about:blank',
         titulo: 'No autorizado',
         codigo: 'NO_AUTORIZADO',
         detalle: 'Se requiere sesión activa o token para acceder al diagnóstico',
@@ -62,7 +62,7 @@ export async function GET(req: NextRequest) {
   } catch (err: any) {
     return NextResponse.json(
       {
-        tipo: 'https://problemas.yarken.cl/error-diagnostico',
+        tipo: 'about:blank',
         titulo: 'Error obteniendo diagnóstico',
         codigo: 'ERROR_DIAGNOSTICO',
         detalle: err.message,

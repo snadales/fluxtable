@@ -31,11 +31,11 @@ export async function GET(request: NextRequest) {
     const lines: string[] = [
       'BEGIN:VCALENDAR',
       'VERSION:2.0',
-      'PRODID:-//Yarken Homelab//BaserowLite//ES',
+      'PRODID:-//FluxTable//Calendar//ES',
       'CALSCALE:GREGORIAN',
       'METHOD:PUBLISH',
       `X-WR-CALNAME:${tableName} · Arribos`,
-      'X-WR-TIMEZONE:America/Santiago',
+      `X-WR-TIMEZONE:${process.env.TIMEZONE || 'America/Santiago'}`,
       'X-PUBLISHED-TTL:PT1H',
     ];
 
@@ -64,7 +64,8 @@ export async function GET(request: NextRequest) {
       const progress = data['Avance Logístico'] ? `${data['Avance Logístico']}%` : 'N/A';
 
       lines.push('BEGIN:VEVENT');
-      lines.push(`UID:${r.id}@baserow-lite.yarken.cl`);
+      const host = request.headers.get('host') || 'fluxtable.local';
+      lines.push(`UID:${r.id}@${host}`);
       lines.push(`DTSTAMP:${nowStr}`);
       lines.push(`DTSTART;VALUE=DATE:${dateClean}`);
       lines.push(`DTEND;VALUE=DATE:${nextDayClean}`);

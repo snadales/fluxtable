@@ -3,7 +3,8 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { ShieldCheck, ArrowRight, Lock, Mail } from 'lucide-react';
-import { YarkenSymbol } from '@/components/brand/yarken-logo';
+import { BrandSymbol } from '@/components/brand/brand-logo';
+import { getBrandConfig } from '@/lib/brand-config';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -43,24 +44,28 @@ export default function LoginPage() {
     }
   };
 
+  const brand = getBrandConfig();
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-bg px-4">
       <div className="w-full max-w-sm space-y-6">
-        {/* Logo y Encabezado con Brandbook Cobalto */}
+        {/* Logo y Encabezado Adaptable White-Label */}
         <div className="text-center space-y-2">
           <div className="inline-flex items-center justify-center">
-            <YarkenSymbol size={52} variant="tile" />
+            <BrandSymbol size={52} variant="tile" />
           </div>
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-ink">
-              FluxTable
+              {brand.appName}
             </h1>
-            <p className="text-[11px] font-bold tracking-[0.08em] uppercase text-ink-3 mt-0.5">
-              SISTEMA YARKEN
-            </p>
+            {brand.appOrg && (
+              <p className="text-[11px] font-bold tracking-[0.08em] uppercase text-ink-3 mt-0.5">
+                {brand.appOrg}
+              </p>
+            )}
           </div>
           <p className="text-xs text-ink-2 max-w-xs mx-auto">
-            Plataforma unificada de datos colaborativos y Business Intelligence
+            {brand.tagline}
           </p>
         </div>
 

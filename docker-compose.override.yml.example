@@ -1,0 +1,23 @@
+# ==============================================================================
+# FluxTable - Docker Compose Override (Opcional para Redes Externas de BI)
+# ==============================================================================
+# Copie este archivo a `docker-compose.override.yml` solo si desea conectar
+# FluxTable a bases de datos en redes Docker externas (ej. ERP, CRM, PIM).
+# Si no necesita redes externas, no use este archivo.
+# ==============================================================================
+
+services:
+  app:
+    networks:
+      - fluxtable_internal
+      # Descomente las redes externas que necesite:
+      # - odoo_net
+      # - crm_net
+
+# networks:
+#   odoo_net:
+#     external: true
+#     name: odoo-network
+#   crm_net:
+#     external: true
+#     name: crm-network

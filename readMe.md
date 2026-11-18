@@ -5,6 +5,22 @@
 
 ---
 
+## 🎨 Personalización de Marca y White-Label (Open Source Ready)
+
+FluxTable cuenta con una arquitectura de marca desacoplada que permite adaptar la identidad visual completa (nombre, logo, organización, lema y colores) mediante variables de entorno en runtime, sin tocar el código fuente:
+
+| Variable de Entorno | Valor por Defecto | Descripción |
+| :--- | :--- | :--- |
+| `NEXT_PUBLIC_APP_NAME` | `FluxTable` | Nombre de la aplicación en el encabezado, login y títulos. |
+| `NEXT_PUBLIC_APP_ORG` | *(vacío)* | Nombre de la empresa u organización visible como subtítulo. |
+| `NEXT_PUBLIC_APP_TAGLINE` | `Plataforma de Datos & Business Intelligence` | Lema o subtítulo descriptivo en la pantalla de inicio de sesión. |
+| `NEXT_PUBLIC_APP_LOGO_URL` | *(vacío)* | URL o ruta a un archivo PNG/SVG corporativo propio. Si no se define, utiliza el isotipo geométrico vectorizado. |
+| `NEXT_PUBLIC_BRAND_COLOR` | `#1D5BD8` | Color de acento primario para el símbolo de marca y elementos destacados. |
+| `NEXT_PUBLIC_APP_FAVICON_URL` | `/favicon.svg` | Ruta del favicon para pestañas del navegador. |
+| `NEXT_PUBLIC_APP_URL` | *(autodetectado)* | URL base pública de la instancia para feeds iCal y webhooks. |
+
+---
+
 ## 🎯 Objetivo y Descripción
 
 ### Objetivo

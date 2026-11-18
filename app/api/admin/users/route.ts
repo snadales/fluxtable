@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
         email: u.email,
         name: u.name || 'Usuario',
         role: u.role,
-        workspaces: userWorkspaces.length > 0 ? userWorkspaces : ['Negocios', 'LinkedIn', 'Yarken', 'Salud (privado)', 'Salud-Roshi'],
+        workspaces: userWorkspaces.length > 0 ? userWorkspaces : ['Principal', 'General'],
         lastLogin: '11/17/2026 8:06 AM',
         signedUp: '10/09/2026 4:55 PM',
         isActive: u.isActive,

@@ -168,7 +168,7 @@ export async function GET(request: NextRequest) {
         slug: w.slug,
         role: 'Admin',
         members: wMembers.map((m) => ({
-          email: m.userEmail || 'usuario@yarken.cl',
+          email: m.userEmail || 'usuario@fluxtable.local',
           name: m.userName || 'Usuario',
           role: m.role || 'admin',
         })),

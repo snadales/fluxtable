@@ -140,13 +140,14 @@ export async function authenticateRequest(req: NextRequest): Promise<AuthContext
     }
   }
 
-  // 4. Modo Soberano Homelab / Fallback de Propietario (tables.yarken.cl / red interna)
+  // 4. Modo Soberano / Fallback de Administrador Primario
   // En entorno de pruebas (Vitest), se mantiene el rechazo estricto 401 para verificar RBAC
   const currentEnv = (process.env.NODE_ENV as string);
-  if (currentEnv !== 'test') {
+  const primaryAdminEmail = process.env.ADMIN_EMAIL || process.env.ALLOWED_EMAILS?.split(',')[0]?.trim();
+  if (currentEnv !== 'test' && primaryAdminEmail) {
     try {
       const primaryUser = await db.query.users.findFirst({
-        where: eq(users.email, 'snadales@gmail.com'),
+        where: eq(users.email, primaryAdminEmail),
       });
 
       if (primaryUser && primaryUser.isActive) {
@@ -155,7 +156,7 @@ export async function authenticateRequest(req: NextRequest): Promise<AuthContext
           user: {
             id: primaryUser.id,
             email: primaryUser.email,
-            name: primaryUser.name || 'Sebastián Nadales',
+            name: primaryUser.name || primaryUser.email.split('@')[0],
             role: primaryUser.role || 'superadmin',
             isApiToken: false,
           },

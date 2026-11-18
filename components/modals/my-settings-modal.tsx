@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { 
   X, User, Lock, Mail, Bell, Sparkles, Key, Trash2, Check, Copy, ShieldCheck, Terminal
 } from 'lucide-react';
+import { getBaseUrl } from '@/lib/brand-config';
 
 interface MySettingsModalProps {
   isOpen: boolean;
@@ -212,7 +213,7 @@ export const MySettingsModal: React.FC<MySettingsModalProps> = ({
                   <div>
                     <div className="font-semibold">Autenticación Segura Activa</div>
                     <div className="text-[11px] opacity-90">
-                      Tu cuenta está vinculada a Google SSO y protegida por la política Zero Trust de Cloudflare Access en Yarken Homelab.
+                      Tu cuenta está vinculada a Google SSO y protegida por autenticación corporativa y sesiones seguras.
                     </div>
                   </div>
                 </div>
@@ -286,12 +287,12 @@ export const MySettingsModal: React.FC<MySettingsModalProps> = ({
 
                 <div className="p-3 rounded-lg bg-slate-900 text-slate-200 font-mono text-[11px] border border-slate-800 space-y-1 relative">
                   <div>{`// Conexión MCP FluxTable`}</div>
-                  <div className="text-emerald-400">ENDPOINT = "https://tables.yarken.cl/api"</div>
-                  <div className="text-amber-300">AUTH = "Bearer baserow_lite_..."</div>
+                  <div className="text-emerald-400">{`ENDPOINT = "${getBaseUrl()}/api"`}</div>
+                  <div className="text-amber-300">AUTH = "Bearer token_..."</div>
                   <button
                     type="button"
                     onClick={() => {
-                      navigator.clipboard.writeText('https://tables.yarken.cl/api');
+                      navigator.clipboard.writeText(`${getBaseUrl()}/api`);
                       setCopiedMcp(true);
                       setTimeout(() => setCopiedMcp(false), 2000);
                     }}

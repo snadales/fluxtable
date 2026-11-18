@@ -24,7 +24,7 @@ const DEFAULT_CATEGORIES = [
 ];
 
 const COLOR_OPTIONS = [
-  { id: 'blue', label: 'Cobalto Yarken', bg: 'bg-[#1D5BD8]', ring: 'ring-[#1D5BD8]' },
+  { id: 'blue', label: 'Azul Cobalto', bg: 'bg-[#1D5BD8]', ring: 'ring-[#1D5BD8]' },
   { id: 'green', label: 'Esmeralda', bg: 'bg-emerald-600', ring: 'ring-emerald-600' },
   { id: 'purple', label: 'Violeta', bg: 'bg-purple-600', ring: 'ring-purple-600' },
   { id: 'amber', label: 'Ámbar', bg: 'bg-amber-600', ring: 'ring-amber-600' },
@@ -232,7 +232,7 @@ export function NewModuleModal({
           <div className="p-3 bg-blue-50/70 dark:bg-blue-950/30 border border-blue-200/80 dark:border-blue-900/50 rounded-xl flex items-start gap-2.5">
             <Sparkles className="w-4 h-4 text-[#1D5BD8] shrink-0 mt-0.5" />
             <p className="text-xs text-blue-950 dark:text-blue-200 leading-relaxed">
-              <strong>Framework Yarken:</strong> Este módulo se creará con sus 4 subcarpetas listas:{' '}
+              <strong>Estructura Estándar:</strong> Este módulo se creará con sus 4 subcarpetas listas:{' '}
               <span className="font-mono text-[11px] font-semibold text-[#1D5BD8]">01 Indicadores</span>,{' '}
               <span className="font-mono text-[11px] font-semibold text-purple-700 dark:text-purple-300">02 Gráficos</span>,{' '}
               <span className="font-mono text-[11px] font-semibold text-amber-700 dark:text-amber-300">03 Tablas</span> y{' '}

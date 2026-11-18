@@ -2,6 +2,30 @@
 
 ---
 
+## 🗓️ [2026-11-18] - Fase 18: Arquitectura White-Label, Logo Adaptable y Desacople Open Source (Issue #41)
+
+### 🎯 Intención
+Desacoplar por completo cualquier valor hardcodeado de identidad visual, credenciales y URLs fijas en el código fuente ([Issue #41](https://github.com/snadales/fluxtable/issues/41)):
+1. Implementar `lib/brand-config.ts` y `components/brand/brand-logo.tsx` soportando logo adaptable por URL o isotipo vectorial configurable, títulos y organización dinámica vía `NEXT_PUBLIC_APP_*`.
+2. Dinamizar `app/layout.tsx`, `app/login/page.tsx`, `AppSidebar`, `app/page.tsx` y modales para consumir la configuración de marca.
+3. Eliminar contraseñas y credenciales fallback de homelab en conectores (`lib/bi/connectors/pool-manager.ts`).
+4. Reemplazar URLs fijas en feeds iCal y webhooks por detección automática de origen (`getBaseUrl()`).
+5. Estandarizar `docker-compose.yml` para ejecución autónoma universal sin dependencias de redes externas obligatorias, habilitando `docker-compose.override.yml` para entornos híbridos.
+
+### 📍 Estado Actual
+- **Marca Blanca (White-Label)**: Configurable mediante `NEXT_PUBLIC_APP_NAME`, `NEXT_PUBLIC_APP_ORG`, `NEXT_PUBLIC_APP_LOGO_URL`, `NEXT_PUBLIC_BRAND_COLOR` y `NEXT_PUBLIC_APP_TAGLINE`.
+- **Código Fuente Desacoplado**: 0 referencias fijas a correos personales o nombres de homelab en componentes y backend.
+- **Docker Compose Autónomo**: Archivo base limpio con PostgreSQL y FluxTable. Conectores externos gestionados mediante override opcional.
+- **Calidad y Pruebas**: 71/71 pruebas unitarias pasando al 100% (+3 pruebas para brand-config), 0 errores TypeScript (`npx tsc --noEmit`) y 31/31 rutas compiladas en producción.
+
+### 🏁 Estado Deseado
+- Código 100% personalizable y listo para ser publicado en modo Open Source.
+
+### 🔄 Iteraciones e Historial de Ejecución
+1. **Iteración 141**: Creación de Issue #41, creación de `brand-config` y `brand-logo`, refactor de login, layout y modales, eliminación de credenciales en pool-manager, configuración de docker-compose autónomo y override, y validación de 71 pruebas.
+
+---
+
 ## 🗓️ [2026-11-18] - Fase 17: Renombramiento Integral y Unificación de Identidad a FluxTable (Issue #40)
 
 ### 🎯 Intención

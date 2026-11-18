@@ -7,7 +7,7 @@ import {
   Folder, BarChart3, Edit3, Copy, Camera, Download, Upload, X,
   Layers
 } from 'lucide-react';
-import { FluxTableLogo, YarkenSymbol } from '@/components/brand/yarken-logo';
+import { FluxTableLogo, YarkenSymbol } from '@/components/brand/brand-logo';
 
 export interface BaseItem {
   id: string;

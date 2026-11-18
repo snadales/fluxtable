@@ -1,11 +1,15 @@
 import type { Metadata } from 'next';
 import './globals.css';
 
+const appName = process.env.NEXT_PUBLIC_APP_NAME || 'FluxTable';
+const appOrg = process.env.NEXT_PUBLIC_APP_ORG ? ` | ${process.env.NEXT_PUBLIC_APP_ORG}` : '';
+const tagline = process.env.NEXT_PUBLIC_APP_TAGLINE || 'Plataforma de Datos & BI';
+
 export const metadata: Metadata = {
-  title: 'FluxTable · Plataforma de Datos & BI | Sistema Yarken',
+  title: `${appName} · ${tagline}${appOrg}`,
   description: 'Plataforma unificada de datos colaborativos, analytics y dashboards de alto rendimiento',
   icons: {
-    icon: '/favicon.svg',
+    icon: process.env.NEXT_PUBLIC_APP_FAVICON_URL || '/favicon.svg',
   },
 };
 

@@ -60,11 +60,11 @@ class BiPoolManager {
               statement_timeout: 15000,
             }
           : {
-              host: process.env.ODOO_DB_HOST || 'odoo20_db',
+              host: process.env.ODOO_DB_HOST || 'localhost',
               port: parseInt(process.env.ODOO_DB_PORT || '5432', 10),
-              user: process.env.ODOO_DB_USER || 'baserow_ro',
-              password: process.env.ODOO_DB_PASSWORD || 'bi_ro_yarken_2026',
-              database: process.env.ODOO_DB_NAME || 'odoo_prod',
+              user: process.env.ODOO_DB_USER || '',
+              password: process.env.ODOO_DB_PASSWORD || '',
+              database: process.env.ODOO_DB_NAME || 'odoo',
               max: 3,
               idleTimeoutMillis: 10000,
               connectionTimeoutMillis: 5000,
@@ -91,10 +91,10 @@ class BiPoolManager {
               statement_timeout: 10000,
             }
           : {
-              host: process.env.VOZ_DB_HOST || 'voz-db',
+              host: process.env.VOZ_DB_HOST || 'localhost',
               port: parseInt(process.env.VOZ_DB_PORT || '5432', 10),
-              user: process.env.VOZ_DB_USER || 'baserow_ro',
-              password: process.env.VOZ_DB_PASSWORD || 'bi_ro_yarken_2026',
+              user: process.env.VOZ_DB_USER || '',
+              password: process.env.VOZ_DB_PASSWORD || '',
               database: process.env.VOZ_DB_NAME || 'voz',
               max: 2,
               idleTimeoutMillis: 10000,
@@ -112,10 +112,10 @@ class BiPoolManager {
   public getPimcorePool(): MysqlPool {
     if (!this.pimcorePool) {
       this.pimcorePool = mysql.createPool({
-        host: process.env.PIMCORE_DB_HOST || 'pimcore-db-1',
+        host: process.env.PIMCORE_DB_HOST || 'localhost',
         port: parseInt(process.env.PIMCORE_DB_PORT || '3306', 10),
-        user: process.env.PIMCORE_DB_USER || 'baserow_ro',
-        password: process.env.PIMCORE_DB_PASSWORD || 'bi_ro_yarken_2026',
+        user: process.env.PIMCORE_DB_USER || '',
+        password: process.env.PIMCORE_DB_PASSWORD || '',
         database: process.env.PIMCORE_DB_NAME || 'pimcore',
         waitForConnections: true,
         connectionLimit: 2,

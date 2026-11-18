@@ -19,7 +19,7 @@ const EMOJI_OPTIONS = [
 ];
 
 const COLOR_OPTIONS = [
-  { id: 'blue', label: 'Cobalto Yarken', bg: 'bg-[#1D5BD8]', hex: '#1D5BD8', ring: 'ring-[#1D5BD8]' },
+  { id: 'blue', label: 'Azul Cobalto', bg: 'bg-[#1D5BD8]', hex: '#1D5BD8', ring: 'ring-[#1D5BD8]' },
   { id: 'green', label: 'Esmeralda Operativo', bg: 'bg-emerald-600', hex: '#059669', ring: 'ring-emerald-600' },
   { id: 'purple', label: 'Violeta Estratégico', bg: 'bg-purple-600', hex: '#7C3AED', ring: 'ring-purple-600' },
   { id: 'amber', label: 'Ámbar Alertas', bg: 'bg-amber-600', hex: '#D97706', ring: 'ring-amber-600' },

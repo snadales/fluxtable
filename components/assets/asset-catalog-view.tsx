@@ -6,7 +6,7 @@ import {
   TrendingUp, TrendingDown, Minus, Plus, Search, Filter, ShieldCheck, 
   CheckCircle2, Clock, ExternalLink, RefreshCw, Layers, Edit3, Eye
 } from 'lucide-react';
-import { FluxTableLogo } from '@/components/brand/yarken-logo';
+import { FluxTableLogo } from '@/components/brand/brand-logo';
 
 export interface IndicatorItem {
   id: string;
@@ -131,7 +131,7 @@ export const AssetCatalogView: React.FC<AssetCatalogViewProps> = ({
               <span>{moduleName}</span>
             </h1>
             <p className="text-xs text-ink-3 mt-1 max-w-2xl">
-              Catálogo estructurado bajo el Framework Yarken / Metabase. Gestiona de forma centralizada indicadores (K), gráficos (G), tablas fuente (T) y tableros ejecutivos (D).
+              Catálogo unificado de activos de datos y BI. Gestiona de forma centralizada indicadores (K), gráficos (G), tablas fuente (T) y tableros ejecutivos (D).
             </p>
           </div>
 

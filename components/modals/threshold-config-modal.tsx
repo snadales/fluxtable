@@ -139,7 +139,7 @@ export function ThresholdConfigModal({
             </label>
             <input
               type="url"
-              placeholder="https://n8n.yarken.cl/webhook/alertas-bi"
+              placeholder="https://tu-servidor.com/webhook/alertas-bi"
               value={webhookUrl}
               onChange={(e) => setWebhookUrl(e.target.value)}
               className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-blue-500 font-mono"

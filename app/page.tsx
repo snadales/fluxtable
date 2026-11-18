@@ -18,7 +18,8 @@ import { TableWebhooksModal } from '@/components/modals/table-webhooks-modal';
 import { TableSnapshotsModal } from '@/components/modals/table-snapshots-modal';
 import { BiAnalyticsPage } from '@/components/bi/bi-analytics-page';
 import { useDashboardStore } from '@/lib/bi/state/dashboard-store';
-import { FluxTableLogo } from '@/components/brand/yarken-logo';
+import { FluxTableLogo } from '@/components/brand/brand-logo';
+import { getBaseUrl } from '@/lib/brand-config';
 import { AppSidebar } from '@/components/navigation/app-sidebar';
 import { AssetCatalogView } from '@/components/assets/asset-catalog-view';
 import { DocumentTabBar, DocumentTab } from '@/components/navigation/document-tab-bar';
@@ -2298,13 +2299,13 @@ export default function HomePage() {
                   <input
                     type="text"
                     readOnly
-                    value={`https://tables.yarken.cl/api/v1/calendar/ical?tableId=${currentTableId}`}
+                    value={`${getBaseUrl()}/api/v1/calendar/ical?tableId=${currentTableId}`}
                     className="flex-1 bg-transparent font-mono text-[11px] outline-none text-slate-800 dark:text-white"
                   />
                   <button
                     type="button"
                     onClick={() => {
-                      navigator.clipboard.writeText(`https://tables.yarken.cl/api/v1/calendar/ical?tableId=${currentTableId}`);
+                      navigator.clipboard.writeText(`${getBaseUrl()}/api/v1/calendar/ical?tableId=${currentTableId}`);
                       setCopiedIcal(true);
                       setTimeout(() => setCopiedIcal(false), 2000);
                     }}
@@ -2327,7 +2328,7 @@ export default function HomePage() {
 
               <div className="pt-2 flex flex-col gap-2">
                 <a
-                  href={`webcal://tables.yarken.cl/api/v1/calendar/ical?tableId=${currentTableId}`}
+                  href={`${getBaseUrl().replace(/^https?:\/\//, 'webcal://')}/api/v1/calendar/ical?tableId=${currentTableId}`}
                   className="w-full py-2.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg text-center flex items-center justify-center gap-1.5 shadow-sm transition-colors"
                 >
                   <CalendarIcon className="w-3.5 h-3.5" />
