@@ -4,6 +4,7 @@ import { users, sessions } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 import crypto from 'crypto';
+import { calculateSessionExpiry, getSessionConfig } from '@/lib/auth/session-config';
 import { hashPassword, verifyPassword } from '@/lib/auth/auth-guard';
 
 const LoginSchema = z.object({
@@ -78,9 +79,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Crear sesión persistente de 7 días
+    // Crear sesión persistente parametrizable (SEG-21 / D9)
     const sessionToken = crypto.randomBytes(32).toString('hex');
-    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    const expiresAt = calculateSessionExpiry();
+    const sessionConfig = getSessionConfig();
     const ipAddress = req.headers.get('x-forwarded-for')?.split(',')[0].trim() || '127.0.0.1';
     const userAgent = req.headers.get('user-agent') || 'Unknown';
 
@@ -103,7 +105,7 @@ export async function POST(req: NextRequest) {
     });
 
     // Fijar cookie segura HTTP-Only
-    response.cookies.set('fluxtable_session', sessionToken, {
+    response.cookies.set(sessionConfig.cookieName, sessionToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',

@@ -2,10 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db';
 import { sessions } from '@/db/schema';
 import { eq } from 'drizzle-orm';
+import { getSessionConfig } from '@/lib/auth/session-config';
 
 export async function POST(req: NextRequest) {
   try {
-    const sessionToken = req.cookies.get('fluxtable_session')?.value;
+    const cookieName = getSessionConfig().cookieName;
+    const sessionToken = req.cookies.get(cookieName)?.value || req.cookies.get('fluxtable_session')?.value;
 
     if (sessionToken) {
       await db.delete(sessions).where(eq(sessions.sessionToken, sessionToken)).catch(() => {});
@@ -13,14 +15,23 @@ export async function POST(req: NextRequest) {
 
     const response = NextResponse.json({ success: true, message: 'Sesión cerrada exitosamente' });
 
-    // Purgar cookie de sesión
-    response.cookies.set('fluxtable_session', '', {
+    // Purgar cookie de sesión parametrizable
+    response.cookies.set(cookieName, '', {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       path: '/',
       maxAge: 0,
     });
+    if (cookieName !== 'fluxtable_session') {
+      response.cookies.set('fluxtable_session', '', {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        path: '/',
+        maxAge: 0,
+      });
+    }
 
     return response;
   } catch (err: any) {

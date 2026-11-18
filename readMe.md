@@ -166,13 +166,26 @@ BaserowLite permite gestionar programáticamente todas las bases, tablas, column
 
 ---
 
-## 🧪 Pruebas Automatizadas
+## 🧪 Pruebas Automatizadas y Cobertura
 
-Para ejecutar la batería completa de 39 pruebas unitarias y de integración:
+Para ejecutar la batería completa de 68 pruebas unitarias y de integración:
 ```bash
 npm test
+```
+Para auditar la cobertura de código (V8 Coverage, QA-02 / D3):
+```bash
+npm run test:coverage
 ```
 Para compilar la versión de producción de Next.js 15:
 ```bash
 npm run build
 ```
+
+## 📡 Endpoints de Diagnóstico y Salud (Estándar Yarken v2)
+
+| Endpoint | Método | Autenticación | Función |
+| :--- | :--- | :--- | :--- |
+| `/api/v1/salud` | `GET` | Abierto (Red Interna) | Verificación activa de PostgreSQL (`SELECT 1`). Devuelve `200 OK` o `503 Service Unavailable`. |
+| `/api/v1/version` | `GET` | Abierto | Información de versión, framework, commit y runtime. |
+| `/api/v1/diagnostico` | `GET` | Sesión / Token | Diagnóstico detallado: conteo de workspaces, tablas, usuarios, memoria y uptime. |
+| `/api/health` | `GET` | Abierto | Alias retrocompatible hacia `/api/v1/salud`. |

@@ -2,6 +2,41 @@
 
 ---
 
+## 🗓️ [2026-11-17] - Fase 16: Alineación Normativa con Estándar de Servicio Yarken v2 (Issue #39)
+
+### 🎯 Intención
+Alinear FluxTable con los requisitos obligatorios (MUST) para servicios Nivel U (Interfaz / UI) del **Estándar de Servicio Yarken (v2)** ([Issue #39](https://github.com/snadales/BaserowLite/issues/39)):
+1. Implementar endpoints oficiales del contrato de API y observabilidad (`API-08`, `OBS-05`): `GET /api/v1/salud` (con chequeo activo a PostgreSQL respondiendo 200/503), `GET /api/v1/version` y `GET /api/v1/diagnostico` autenticado.
+2. Mantener `/api/health` como alias transparente de compatibilidad hacia `/api/v1/salud`.
+3. Parametrizar la expiración de sesión y cookie (`SEG-21`, `D9`, `Principio 1`) eliminando tiempos en duro, acotando el tope estricto a 7 días.
+4. Habilitar suite de cobertura con `@vitest/coverage-v8` (`QA-02`, `D3`) y script `npm run test:coverage`.
+
+### 📍 Estado Actual
+- **Contrato de API y Diagnóstico (`API-08`, `OBS-05`)**:
+  - `GET /api/v1/salud`: Ejecuta `SELECT 1` sobre PostgreSQL. Responde 200 OK con latencia en ms, o 503 Service Unavailable si la base está inaccesible.
+  - `GET /api/v1/version`: Expone versión, entorno, framework y nodo sin autenticación.
+  - `GET /api/v1/diagnostico`: Protegido por sesión/token, expone métricas de memoria (RSS/heap), uptime e inventario de workspaces, tablas y usuarios.
+  - `GET /api/health`: Delegado a `/api/v1/salud`.
+- **Sesiones Paramétricas (`SEG-21`, `D9`)**:
+  - Creado módulo `lib/auth/session-config.ts` con lectura de `SESSION_MAX_AGE_DAYS` y `SESSION_COOKIE_NAME` respetando el límite normativo de 7 días.
+  - Aplicado en `app/api/auth/login/route.ts`, `app/api/auth/logout/route.ts` y `lib/auth/auth-guard.ts`.
+- **Calidad y Cobertura (`QA-02`, `D3`)**:
+  - Incorporado `@vitest/coverage-v8` y configurado reporte en `vitest.config.ts`.
+  - 68/68 pruebas unitarias pasando al 100% (+4 nuevos tests en `session-config.test.ts`).
+  - Next.js build genera 31/31 rutas compiladas limpiamente.
+
+### 🏁 Estado Deseado
+- Cumplimiento normativo del estándar para servicios Nivel U en sus puertas de salida de API, Observabilidad y Calidad.
+
+### ⚠️ Problemas Encontrados y Soluciones
+- *Problema:* El endpoint de salud `/api/health` anterior no probaba la conexión a PostgreSQL, arriesgando falsos positivos en Kuma.
+  *Solución:* Se implementó `SELECT 1` activo con medición de latencia y código 503 ante fallos.
+
+### 🔄 Iteraciones e Historial de Ejecución
+1. **Iteración 139**: Creación de Issue #39, implementación de endpoints `/api/v1/salud`, `/api/v1/version`, `/api/v1/diagnostico`, refactor de sesiones parametrizables `SEG-21`, instalación de `@vitest/coverage-v8`, ejecución de 68/68 tests y compilación de 31 rutas Next.js.
+
+---
+
 ## 🗓️ [2026-11-17] - Fase 15: Limpieza de Código, Depuración de Servicio y Sincronización Total de Documentación (Issue #38)
 
 ### 🎯 Intención

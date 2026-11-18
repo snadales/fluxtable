@@ -3,6 +3,7 @@ import { db } from '@/db';
 import { apiTokens, users, sessions } from '@/db/schema';
 import { eq, gt } from 'drizzle-orm';
 import crypto from 'crypto';
+import { getSessionConfig } from '@/lib/auth/session-config';
 
 export interface AuthContext {
   authenticated: boolean;
@@ -21,8 +22,9 @@ export interface AuthContext {
  * Valida autenticación por Cookie de Sesión, API Token (SHA-256) o Cloudflare Zero Trust
  */
 export async function authenticateRequest(req: NextRequest): Promise<AuthContext> {
-  // 1. Revisar Cookie de Sesión 'fluxtable_session'
-  const sessionCookie = req.cookies.get('fluxtable_session')?.value;
+  // 1. Revisar Cookie de Sesión parametrizable (SEG-21 / D9)
+  const cookieName = getSessionConfig().cookieName;
+  const sessionCookie = req.cookies.get(cookieName)?.value || req.cookies.get('fluxtable_session')?.value;
   if (sessionCookie) {
     try {
       const activeSession = await db.query.sessions.findFirst({
