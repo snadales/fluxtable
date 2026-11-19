@@ -95,6 +95,19 @@ docker compose up -d --build
 ```
 La aplicación estará disponible inmediatamente en `http://localhost:3000`.
 
+### Despliegue en Servidor ZBook (`docker-framework`)
+En el servidor de producción (ZBook), el despliegue se rige estrictamente por el estándar `docker-framework`:
+1. **Secretos 1Password:** Se utiliza `.env.1password` resuelto mediante `/home/snadales/docker/1password/resolve-env.sh /home/snadales/docker/fluxtable`.
+2. **Loopback Estricto:** Los puertos quedan confinados exclusivamente a `127.0.0.1` (`127.0.0.1:8097` para la app y `127.0.0.1:5435` para PostgreSQL), sin exposición a `0.0.0.0`.
+3. **Archivo Canónico:** Se utiliza `compose.yaml` (especificación Docker Compose v2) con rotación de logs `json-file` y directivas de seguridad (`no-new-privileges:true`).
+4. **Respaldos & Restore:** Programados en crontab de ZBook con `scripts/backup.sh` (diario 02:30 UTC a NAS y Kuma) y `scripts/restore_test.sh` (semanal domingos 04:50 UTC con validación de integridad relacional).
+
+```bash
+# Despliegue / Actualización en ZBook:
+/home/snadales/docker/1password/resolve-env.sh /home/snadales/docker/fluxtable
+cd /home/snadales/docker/fluxtable && docker compose up -d
+```
+
 ---
 
 ## 🔄 Convivencia en Paralelo (Cero Impacto a Producción)

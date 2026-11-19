@@ -1,0 +1,99 @@
+name: fluxtable
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: fluxtable-db
+    restart: unless-stopped
+    shm_size: 512mb
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-fluxtable}
+      POSTGRES_USER: ${POSTGRES_USER:-fluxtable_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-fluxtable_pass}
+    ports:
+      # SEGURIDAD CRÍTICA: Bind estricto a loopback, nunca 0.0.0.0
+      - "127.0.0.1:${POSTGRES_PORT:-5435}:5432"
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+      - ./db/migrations/0000_third_paper_doll.sql:/docker-entrypoint-initdb.d/01_init.sql:ro
+    command: >
+      postgres 
+        -c shared_buffers=256MB 
+        -c work_mem=8MB 
+        -c maintenance_work_mem=64MB 
+        -c effective_cache_size=768MB 
+        -c max_connections=40 
+        -c max_parallel_workers_per_gather=2
+    deploy:
+      resources:
+        limits:
+          memory: 1024M
+        reservations:
+          memory: 384M
+    networks:
+      - fluxtable_internal
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-fluxtable_user} -d ${POSTGRES_DB:-fluxtable}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    logging: *default-logging
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: fluxtable-app:actual
+    container_name: fluxtable-app
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATABASE_URL: postgresql://${POSTGRES_USER:-fluxtable_user}:${POSTGRES_PASSWORD:-fluxtable_pass}@postgres:5432/${POSTGRES_DB:-fluxtable}
+      APP_SECRET: ${APP_SECRET:-default_secret_key_change_me_32_bytes}
+      STORAGE_DRIVER: ${STORAGE_DRIVER:-local}
+      LOCAL_STORAGE_PATH: /app/storage/uploads
+      ALLOWED_EMAILS: ${ALLOWED_EMAILS:-admin@fluxtable.local}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@fluxtable.local}
+      NEXT_PUBLIC_APP_NAME: ${NEXT_PUBLIC_APP_NAME:-FluxTable}
+      NEXT_PUBLIC_APP_ORG: ${NEXT_PUBLIC_APP_ORG:-}
+      NEXT_PUBLIC_APP_TAGLINE: ${NEXT_PUBLIC_APP_TAGLINE:-Plataforma de Datos & Business Intelligence}
+      NEXT_PUBLIC_BRAND_COLOR: ${NEXT_PUBLIC_BRAND_COLOR:-#1D5BD8}
+      NEXT_PUBLIC_APP_LOGO_URL: ${NEXT_PUBLIC_APP_LOGO_URL:-}
+      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-}
+    ports:
+      # SEGURIDAD CRÍTICA: Bind estricto a loopback, nunca 0.0.0.0
+      - "127.0.0.1:${PORT:-8097}:3000"
+    volumes:
+      - ./data/uploads:/app/storage/uploads
+    deploy:
+      resources:
+        limits:
+          memory: 1024M
+        reservations:
+          memory: 256M
+    networks:
+      - fluxtable_internal
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:3000/api/v1/salud"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    logging: *default-logging
+
+networks:
+  fluxtable_internal:
+    driver: bridge

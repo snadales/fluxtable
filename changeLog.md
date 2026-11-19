@@ -2,6 +2,34 @@
 
 ---
 
+## 🗓️ [2026-11-19] - Fase 25: Estandarización Completa con Docker Framework en ZBook (Issue #49)
+
+### 🎯 Intención
+Alinear el servicio FluxTable al 100% con el estándar del Ecosistema Homelab (`docker-framework`) ([Issue #49](https://github.com/snadales/fluxtable/issues/49)):
+1. **Loopback Estricto**: Reemplazar binds perimetrales `0.0.0.0` por `127.0.0.1:8097` (app) y `127.0.0.1:5435` (PostgreSQL), garantizando cero exposición perimetral.
+2. **Secretos Centralizados en 1Password (Regla 1-a-1)**: Crear ítem `zbook_docker_fluxtable_config` en la bóveda `IA` de 1Password y plantilla declarativa `.env.1password` resuelta en runtime por `resolve-env.sh`.
+3. **Hardening de Compose**: Estandarizar a `compose.yaml` (nombre oficial compose v2), agregar rotación de logs `json-file` (10m, 3 files), aislamiento de privilegios `security_opt: ["no-new-privileges:true"]` y límites de memoria/CPU.
+4. **Respaldos y Restore Automatizados**:
+   - `scripts/backup.sh`: Dumps diarios en formato custom `pg_dump -Fc`, retención local de 14 días, sincronización a NAS (`/mnt/backups/zbook-dumps/fluxtable`) y notificación Kuma push.
+   - `scripts/restore_test.sh`: Script de verificación periódica de restore en base temporal (`fluxtable_restoretest`), validación de consistencia y conteos de registros en tablas críticas (`workspaces`, `bases`, `tables`, `fields`, `records`, `bi_dashboards`, `bi_cards`).
+   - Configuración de crontab en ZBook (backup diario a las 02:30 UTC y restore test semanal los domingos a las 04:50 UTC).
+5. **Documentación Sincrónica**: Actualizar `readMe.md` y `changeLog.md`.
+
+### 📍 Estado Actual
+- **Docker Compose**: `compose.yaml` desplegado y activo en ZBook con binds exclusivos `127.0.0.1:8097` y `127.0.0.1:5435`.
+- **1Password**: Ítem `zbook_docker_fluxtable_config` activo en bóveda `IA`, `.env` con permisos `600`.
+- **Backups**: Scripts `backup.sh` y `restore_test.sh` probados y certificados exitosamente al 100%.
+- **Crontab**: Programación activa en ZBook.
+- **Salud**: HTTP 200 en `http://127.0.0.1:8097/api/v1/salud` (latencia DB 1ms) y `https://fluxtable.yarken.cl`.
+
+### 🏁 Estado Deseado
+- Servicio FluxTable 100% certificado bajo la norma `docker-framework` del homelab con respaldo y restore auditados.
+
+### 🔄 Iteraciones e Historial de Ejecución
+1. **Iteración 149**: Creación de Issue #49, creación de ítem en 1Password Connect, generación de `.env.1password`, redacción de `compose.yaml` endurecido con loopback estricto, implementación y prueba de scripts de backup y restore test, registro en crontab de ZBook, despliegue y verificación E2E de salud.
+
+---
+
 ## 🗓️ [2026-11-18] - Fase 24: Deduplicación de Membresías y Constraint UNIQUE en workspace_members (Issue #48)
 
 ### 🎯 Intención
