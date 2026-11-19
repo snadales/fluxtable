@@ -30,3 +30,6 @@ packages/*/dist/
 data/
 data/postgres/
 data/uploads/
+backups/
+*.dump
+
