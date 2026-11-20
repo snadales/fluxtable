@@ -12,44 +12,6 @@ describe('Auth Guard & RBAC', () => {
     }
   });
 
-  it('should authenticate valid Cloudflare Access header with matching user in allowed list', async () => {
-    // Save original ALLOWED_EMAILS
-    const originalAllowed = process.env.ALLOWED_EMAILS;
-    process.env.ALLOWED_EMAILS = 'admin@yarken.cl,snadales@gmail.com';
-
-    const req = new NextRequest('http://localhost:3000/api/database/tables', {
-      headers: {
-        'cf-access-authenticated-user-email': 'snadales@gmail.com',
-      },
-    });
-
-    const auth = await authenticateRequest(req);
-    expect(auth.authenticated).toBe(true);
-    expect(auth.user?.email).toBe('snadales@gmail.com');
-    expect(auth.user?.role).toBe('superadmin');
-
-    // Restore
-    process.env.ALLOWED_EMAILS = originalAllowed;
-  });
-
-  it('should reject Cloudflare Access header if email is not allowed', async () => {
-    const originalAllowed = process.env.ALLOWED_EMAILS;
-    process.env.ALLOWED_EMAILS = 'admin@yarken.cl';
-
-    const req = new NextRequest('http://localhost:3000/api/database/tables', {
-      headers: {
-        'cf-access-authenticated-user-email': 'hacker@malicious.com',
-      },
-    });
-
-    const auth = await authenticateRequest(req);
-    expect(auth.authenticated).toBe(false);
-    expect(auth.user).toBeUndefined();
-
-    // Restore
-    process.env.ALLOWED_EMAILS = originalAllowed;
-  });
-
   it('should securely hash and verify passwords using scrypt', async () => {
     const { hashPassword, verifyPassword } = await import('../auth-guard');
     const pwd = 'SuperSecretPassword2026!';

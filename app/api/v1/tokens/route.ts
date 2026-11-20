@@ -1,10 +1,13 @@
+import { requireSuperadmin } from '@/lib/auth/auth-guard';
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db';
 import { apiTokens, workspaces } from '@/db/schema';
 import { eq, desc } from 'drizzle-orm';
 import crypto from 'crypto';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const guard = await requireSuperadmin(request);
+  if (!guard.authenticated) return guard.response;
   try {
     const tokens = await db.query.apiTokens.findMany({
       orderBy: desc(apiTokens.createdAt),
@@ -28,6 +31,8 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+  const guard = await requireSuperadmin(request);
+  if (!guard.authenticated) return guard.response;
   try {
     const body = await request.json();
     const { name, agentClient = 'external_script', permissions = { tables: 'all', mode: 'read_write' } } = body;
