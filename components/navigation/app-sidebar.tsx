@@ -154,7 +154,14 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
   }
 
   return (
-    <aside className="w-64 border-r border-line bg-surface flex flex-col h-full shrink-0 select-none transition-all duration-200 z-20">
+    <>
+    {/* Móvil (<768px): el panel abierto flota sobre el contenido; el fondo lo cierra */}
+    <div
+      className="md:hidden fixed inset-0 bg-black/40 z-30"
+      onClick={onToggle}
+      aria-hidden="true"
+    />
+    <aside className="w-64 border-r border-line bg-surface flex flex-col h-full shrink-0 select-none transition-all duration-200 z-20 max-md:fixed max-md:inset-y-0 max-md:left-0 max-md:z-40 max-md:w-[85vw] max-md:max-w-72 max-md:shadow-2xl">
       {/* 1. Header con Selector de Workspace, Usuario y Botón Colapsar */}
       <div className="border-b border-line p-2.5 space-y-2 shrink-0 bg-surface">
         <div className="flex items-center justify-between">
@@ -784,5 +791,6 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
         </div>
       </div>
     </aside>
+    </>
   );
 };

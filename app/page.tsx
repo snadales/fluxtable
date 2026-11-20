@@ -198,6 +198,12 @@ export default function HomePage() {
   const [inspectingKpiCode, setInspectingKpiCode] = useState<string | null>(null);
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  // Móvil (<768px): el sidebar arranca colapsado para no ocupar el 65% de la pantalla
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches) {
+      setIsSidebarOpen(false);
+    }
+  }, []);
   const [workspaces, setWorkspaces] = useState<WorkspaceGroup[]>([]);
   const [activeWorkspaceId, setActiveWorkspaceId] = useState<string | null>(null);
   const [showWorkspaceUserMenu, setShowWorkspaceUserMenu] = useState(false);
