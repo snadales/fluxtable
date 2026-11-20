@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth/auth-guard';
 import { db } from '@/db';
 import { biDashboards, biDashboardTabs, biCards, biThresholds } from '@/db/schema';
-import { eq, asc } from 'drizzle-orm';
+import { eq, asc, inArray } from 'drizzle-orm';
+import { actorOf, authorizeDashboard } from '@/lib/auth/dashboard-access';
 
 export async function GET(
   req: NextRequest,
@@ -14,19 +15,10 @@ export async function GET(
   try {
     const { id } = await params;
 
-    // Buscar por ID o por Código (ej. D001)
-    const dashboard = await db.query.biDashboards.findFirst({
-      where: id.startsWith('D') && id.length <= 6
-        ? eq(biDashboards.code, id)
-        : eq(biDashboards.id, id),
-    });
-
-    if (!dashboard) {
-      return NextResponse.json(
-        { error: 'NOT_FOUND', message: 'Dashboard no encontrado' },
-        { status: 404 }
-      );
-    }
+    // Buscar por ID o por Código (ej. D001). Sin acceso responde 404 (#54).
+    const access = await authorizeDashboard(actorOf(auth.user), id, 'view');
+    if (!access.ok) return access.response;
+    const { dashboard, caps } = access;
 
     const tabs = await db.query.biDashboardTabs.findMany({
       where: eq(biDashboardTabs.dashboardId, dashboard.id),
@@ -38,7 +30,10 @@ export async function GET(
       orderBy: [asc(biCards.order)],
     });
 
-    const thresholds = await db.query.biThresholds.findMany();
+    const cardIds = cards.map((c) => c.id);
+    const thresholds = cardIds.length
+      ? await db.query.biThresholds.findMany({ where: inArray(biThresholds.cardId, cardIds) })
+      : [];
 
     const cardsWithThresholds = cards.map((c) => ({
       ...c,
@@ -50,6 +45,8 @@ export async function GET(
         ...dashboard,
         tabs,
         cards: cardsWithThresholds,
+        // Capacidades del usuario actual sobre este dashboard: la UI oculta controles según esto.
+        access: caps,
       },
     });
   } catch (err: any) {
@@ -69,6 +66,9 @@ export async function PATCH(
 
   try {
     const { id } = await params;
+    const actor = actorOf(auth.user);
+    const access = await authorizeDashboard(actor, id, 'edit');
+    if (!access.ok) return access.response;
     const body = await req.json();
 
     const [updated] = await db
@@ -77,14 +77,15 @@ export async function PATCH(
         name: body.name,
         description: body.description,
         icon: body.icon,
-        folderId: body.folderId,
+        // Un invitado no ve el árbol de carpetas: no puede mover el dashboard.
+        folderId: actor.role === 'shared' ? undefined : body.folderId,
         isFavorite: body.isFavorite,
         autoRefreshInterval: body.autoRefreshInterval,
         layoutJson: body.layoutJson,
         tags: body.tags,
         updatedAt: new Date(),
       })
-      .where(eq(biDashboards.id, id))
+      .where(eq(biDashboards.id, access.dashboard.id))
       .returning();
 
     return NextResponse.json({ dashboard: updated });
@@ -105,7 +106,9 @@ export async function DELETE(
 
   try {
     const { id } = await params;
-    await db.delete(biDashboards).where(eq(biDashboards.id, id));
+    const access = await authorizeDashboard(actorOf(auth.user), id, 'delete');
+    if (!access.ok) return access.response;
+    await db.delete(biDashboards).where(eq(biDashboards.id, access.dashboard.id));
     return NextResponse.json({ success: true });
   } catch (err: any) {
     return NextResponse.json(

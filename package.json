@@ -35,6 +35,7 @@
     "zustand": "^5.1.0"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.3.15",
     "@types/echarts": "^4.9.22",
     "@types/node": "^22.9.0",
     "@types/pg": "^8.11.10",
