@@ -11,12 +11,14 @@ interface BiAnalyticsPageProps {
   onNavigateToTable?: (tableId: string) => void;
   hideFolderSidebar?: boolean;
   onInspectKpi?: (kpiCode: string) => void;
+  currentUser?: { id?: string; email?: string } | null;
 }
 
 export function BiAnalyticsPage({ 
   onNavigateToTable, 
   hideFolderSidebar = true,
   onInspectKpi,
+  currentUser,
 }: BiAnalyticsPageProps = {}) {
   const { fetchDashboardsAndFolders, isKioskMode } = useDashboardStore();
   const [isDashboardModalOpen, setIsDashboardModalOpen] = useState(false);
@@ -40,6 +42,7 @@ export function BiAnalyticsPage({
         onNewCard={() => setIsCardModalOpen(true)}
         onNavigateToTable={onNavigateToTable}
         onInspectKpi={onInspectKpi}
+        currentUser={currentUser}
       />
 
       {/* Modales de Creación */}
