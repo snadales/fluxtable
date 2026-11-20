@@ -2,6 +2,24 @@
 
 ---
 
+## 🗓️ [2026-11-20] - Fase 26: Compartir dashboards con roles por usuario (Issue #54)
+
+### 🎯 Intención
+Compartir un dashboard puntual con una persona (cuenta de Google) sin darle acceso a tablas ni a otros dashboards ([Issue #54](https://github.com/snadales/fluxtable/issues/54)).
+
+### 🔄 Cambios
+1. **Modelo**: tabla `dashboard_shares` (dashboard, correo, rol `lector`/`colaborador`/`propietario`) y rol global nuevo `shared` para invitados. Migración idempotente `db/migrations/0003_dashboard_shares.sql`.
+2. **Autorización en servidor**: `lib/auth/dashboard-permissions.ts` (reglas puras) y `lib/auth/dashboard-access.ts` (consultas). Todas las rutas `/api/bi/*` validan el acceso; un `shared` queda limitado por lista blanca en `middleware.ts` y `requireAuth`. `superadmin`, `member` y tokens API siguen como antes.
+3. **API**: `GET/POST/DELETE /api/bi/dashboards/[id]/shares`. Un correo desconocido se crea como usuario `shared`; un `pending` pasa a `shared`.
+4. **Consultas**: un `shared` solo consulta tarjetas visibles (`cardId` obligatorio, sin SQL libre); el servidor usa la consulta guardada y solo suma filtros y rango de fechas.
+5. **UI**: botón «Compartir» con diálogo (correo + rol, lista de accesos, quitar, «Copiar enlace» `/?dashboard=<código>&tab=1`); «Añadir tarjeta» oculto a quien no edita; vista reducida para invitados.
+6. **Semilla D003**: `scripts/seed_dashboard_shares_d003.sql` (snadales@gmail.com propietario, dhayis27@gmail.com colaborador). No ejecutada en producción.
+7. **Pruebas**: PGlite en memoria (devDependency) para pruebas de integración de rutas, semilla y migración.
+
+### 📍 Pendiente del dueño
+- Política de Cloudflare Access que admita las cuentas invitadas.
+- Aplicar `0003` y luego la semilla en la BD de ZBook.
+
 ## 🗓️ [2026-11-19] - Fase 25: Estandarización Completa con Docker Framework en ZBook (Issue #49)
 
 ### 🎯 Intención

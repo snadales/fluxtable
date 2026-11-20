@@ -12,7 +12,8 @@ export const users = pgTable('users', {
   avatarUrl: text('avatar_url'),
   passwordHash: text('password_hash'), // null si se autentica exclusivamente vía Google
   googleId: text('google_id').unique(),
-  role: text('role', { enum: ['superadmin', 'member', 'pending'] }).default('member').notNull(),
+  // shared = «lector de compartidos»: solo ve los dashboards compartidos con su correo (#54)
+  role: text('role', { enum: ['superadmin', 'member', 'pending', 'shared'] }).default('member').notNull(),
   isActive: boolean('is_active').default(true).notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
@@ -317,6 +318,22 @@ export const biDashboards = pgTable('bi_dashboards', {
   index('bi_dashboards_workspace_idx').on(t.workspaceId),
   index('bi_dashboards_folder_idx').on(t.folderId),
   index('bi_dashboards_code_idx').on(t.code),
+]);
+
+/**
+ * Accesos por dashboard (#54). El correo se guarda normalizado en minúscula para que el
+ * acceso exista antes del primer login con Google del invitado.
+ */
+export const dashboardShares = pgTable('dashboard_shares', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  dashboardId: uuid('dashboard_id').references(() => biDashboards.id, { onDelete: 'cascade' }).notNull(),
+  email: text('email').notNull(),
+  role: text('role', { enum: ['lector', 'colaborador', 'propietario'] }).notNull(),
+  createdBy: uuid('created_by').references(() => users.id, { onDelete: 'set null' }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+}, (t) => [
+  uniqueIndex('dashboard_shares_dashboard_email_idx').on(t.dashboardId, t.email),
+  index('dashboard_shares_email_idx').on(t.email),
 ]);
 
 export const biDashboardTabs = pgTable('bi_dashboard_tabs', {

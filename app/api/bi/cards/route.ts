@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth/auth-guard';
 import { db } from '@/db';
 import { biCards } from '@/db/schema';
-import { eq, desc } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
+import { actorOf, authorizeDashboard, forbidden } from '@/lib/auth/dashboard-access';
 
 export async function POST(req: NextRequest) {
   const auth = await requireAuth(req);
@@ -18,6 +19,16 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // #54: crear tarjetas exige poder editar el dashboard. Un invitado (aunque sea propietario)
+    // no define consultas nuevas: eso le daría lectura de cualquier tabla u origen.
+    const actor = actorOf(auth.user);
+    if (actor.role === 'shared') {
+      return forbidden('Los invitados no pueden crear tarjetas nuevas');
+    }
+    const access = await authorizeDashboard(actor, String(body.dashboardId), 'edit');
+    if (!access.ok) return access.response;
+    const dashboardId = access.dashboard.id;
+
     // Código correlativo K001, G001, T001
     let prefix = 'G';
     if (body.chartType === 'kpi') prefix = 'K';
@@ -25,7 +36,7 @@ export async function POST(req: NextRequest) {
     else if (body.chartType === 'markdown') prefix = 'M';
 
     const existingCards = await db.query.biCards.findMany({
-      where: eq(biCards.dashboardId, body.dashboardId),
+      where: eq(biCards.dashboardId, dashboardId),
     });
     const code = `${prefix}${String(existingCards.length + 1).padStart(3, '0')}`;
 
@@ -33,7 +44,7 @@ export async function POST(req: NextRequest) {
       .insert(biCards)
       .values({
         code,
-        dashboardId: body.dashboardId,
+        dashboardId,
         tabId: body.tabId || null,
         name: body.name,
         description: body.description || '',

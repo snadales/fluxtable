@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { authenticateRequest, isPublicApiPath } from '@/lib/auth/auth-guard';
+import { isApiPathAllowedForShared, SHARED_GLOBAL_ROLE } from '@/lib/auth/dashboard-permissions';
 
 interface RateLimitRecord {
   count: number;
@@ -110,6 +111,15 @@ export async function middleware(req: NextRequest) {
     } else if (auth.user?.role === 'pending' && pathname !== '/api/v1/auth/me') {
       return NextResponse.json(
         { error: 'PENDING_APPROVAL', message: 'Tu cuenta espera que un administrador te asigne acceso' },
+        { status: 403 }
+      );
+    } else if (
+      auth.user?.role === SHARED_GLOBAL_ROLE &&
+      !isApiPathAllowedForShared(pathname, req.method)
+    ) {
+      // #54: un invitado solo usa la API de dashboards compartidos; tablas, bases y admin quedan fuera.
+      return NextResponse.json(
+        { error: 'FORBIDDEN', message: 'Tu acceso de invitado solo permite ver dashboards compartidos' },
         { status: 403 }
       );
     }

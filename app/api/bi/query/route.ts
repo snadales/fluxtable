@@ -5,6 +5,8 @@ import { biCacheManager } from '@/lib/bi/analytics/cache-manager';
 import { biPoolManager, BiSourceType } from '@/lib/bi/connectors/pool-manager';
 import { db } from '@/db';
 import { sql } from 'drizzle-orm';
+import { actorOf, authorizeCard } from '@/lib/auth/dashboard-access';
+import { mergeSharedQueryConfig } from '@/lib/auth/dashboard-permissions';
 
 export async function POST(req: NextRequest) {
   const auth = await requireAuth(req);
@@ -14,6 +16,24 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
+    const actor = actorOf(auth.user);
+
+    // #54: un invitado no envía SQL ni consultas libres. Solo ejecuta la consulta guardada de una
+    // tarjeta de un dashboard que puede ver; el cliente aporta rango de fechas y filtros.
+    if (actor.role === 'shared') {
+      if (!body.cardId || body.rawSql) {
+        return NextResponse.json(
+          { error: 'FORBIDDEN', message: 'Los invitados solo pueden consultar tarjetas de dashboards compartidos' },
+          { status: 403 }
+        );
+      }
+      const access = await authorizeCard(actor, String(body.cardId), 'view');
+      if (!access.ok) return access.response;
+      body.sourceType = access.card.sourceType || 'local_baserow';
+      body.queryConfig = mergeSharedQueryConfig(access.card.queryConfigJson as any, body.queryConfig);
+      delete body.params;
+    }
+
     const sourceType: BiSourceType = body.sourceType || 'local_baserow';
     const useCache: boolean = body.useCache !== false;
     const cacheTtlMs: number = body.cacheTtlMs || 60 * 1000;

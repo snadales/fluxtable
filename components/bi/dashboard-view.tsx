@@ -3,19 +3,39 @@
 import React, { useEffect, useState } from 'react';
 import { 
   Printer, Maximize2, Minimize2, Clock, Filter, X, Plus, 
-  RotateCcw, Sparkles, AlertCircle, LayoutDashboard, Share2
+  RotateCcw, Sparkles, AlertCircle, LayoutDashboard, Share2, Link2, Check
 } from 'lucide-react';
 import { useDashboardStore } from '@/lib/bi/state/dashboard-store';
 import { TimeRangePicker } from './time-range-picker';
 import { BiCardRenderer } from './bi-card-renderer';
+import { ShareDashboardDialog } from './share-dashboard-dialog';
+import {
+  DashboardCapabilities,
+  SHARE_ROLE_LABELS,
+  buildDashboardLink,
+  isShareRole,
+} from '@/lib/auth/dashboard-permissions';
+
+// Si el servidor no envía capacidades (versión anterior de la API), se asume el comportamiento de siempre.
+const LEGACY_ACCESS: DashboardCapabilities = {
+  effectiveRole: 'miembro',
+  shareRole: null,
+  canView: true,
+  canEdit: true,
+  canDelete: true,
+  canShare: false,
+  canManageShares: false,
+  grantableRoles: [],
+};
 
 interface DashboardViewProps {
   onNewCard?: () => void;
   onNavigateToTable?: (tableId: string) => void;
   onInspectKpi?: (kpiCode: string) => void;
+  currentUser?: { id?: string; email?: string } | null;
 }
 
-export function DashboardView({ onNewCard, onNavigateToTable, onInspectKpi }: DashboardViewProps) {
+export function DashboardView({ onNewCard, onNavigateToTable, onInspectKpi, currentUser }: DashboardViewProps) {
   const {
     activeDashboard,
     activeTabId,
@@ -34,6 +54,8 @@ export function DashboardView({ onNewCard, onNavigateToTable, onInspectKpi }: Da
   } = useDashboardStore();
 
   const [countdown, setCountdown] = useState(autoRefreshSeconds);
+  const [shareOpen, setShareOpen] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
 
   // Auto-refresco periódico
   useEffect(() => {
@@ -65,6 +87,21 @@ export function DashboardView({ onNewCard, onNavigateToTable, onInspectKpi }: Da
     );
   }
 
+  const access: DashboardCapabilities = { ...LEGACY_ACCESS, ...(activeDashboard.access || {}) };
+  const canEdit = access.canEdit !== false;
+  const addCard = canEdit ? onNewCard : undefined;
+  const roleBadge = isShareRole(access.effectiveRole) ? SHARE_ROLE_LABELS[access.effectiveRole] : null;
+
+  const copyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(buildDashboardLink(window.location.origin, activeDashboard.code));
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000);
+    } catch {
+      /* sin portapapeles: no se muestra confirmación */
+    }
+  };
+
   // Filtrar tarjetas por pestaña activa si hay pestañas definidas
   const visibleCards = (activeDashboard.cards || []).filter((c: any) => {
     if (!activeTabId) return true;
@@ -74,18 +111,23 @@ export function DashboardView({ onNewCard, onNavigateToTable, onInspectKpi }: Da
   const crossFilterEntries = Object.entries(crossFilters);
 
   return (
-    <div className={`flex-1 flex flex-col h-full bg-slate-100/60 overflow-hidden ${
+    <div className={`flex-1 flex flex-col h-full bg-slate-100/60 dark:bg-slate-950 overflow-hidden ${
       isKioskMode ? 'fixed inset-0 z-50 bg-white' : ''
     }`}>
       {/* 1. Barra de Herramientas Superior */}
-      <header className="bg-white border-b border-slate-200 px-4 py-2.5 flex flex-wrap items-center justify-between gap-3 shrink-0">
-        <div className="flex items-center gap-3">
+      <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 py-2.5 flex flex-wrap items-center justify-between gap-3 shrink-0">
+        <div className="flex items-center gap-3 min-w-0">
           <span className="font-mono text-xs font-bold px-2 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 rounded-md">
             {activeDashboard.code}
           </span>
-          <div>
-            <h1 className="text-sm font-bold text-slate-900 leading-tight">
+          <div className="min-w-0">
+            <h1 className="text-sm font-bold text-slate-900 dark:text-slate-100 leading-tight flex items-center gap-2 flex-wrap">
               {activeDashboard.name}
+              {roleBadge && (
+                <span className="text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                  {roleBadge}
+                </span>
+              )}
             </h1>
             {activeDashboard.description && (
               <p className="text-[11px] text-slate-500 line-clamp-1">
@@ -96,7 +138,7 @@ export function DashboardView({ onNewCard, onNavigateToTable, onInspectKpi }: Da
         </div>
 
         {/* Acciones y Controles Globales */}
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {/* Selector de Rango Temporal */}
           <TimeRangePicker value={activeTimeRange} onChange={setTimeRange} />
 
@@ -140,11 +182,33 @@ export function DashboardView({ onNewCard, onNavigateToTable, onInspectKpi }: Da
             {isKioskMode ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
           </button>
 
-          {/* Nueva Tarjeta */}
-          {onNewCard && (
+          {/* Compartir (#54) o, si no puede compartir, solo copiar el enlace */}
+          {access.canShare ? (
             <button
               type="button"
-              onClick={onNewCard}
+              onClick={() => setShareOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+              aria-haspopup="dialog"
+            >
+              <Share2 className="w-3.5 h-3.5" aria-hidden="true" />
+              <span>Compartir</span>
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={copyLink}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+            >
+              {linkCopied ? <Check className="w-3.5 h-3.5 text-emerald-600" aria-hidden="true" /> : <Link2 className="w-3.5 h-3.5" aria-hidden="true" />}
+              <span aria-live="polite">{linkCopied ? 'Enlace copiado' : 'Copiar enlace'}</span>
+            </button>
+          )}
+
+          {/* Nueva Tarjeta (oculta a lectores y colaboradores) */}
+          {addCard && (
+            <button
+              type="button"
+              onClick={addCard}
               className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-xs transition-colors"
             >
               <Plus className="w-3.5 h-3.5" />
@@ -216,16 +280,18 @@ export function DashboardView({ onNewCard, onNavigateToTable, onInspectKpi }: Da
       {/* 3. Rejilla de Tarjetas (Cards Grid) */}
       <main className="flex-1 overflow-y-auto p-4">
         {visibleCards.length === 0 && (
-          <div className="h-64 flex flex-col items-center justify-center text-center bg-white rounded-xl border border-dashed border-slate-300 p-6">
+          <div className="h-64 flex flex-col items-center justify-center text-center bg-white dark:bg-slate-900 dark:border-slate-700 rounded-xl border border-dashed border-slate-300 p-6">
             <Sparkles className="w-8 h-8 text-blue-500 mb-2" />
-            <h4 className="text-xs font-semibold text-slate-800">Esta pestaña no tiene tarjetas</h4>
-            <p className="text-[11px] text-slate-500 mt-1 max-w-sm">
-              Agrega una tarjeta KPI, gráfico o tabla para visualizar métricas en tiempo real.
-            </p>
-            {onNewCard && (
+            <h4 className="text-xs font-semibold text-slate-800 dark:text-slate-200">Esta pestaña no tiene tarjetas</h4>
+            {addCard && (
+              <p className="text-[11px] text-slate-500 mt-1 max-w-sm">
+                Agrega una tarjeta KPI, gráfico o tabla para visualizar métricas en tiempo real.
+              </p>
+            )}
+            {addCard && (
               <button
                 type="button"
-                onClick={onNewCard}
+                onClick={addCard}
                 className="mt-3 px-3 py-1.5 text-xs font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
               >
                 + Crear primera tarjeta
@@ -257,6 +323,16 @@ export function DashboardView({ onNewCard, onNavigateToTable, onInspectKpi }: Da
           </div>
         )}
       </main>
+
+      {access.canShare && (
+        <ShareDashboardDialog
+          isOpen={shareOpen}
+          onClose={() => setShareOpen(false)}
+          dashboard={{ id: activeDashboard.id, code: activeDashboard.code, name: activeDashboard.name }}
+          access={access}
+          currentUser={currentUser}
+        />
+      )}
     </div>
   );
 }

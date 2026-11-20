@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
 
 const UpdateUserSchema = z.object({
   id: z.string().uuid(),
-  role: z.enum(['superadmin', 'member', 'pending']).optional(),
+  role: z.enum(['superadmin', 'member', 'pending', 'shared']).optional(),
   isActive: z.boolean().optional(),
 });
 

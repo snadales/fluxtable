@@ -22,6 +22,6 @@ export async function GET(request: NextRequest) {
     avatarInitials: (name || email).slice(0, 2).toUpperCase(),
     isZeroTrust: isViaCloudflare(request.headers),
     isApiToken,
-    permissions: role === 'superadmin' ? ['all'] : ['read', 'write'],
+    permissions: role === 'superadmin' ? ['all'] : role === 'shared' ? ['read'] : ['read', 'write'],
   });
 }

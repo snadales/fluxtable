@@ -114,6 +114,8 @@ export function BiCardRenderer({ card, onNavigateToTable, onInspectKpi }: BiCard
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          // cardId permite al servidor validar el acceso y usar la consulta guardada (#54).
+          cardId: card.id,
           sourceType: card.sourceType || 'local_baserow',
           queryConfig,
         }),
@@ -321,7 +323,7 @@ export function BiCardRenderer({ card, onNavigateToTable, onInspectKpi }: BiCard
           )}
 
           {/* Badge de Trazabilidad hacia la Tabla Origen (Concepto de Negocio) */}
-          {sourceTable && (
+          {sourceTable && onNavigateToTable && (
             <button
               type="button"
               onClick={(e) => {

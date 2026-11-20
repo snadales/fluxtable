@@ -2,7 +2,24 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth/auth-guard';
 import { db } from '@/db';
 import { biFolders, workspaces } from '@/db/schema';
-import { eq, asc, and, isNull } from 'drizzle-orm';
+import { eq, asc, and, isNull, inArray } from 'drizzle-orm';
+import { actorOf, dashboardsByIds, forbidden, visibleDashboardIds } from '@/lib/auth/dashboard-access';
+import { canCreateDashboards } from '@/lib/auth/dashboard-permissions';
+
+/** Carpetas que contienen dashboards visibles, más sus ancestros (para armar el árbol). */
+async function visibleFolderIds(dashboardIds: string[]): Promise<string[]> {
+  const dashboards = await dashboardsByIds(dashboardIds);
+  const ids = new Set<string>();
+  let frontier = dashboards.map((d) => d.folderId).filter((x): x is string => Boolean(x));
+  while (frontier.length > 0) {
+    const fresh = frontier.filter((id) => !ids.has(id));
+    if (fresh.length === 0) break;
+    fresh.forEach((id) => ids.add(id));
+    const rows = await db.query.biFolders.findMany({ where: inArray(biFolders.id, fresh) });
+    frontier = rows.map((r) => r.parentId).filter((x): x is string => Boolean(x));
+  }
+  return [...ids];
+}
 
 export async function GET(req: NextRequest) {
   const auth = await requireAuth(req);
@@ -14,6 +31,15 @@ export async function GET(req: NextRequest) {
     const parentId = searchParams.get('parent_id');
 
     let conditions: any[] = [];
+
+    // #54: un invitado solo ve las carpetas de sus dashboards compartidos.
+    const visible = await visibleDashboardIds(actorOf(auth.user));
+    if (visible) {
+      const folderIds = await visibleFolderIds(visible);
+      if (folderIds.length === 0) return NextResponse.json({ folders: [] });
+      conditions.push(inArray(biFolders.id, folderIds));
+    }
+
     if (baseId) {
       conditions.push(eq(biFolders.baseId, baseId as any));
     }
@@ -42,6 +68,9 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const auth = await requireAuth(req);
   if (!auth.authenticated) return auth.response;
+  if (!canCreateDashboards(actorOf(auth.user))) {
+    return forbidden('Los invitados no pueden crear carpetas');
+  }
 
   try {
     const body = await req.json();

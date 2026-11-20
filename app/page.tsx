@@ -17,6 +17,7 @@ import { MySettingsModal } from '@/components/modals/my-settings-modal';
 import { TableWebhooksModal } from '@/components/modals/table-webhooks-modal';
 import { TableSnapshotsModal } from '@/components/modals/table-snapshots-modal';
 import { BiAnalyticsPage } from '@/components/bi/bi-analytics-page';
+import { SharedDashboardsShell } from '@/components/bi/shared-dashboards-shell';
 import { useDashboardStore } from '@/lib/bi/state/dashboard-store';
 import { FluxTableLogo } from '@/components/brand/brand-logo';
 import { getBaseUrl } from '@/lib/brand-config';
@@ -139,6 +140,7 @@ export default function HomePage() {
 
   // Usuario y Sesión
   const [user, setUser] = useState<{
+    id?: string;
     name: string;
     email: string;
     role: string;
@@ -246,6 +248,7 @@ export default function HomePage() {
       if (userRes.ok) {
         const uJson = await userRes.json();
         setUser({
+          id: uJson.id,
           name: uJson.name,
           email: uJson.email,
           role: uJson.role,
@@ -939,6 +942,11 @@ export default function HomePage() {
     }
   };
 
+  // Invitado (#54): solo ve los dashboards compartidos con él, sin tablas ni administración.
+  if (user.role === 'shared') {
+    return <SharedDashboardsShell user={user} />;
+  }
+
   return (
     <div className="flex flex-col h-screen overflow-hidden bg-slate-50 dark:bg-slate-950">
       {/* 0. Barra de Pestañas Global Multi-Documento (Issue #33) */}
@@ -1071,6 +1079,7 @@ export default function HomePage() {
               </header>
               <div className="flex-1 overflow-y-auto">
                 <BiAnalyticsPage 
+                  currentUser={user}
                   hideFolderSidebar={true}
                   onInspectKpi={(code) => setInspectingKpiCode(code)}
                   onNavigateToTable={async (targetTableIdentifier) => {

@@ -5,6 +5,7 @@ import { eq, gt } from 'drizzle-orm';
 import crypto from 'crypto';
 import { getSessionConfig } from '@/lib/auth/session-config';
 import { checkCfAccessPerimeter } from '@/lib/auth/cf-access';
+import { isApiPathAllowedForShared, SHARED_GLOBAL_ROLE } from './dashboard-permissions';
 
 export interface AuthContext {
   authenticated: boolean;
@@ -139,6 +140,17 @@ export async function requireAuth(req: NextRequest): Promise<
       authenticated: false,
       response: NextResponse.json(
         { error: 'PENDING_APPROVAL', message: 'Tu cuenta espera que un administrador te asigne acceso' },
+        { status: 403 }
+      ),
+    };
+  }
+  // #54: defensa en profundidad (además del middleware): un invitado solo usa la API de dashboards.
+  const pathname = req.nextUrl?.pathname ?? new URL(req.url).pathname;
+  if (auth.user.role === SHARED_GLOBAL_ROLE && !isApiPathAllowedForShared(pathname, req.method)) {
+    return {
+      authenticated: false,
+      response: NextResponse.json(
+        { error: 'FORBIDDEN', message: 'Tu acceso de invitado solo permite ver dashboards compartidos' },
         { status: 403 }
       ),
     };
