@@ -41,7 +41,7 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
   activeTabId: null,
   activeTimeRange: {
     field: 'created_at',
-    preset: 'last_30_days',
+    preset: 'this_year', // Este año (YTD): el detalle financiero de cierres cubre mayo–septiembre 2026
   },
   crossFilters: {},
   isKioskMode: false,

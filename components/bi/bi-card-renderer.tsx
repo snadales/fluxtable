@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { useDashboardStore } from '@/lib/bi/state/dashboard-store';
 import { formatCurrency } from '@/lib/formatters';
+import { getCellBadge } from '@/lib/bi/cell-badges';
 
 interface BiCardRendererProps {
   card: {
@@ -157,14 +158,41 @@ export function BiCardRenderer({ card, onNavigateToTable, onInspectKpi }: BiCard
     const categories = data.map((d) => String(d[dimField] ?? ''));
     const values = data.map((d) => Number(d[metricField]) || 0);
 
+    // Formato es-CL: miles con punto, CLP sin decimales ('clp' antepone $), 'int' entero, 'pct' 1 decimal
+    const valueFormat: string = card.visualConfigJson?.valueFormat || '';
+    const fmtVal = (n: number, key?: string) => {
+      const isPct = valueFormat === 'pct';
+      const txt = isPct
+        ? n.toLocaleString('es-CL', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' %'
+        : Math.round(n).toLocaleString('es-CL');
+      const isMain = !key || key === metricField;
+      return valueFormat === 'clp' && isMain ? `$${txt}` : txt;
+    };
+    // Tooltip con todas las métricas listadas (p. ej. venta bruta + órdenes)
+    const tooltipKeys: string[] = card.visualConfigJson?.tooltipMetrics?.length
+      ? card.visualConfigJson.tooltipMetrics
+      : [metricField];
+    // Colores por categoría (paleta fija por sociedad/canal)
+    const colorMap: Record<string, string> | undefined = card.visualConfigJson?.colorMap;
+    const baseColor = card.visualConfigJson?.color || '#1D5BD8';
+    const barData = values.map((v, i) => ({
+      value: v,
+      itemStyle: colorMap && colorMap[categories[i]] ? { color: colorMap[categories[i]] } : undefined,
+    }));
+
     const option: any = {
       tooltip: {
         trigger: 'axis',
         axisPointer: { type: 'shadow' },
+        confine: true,
         formatter: (params: any) => {
           const item = Array.isArray(params) ? params[0] : params;
-          const val = typeof item.value === 'number' ? item.value.toLocaleString() : item.value;
-          return `<b>${item.name}</b><br/>${metricField}: ${val}`;
+          const row = data[item.dataIndex] || {};
+          const lines = tooltipKeys.map((k) => {
+            const label = k.replace(/_/g, ' ');
+            return `${label}: <b>${fmtVal(Number(row[k]) || 0, k)}</b>`;
+          });
+          return `<b>${item.name}</b><br/>${lines.join('<br/>')}`;
         },
       },
       grid: {
@@ -189,7 +217,12 @@ export function BiCardRenderer({ card, onNavigateToTable, onInspectKpi }: BiCard
             data: categories,
             axisLabel: { fontSize: 10 }
           }
-        : { type: 'value' },
+        : {
+            type: 'value',
+            name: card.visualConfigJson?.yAxisName || '',
+            nameTextStyle: { fontSize: 10, align: 'left' },
+            axisLabel: { fontSize: 10, formatter: (v: number) => v.toLocaleString('es-CL') },
+          },
       dataZoom: isLine && categories.length > 5
         ? [{ type: 'inside' }, { type: 'slider', height: 16, bottom: 5 }]
         : undefined,
@@ -197,7 +230,7 @@ export function BiCardRenderer({ card, onNavigateToTable, onInspectKpi }: BiCard
         {
           name: metricField,
           type: isLine ? 'line' : 'bar',
-          data: values,
+          data: isLine ? values : barData,
           smooth: isLine,
           label: {
             show: true,
@@ -205,10 +238,10 @@ export function BiCardRenderer({ card, onNavigateToTable, onInspectKpi }: BiCard
             fontSize: 10,
             fontWeight: 'bold',
             color: '#334155',
-            formatter: (p: any) => (typeof p.value === 'number' ? p.value.toLocaleString() : p.value),
+            formatter: (p: any) => (typeof p.value === 'number' ? fmtVal(p.value) : p.value),
           },
           itemStyle: {
-            color: card.visualConfigJson?.color || (isLine ? '#1D5BD8' : '#1D5BD8'),
+            color: baseColor,
             borderRadius: isHorizontal ? [0, 4, 4, 0] : [4, 4, 0, 0],
           },
           areaStyle: isLine
@@ -416,19 +449,41 @@ export function BiCardRenderer({ card, onNavigateToTable, onInspectKpi }: BiCard
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {data.slice(0, 50).map((row, idx) => (
-                  <tr key={idx} className="hover:bg-blue-50/40 transition-colors">
-                    {columns.map((col) => {
-                      const cellVal = row[col];
-                      const displayVal = cellVal !== null && cellVal !== undefined ? String(cellVal) : '-';
-                      return (
-                        <td key={col} className="p-2 truncate font-mono text-slate-700 max-w-[200px]">
-                          {displayVal}
-                        </td>
-                      );
-                    })}
-                  </tr>
-                ))}
+                {data.map((row, idx) => {
+                  const totalLabel: string | undefined = card.visualConfigJson?.totalsRow;
+                  const isTotal = !!totalLabel && columns.some((c) => row[c] === totalLabel);
+                  const metricAliases: string[] = (card.queryConfigJson?.metrics || []).map((m: any) => m.alias || m.field);
+                  return (
+                    <tr
+                      key={idx}
+                      className={`hover:bg-blue-50/40 transition-colors ${isTotal ? 'bg-slate-50 font-bold border-t-2 border-slate-300' : ''}`}
+                    >
+                      {columns.map((col) => {
+                        const cellVal = row[col];
+                        let displayVal = cellVal !== null && cellVal !== undefined ? String(cellVal) : '-';
+                        const isNum = metricAliases.includes(col) && cellVal !== null && cellVal !== '' && !isNaN(Number(cellVal));
+                        // es-CL: miles con punto, sin decimales
+                        if (isNum) displayVal = Math.round(Number(cellVal)).toLocaleString('es-CL');
+                        const badge = getCellBadge(col, cellVal);
+                        return (
+                          <td
+                            key={col}
+                            className={`p-2 truncate font-mono text-slate-700 max-w-[260px] ${isNum ? 'text-right tabular-nums' : ''}`}
+                          >
+                            {badge ? (
+                              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[11px] font-semibold ${badge.className}`}>
+                                <span aria-hidden="true">{badge.icon}</span>
+                                {badge.label}
+                              </span>
+                            ) : (
+                              displayVal
+                            )}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
