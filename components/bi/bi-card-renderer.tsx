@@ -347,7 +347,7 @@ export function BiCardRenderer({ card, onNavigateToTable, onInspectKpi }: BiCard
           </div>
         )}
 
-        {!error && !loading && data.length === 0 && (
+        {!error && !loading && data.length === 0 && card.chartType !== 'markdown' && (
           <div className="flex-1 flex items-center justify-center text-slate-400 text-xs italic">
             Sin datos en el rango seleccionado
           </div>
