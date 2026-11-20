@@ -528,6 +528,43 @@ export default function HomePage() {
     setViewMode('analytics');
   }, []);
 
+  // Enlace directo (deep link): /?dashboard=D003&tab=1  (tab = número o parte del nombre de la pestaña).
+  // Se guarda en sessionStorage para sobrevivir al login con Google (que vuelve a «/»).
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    let target: { dash: string; tab: string | null } | null = null;
+    try {
+      const q = new URLSearchParams(window.location.search);
+      const d = q.get('dashboard');
+      if (d) {
+        target = { dash: d, tab: q.get('tab') };
+        sessionStorage.setItem('ft_deeplink', JSON.stringify(target));
+      } else {
+        const saved = sessionStorage.getItem('ft_deeplink');
+        if (saved) target = JSON.parse(saved);
+      }
+    } catch { /* sin sessionStorage: se usa solo la URL */ }
+    if (!target) return;
+    const { dash, tab } = target;
+    (async () => {
+      let store = useDashboardStore.getState();
+      if (!store.dashboards || store.dashboards.length === 0) {
+        await store.fetchDashboardsAndFolders();
+        store = useDashboardStore.getState();
+      }
+      const found = store.dashboards?.find((x: any) => x.code === dash || x.id === dash);
+      if (!found) return; // sin sesión o dashboard inexistente: conserva el enlace guardado
+      await openDashboardTab(found.id, found.code, found.name);
+      const active = useDashboardStore.getState().activeDashboard;
+      if (tab && active?.tabs?.length) {
+        const idx = /^\d+$/.test(tab) ? Number(tab) - 1 : -1;
+        const t = idx >= 0 ? active.tabs[idx] : active.tabs.find((x: any) => x.name.toLowerCase().includes(tab.toLowerCase()));
+        if (t) useDashboardStore.getState().setActiveTab(t.id);
+      }
+      try { sessionStorage.removeItem('ft_deeplink'); } catch { /* noop */ }
+    })();
+  }, [openDashboardTab]);
+
   // Abrir catálogo en pestaña
   const openCatalogTab = useCallback((base: any, defaultTab: 'indicators' | 'charts' | 'tables' | 'dashboards' = 'indicators') => {
     const tabId = `catalog-${base.id || base.name}`;

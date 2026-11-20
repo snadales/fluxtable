@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { useDashboardStore } from '@/lib/bi/state/dashboard-store';
 import { formatCurrency } from '@/lib/formatters';
+import { getCellBadge } from '@/lib/bi/cell-badges';
 
 interface BiCardRendererProps {
   card: {
@@ -463,12 +464,20 @@ export function BiCardRenderer({ card, onNavigateToTable, onInspectKpi }: BiCard
                         const isNum = metricAliases.includes(col) && cellVal !== null && cellVal !== '' && !isNaN(Number(cellVal));
                         // es-CL: miles con punto, sin decimales
                         if (isNum) displayVal = Math.round(Number(cellVal)).toLocaleString('es-CL');
+                        const badge = getCellBadge(col, cellVal);
                         return (
                           <td
                             key={col}
                             className={`p-2 truncate font-mono text-slate-700 max-w-[260px] ${isNum ? 'text-right tabular-nums' : ''}`}
                           >
-                            {displayVal}
+                            {badge ? (
+                              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[11px] font-semibold ${badge.className}`}>
+                                <span aria-hidden="true">{badge.icon}</span>
+                                {badge.label}
+                              </span>
+                            ) : (
+                              displayVal
+                            )}
                           </td>
                         );
                       })}
