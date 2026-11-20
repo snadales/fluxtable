@@ -5,7 +5,7 @@ import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 import crypto from 'crypto';
 import { calculateSessionExpiry, getSessionConfig } from '@/lib/auth/session-config';
-import { hashPassword, verifyPassword } from '@/lib/auth/auth-guard';
+import { verifyPassword } from '@/lib/auth/auth-guard';
 
 const LoginSchema = z.object({
   email: z.string().email('Formato de correo inválido'),
@@ -13,6 +13,13 @@ const LoginSchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
+  // Login por contraseña deshabilitado por defecto: la identidad es Google (Cloudflare Access + OAuth).
+  if (process.env.PASSWORD_LOGIN_ENABLED !== 'true') {
+    return NextResponse.json(
+      { error: 'PASSWORD_LOGIN_DISABLED', message: 'El acceso con contraseña está deshabilitado. Usa «Continuar con Google».' },
+      { status: 403 }
+    );
+  }
   try {
     const body = await req.json();
     const parsed = LoginSchema.safeParse(body);
@@ -28,48 +35,23 @@ export async function POST(req: NextRequest) {
     const normalizedEmail = email.toLowerCase().trim();
 
     // Buscar usuario en base de datos
-    let foundUser = await db.query.users.findFirst({
+    const foundUser = await db.query.users.findFirst({
       where: eq(users.email, normalizedEmail),
     });
 
-    if (!foundUser) {
-      // Si el email está en la lista permitida de administradores, crearlo de forma segura
-      const allowedEmails = (process.env.ALLOWED_EMAILS || 'snadales@gmail.com')
-        .split(',')
-        .map((e) => e.trim().toLowerCase());
+    // Nunca se crean usuarios ni se fija contraseña por esta vía: solo cuentas con contraseña ya establecida.
+    if (!foundUser || !foundUser.passwordHash || !verifyPassword(password, foundUser.passwordHash)) {
+      return NextResponse.json(
+        { error: 'INVALID_CREDENTIALS', message: 'Credenciales inválidas o acceso no autorizado' },
+        { status: 401 }
+      );
+    }
 
-      if (allowedEmails.includes(normalizedEmail)) {
-        const [newUser] = await db
-          .insert(users)
-          .values({
-            email: normalizedEmail,
-            name: normalizedEmail.split('@')[0],
-            passwordHash: hashPassword(password),
-            role: 'superadmin',
-            isActive: true,
-          })
-          .returning();
-        foundUser = newUser;
-      } else {
-        return NextResponse.json(
-          { error: 'INVALID_CREDENTIALS', message: 'Credenciales inválidas o acceso no autorizado' },
-          { status: 401 }
-        );
-      }
-    } else {
-      // Si el usuario existe pero no tiene contraseña establecida aún (cuenta creada por OAuth o seed)
-      if (!foundUser.passwordHash) {
-        const updatedHash = hashPassword(password);
-        await db.update(users).set({ passwordHash: updatedHash }).where(eq(users.id, foundUser.id));
-      } else {
-        const isPasswordValid = verifyPassword(password, foundUser.passwordHash);
-        if (!isPasswordValid) {
-          return NextResponse.json(
-            { error: 'INVALID_CREDENTIALS', message: 'Credenciales inválidas o contraseña incorrecta' },
-            { status: 401 }
-          );
-        }
-      }
+    if (foundUser.role === 'pending') {
+      return NextResponse.json(
+        { error: 'PENDING_APPROVAL', message: 'Tu cuenta espera que un administrador te asigne acceso' },
+        { status: 403 }
+      );
     }
 
     if (!foundUser.isActive) {

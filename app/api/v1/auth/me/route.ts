@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { authenticateRequest } from '@/lib/auth/auth-guard';
+import { isViaCloudflare } from '@/lib/auth/cf-access';
 
 export async function GET(request: NextRequest) {
   const auth = await authenticateRequest(request);
@@ -19,7 +20,7 @@ export async function GET(request: NextRequest) {
     name: name || email.split('@')[0],
     role,
     avatarInitials: (name || email).slice(0, 2).toUpperCase(),
-    isZeroTrust: Boolean(request.headers.get('cf-access-authenticated-user-email')),
+    isZeroTrust: isViaCloudflare(request.headers),
     isApiToken,
     permissions: role === 'superadmin' ? ['all'] : ['read', 'write'],
   });

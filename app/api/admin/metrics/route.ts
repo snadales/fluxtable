@@ -1,8 +1,11 @@
+import { requireSuperadmin } from '@/lib/auth/auth-guard';
 import { NextRequest, NextResponse } from 'next/server';
 import { db, schema } from '@/db';
 import { isNull, count } from 'drizzle-orm';
 
 export async function GET(request: NextRequest) {
+  const guard = await requireSuperadmin(request);
+  if (!guard.authenticated) return guard.response;
   try {
     const [usersCount] = await db.select({ val: count() }).from(schema.users);
     const [workspacesCount] = await db.select({ val: count() }).from(schema.workspaces).where(isNull(schema.workspaces.deletedAt));

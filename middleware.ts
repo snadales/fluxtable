@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { authenticateRequest, isPublicApiPath } from '@/lib/auth/auth-guard';
 
 interface RateLimitRecord {
   count: number;
@@ -22,7 +23,7 @@ function cleanupRateLimitMap() {
   }
 }
 
-export function middleware(req: NextRequest) {
+export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   // Ignorar archivos estáticos, chunks de Next.js e imágenes de favicon
@@ -93,6 +94,27 @@ export function middleware(req: NextRequest) {
     }
   }
 
+  // 3. Deny-by-default: toda ruta /api exige autenticación salvo health checks y endpoints de login
+  const isAuthEndpoint = pathname.startsWith('/api/auth/');
+  if (!isAuthEndpoint && !isPublicApiPath(pathname)) {
+    const auth = await authenticateRequest(req);
+    if (!auth.authenticated) {
+      const forbidden = Boolean(auth.error?.startsWith('FORBIDDEN'));
+      return NextResponse.json(
+        {
+          error: forbidden ? 'FORBIDDEN' : 'UNAUTHORIZED',
+          message: auth.error || 'Acceso no autorizado',
+        },
+        { status: forbidden ? 403 : 401 }
+      );
+    } else if (auth.user?.role === 'pending' && pathname !== '/api/v1/auth/me') {
+      return NextResponse.json(
+        { error: 'PENDING_APPROVAL', message: 'Tu cuenta espera que un administrador te asigne acceso' },
+        { status: 403 }
+      );
+    }
+  }
+
   const remaining = currentRecord ? Math.max(0, limit - currentRecord.count) : limit - 1;
   const response = NextResponse.next();
 
@@ -103,5 +125,6 @@ export function middleware(req: NextRequest) {
 }
 
 export const config = {
+  runtime: 'nodejs',
   matcher: ['/api/:path*'],
 };

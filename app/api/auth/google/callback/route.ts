@@ -5,6 +5,7 @@ import { users, sessions } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { calculateSessionExpiry, getSessionConfig } from '@/lib/auth/session-config';
 import { getBaseUrl } from '@/lib/brand-config';
+import { decideGoogleLogin } from '@/lib/auth/google-policy';
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -62,35 +63,42 @@ export async function GET(req: NextRequest) {
       return NextResponse.redirect(`${baseUrl}/login?error=NO_EMAIL_PROVIDED`);
     }
 
-    const email = profile.email.toLowerCase().trim();
-    const allowedEmails = (process.env.ALLOWED_EMAILS || 'snadales@gmail.com')
-      .split(',')
-      .map((e) => e.trim().toLowerCase());
-
-    // Verificar whitelist de correos si está configurada
-    if (allowedEmails.length > 0 && !allowedEmails.includes(email)) {
-      return NextResponse.redirect(`${baseUrl}/login?error=UNAUTHORIZED_EMAIL`);
+    if (profile.email_verified === false || profile.email_verified === 'false') {
+      return NextResponse.redirect(`${baseUrl}/login?error=EMAIL_NOT_VERIFIED`);
     }
 
-    // Buscar o registrar usuario
+    const email = profile.email.toLowerCase().trim();
+    const decision = decideGoogleLogin(email);
+
+    // Buscar usuario existente (los usuarios ya creados entran siempre que estén activos)
     let foundUser = await db.query.users.findFirst({
       where: eq(users.email, email),
     });
 
     if (!foundUser) {
-      const isSuperadmin = allowedEmails.includes(email);
+      // Alta en el primer login: solo si el email está permitido (lista o dominio)
+      if (!decision.allowed) {
+        return NextResponse.redirect(`${baseUrl}/login?error=UNAUTHORIZED_EMAIL`);
+      }
       const [newUser] = await db
         .insert(users)
         .values({
           email,
           name: profile.name || email.split('@')[0],
-          role: isSuperadmin ? 'superadmin' : 'member',
+          googleId: profile.sub || null,
+          avatarUrl: profile.picture || null,
+          role: decision.role,
           isActive: true,
         })
         .returning();
       foundUser = newUser;
     } else if (!foundUser.isActive) {
       return NextResponse.redirect(`${baseUrl}/login?error=ACCOUNT_DISABLED`);
+    }
+
+    // Rol mínimo: sin acceso (ni sesión) hasta que un administrador lo asigne
+    if (foundUser.role === 'pending') {
+      return NextResponse.redirect(`${baseUrl}/login?error=PENDING_APPROVAL`);
     }
 
     // Crear sesión de usuario

@@ -12,7 +12,7 @@ export const users = pgTable('users', {
   avatarUrl: text('avatar_url'),
   passwordHash: text('password_hash'), // null si se autentica exclusivamente vía Google
   googleId: text('google_id').unique(),
-  role: text('role', { enum: ['superadmin', 'member'] }).default('member').notNull(),
+  role: text('role', { enum: ['superadmin', 'member', 'pending'] }).default('member').notNull(),
   isActive: boolean('is_active').default(true).notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),

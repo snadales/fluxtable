@@ -19,6 +19,10 @@ function LoginForm() {
     if (err) {
       if (err === 'UNAUTHORIZED_EMAIL') {
         setErrorMessage('Tu correo no se encuentra en la lista de usuarios autorizados.');
+      } else if (err === 'PENDING_APPROVAL') {
+        setErrorMessage('Tu cuenta fue registrada y espera que un administrador te asigne acceso.');
+      } else if (err === 'EMAIL_NOT_VERIFIED') {
+        setErrorMessage('Tu correo de Google no está verificado.');
       } else if (err === 'ACCOUNT_DISABLED') {
         setErrorMessage('Esta cuenta ha sido desactivada.');
       } else if (err === 'INVALID_STATE') {

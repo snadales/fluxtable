@@ -1,7 +1,10 @@
-import { NextResponse } from 'next/server';
+import { requireSuperadmin } from '@/lib/auth/auth-guard';
+import { NextRequest, NextResponse } from 'next/server';
 import os from 'os';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const guard = await requireSuperadmin(request);
+  if (!guard.authenticated) return guard.response;
   const memoryUsage = process.memoryUsage();
 
   return NextResponse.json({
