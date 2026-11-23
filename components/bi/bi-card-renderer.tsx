@@ -9,6 +9,9 @@ import {
 import { useDashboardStore } from '@/lib/bi/state/dashboard-store';
 import { formatCurrency } from '@/lib/formatters';
 import { getCellBadge } from '@/lib/bi/cell-badges';
+import {
+  isMoneyColumn, formatClpCell, isNumericValue, shouldWrapColumn, resolveShowLabels,
+} from '@/lib/bi/card-format';
 
 interface BiCardRendererProps {
   card: {
@@ -235,7 +238,7 @@ export function BiCardRenderer({ card, onNavigateToTable, onInspectKpi }: BiCard
           data: isLine ? values : barData,
           smooth: isLine,
           label: {
-            show: true,
+            show: resolveShowLabels(card.visualConfigJson, categories.length),
             position: isHorizontal ? 'right' : (isLine ? 'top' : 'top'),
             fontSize: 10,
             fontWeight: 'bold',
@@ -463,14 +466,19 @@ export function BiCardRenderer({ card, onNavigateToTable, onInspectKpi }: BiCard
                       {columns.map((col) => {
                         const cellVal = row[col];
                         let displayVal = cellVal !== null && cellVal !== undefined ? String(cellVal) : '-';
-                        const isNum = metricAliases.includes(col) && cellVal !== null && cellVal !== '' && !isNaN(Number(cellVal));
-                        // es-CL: miles con punto, sin decimales
-                        if (isNum) displayVal = Math.round(Number(cellVal)).toLocaleString('es-CL');
+                        const isMoney = isMoneyColumn(col, card.visualConfigJson, metricAliases) && isNumericValue(cellVal);
+                        const isNum = isMoney || (metricAliases.includes(col) && isNumericValue(cellVal));
+                        // es-CL: miles con punto, sin decimales; columnas de dinero con `$`
+                        if (isMoney) displayVal = formatClpCell(cellVal);
+                        else if (isNum) displayVal = Math.round(Number(cellVal)).toLocaleString('es-CL');
+                        const wrap = !isNum && shouldWrapColumn(col, card.visualConfigJson);
                         const badge = getCellBadge(col, cellVal);
                         return (
                           <td
                             key={col}
-                            className={`p-2 truncate font-mono text-slate-700 max-w-[260px] ${isNum ? 'text-right tabular-nums' : ''}`}
+                            className={`p-2 font-mono text-slate-700 ${
+                              wrap ? 'whitespace-normal break-words align-top min-w-[180px] max-w-[420px]' : 'truncate max-w-[260px]'
+                            } ${isNum ? 'text-right tabular-nums' : ''}`}
                           >
                             {badge ? (
                               <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[11px] font-semibold ${badge.className}`}>
